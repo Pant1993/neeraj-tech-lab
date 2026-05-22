@@ -14,6 +14,14 @@ weight: 1
 ---
 
 <style>
+:root {
+  --svg-grid: #cbd5e1;
+  --svg-text: #1e293b;
+}
+.dark {
+  --svg-grid: #475569;
+  --svg-text: #e2e8f0;
+}
 .svg-diagram {
   margin: 1.5em 0;
   padding: 1em;
@@ -21,6 +29,10 @@ weight: 1
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   overflow-x: auto;
+}
+.dark .svg-diagram {
+  background: #1e293b;
+  border-color: #334155;
 }
 .svg-diagram svg {
   width: 100%;
