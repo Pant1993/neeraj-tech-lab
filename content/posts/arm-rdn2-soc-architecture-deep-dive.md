@@ -551,107 +551,114 @@ But the tree also extends to non-CPU resources: **PCIe**, debug blocks, and othe
 
 *Inline SVG: Power Domain Tree*
 <div class="svg-diagram">
-<svg viewBox="0 0 1100 700" role="img" aria-label="Power domain tree for RD-N2">
+<svg viewBox="0 0 1100 440" role="img" aria-label="Power domain tree for RD-N2">
 <defs>
 <marker id="arrowPower" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
 <path d="M0 0 L10 5 L0 10 z" fill="#667b97"/>
 </marker>
+<marker id="arrowOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+<path d="M0 0 L10 5 L0 10 z" fill="#d97706"/>
+</marker>
 </defs>
-<!-- SYSTOP -->
-<rect x="420" y="30" width="260" height="64" rx="16" fill="#5b7cfa" opacity="0.9" stroke="#284bcb" stroke-width="3"/>
-<text x="550" y="70" text-anchor="middle" fill="#ffffff" font-size="26" font-weight="800">SYSTOP</text>
-<!-- Arrows from SYSTOP to Clusters -->
-<g stroke="#667b97" stroke-width="3" fill="none" marker-end="url(#arrowPower)">
-<line x1="460" y1="94" x2="195" y2="155"/>
-<line x1="500" y1="94" x2="425" y2="155"/>
-<line x1="600" y1="94" x2="675" y2="155"/>
-<line x1="640" y1="94" x2="905" y2="155"/>
+<!-- SYSTOP at top center -->
+<rect x="420" y="15" width="260" height="50" rx="14" fill="#5b7cfa" stroke="#284bcb" stroke-width="3"/>
+<text x="550" y="47" text-anchor="middle" fill="#ffffff" font-size="22" font-weight="800">SYSTOP</text>
+<!-- Trunk down + horizontal split -->
+<line x1="550" y1="65" x2="550" y2="85" stroke="#667b97" stroke-width="3"/>
+<line x1="280" y1="85" x2="870" y2="85" stroke="#667b97" stroke-width="3"/>
+<!-- Left branch: Compute -->
+<line x1="280" y1="85" x2="280" y2="105" stroke="#667b97" stroke-width="3"/>
+<rect x="185" y="105" width="190" height="28" rx="7" fill="#e8f5e9" stroke="#4caf50" stroke-width="1.5"/>
+<text x="280" y="124" text-anchor="middle" font-size="11" fill="#2e7d32" font-weight="700">COMPUTE DOMAINS</text>
+<!-- Right branch: Peripheral -->
+<line x1="870" y1="85" x2="870" y2="105" stroke="#d97706" stroke-width="3"/>
+<rect x="775" y="105" width="190" height="28" rx="7" fill="#fff3e0" stroke="#f57c00" stroke-width="1.5"/>
+<text x="870" y="124" text-anchor="middle" font-size="11" fill="#e65100" font-weight="700">PERIPHERAL DOMAINS</text>
+<!-- === COMPUTE SIDE === -->
+<line x1="280" y1="133" x2="280" y2="148" stroke="#667b97" stroke-width="2.5"/>
+<line x1="80" y1="148" x2="480" y2="148" stroke="#667b97" stroke-width="2.5"/>
+<g stroke="#667b97" stroke-width="2.5" marker-end="url(#arrowPower)">
+<line x1="80" y1="148" x2="80" y2="168"/>
+<line x1="213" y1="148" x2="213" y2="168"/>
+<line x1="347" y1="148" x2="347" y2="168"/>
+<line x1="480" y1="148" x2="480" y2="168"/>
 </g>
-<!-- Clusters -->
-<g fill="#a7f3d0" stroke="#0f9f7c" stroke-width="2.5">
-<rect x="100" y="155" width="190" height="60" rx="14"/>
-<rect x="330" y="155" width="190" height="60" rx="14"/>
-<rect x="580" y="155" width="190" height="60" rx="14"/>
-<rect x="810" y="155" width="190" height="60" rx="14"/>
+<!-- Cluster boxes -->
+<g fill="#a7f3d0" stroke="#0f9f7c" stroke-width="2">
+<rect x="15" y="168" width="130" height="44" rx="10"/>
+<rect x="148" y="168" width="130" height="44" rx="10"/>
+<rect x="282" y="168" width="130" height="44" rx="10"/>
+<rect x="415" y="168" width="130" height="44" rx="10"/>
 </g>
-<g fill="#0b2f24" font-size="20" font-weight="800" text-anchor="middle">
-<text x="195" y="192">Cluster 0</text>
-<text x="425" y="192">Cluster 1</text>
-<text x="675" y="192">Cluster 2</text>
-<text x="905" y="192">Cluster 3</text>
+<g fill="#0b2f24" font-size="14" font-weight="800" text-anchor="middle">
+<text x="80" y="195">Cluster 0</text>
+<text x="213" y="195">Cluster 1</text>
+<text x="347" y="195">Cluster 2</text>
+<text x="480" y="195">Cluster 3</text>
 </g>
-<!-- Arrows from Clusters to Cores -->
-<g stroke="#2563eb" stroke-width="2" fill="none" marker-end="url(#arrowPower)">
-<line x1="195" y1="215" x2="195" y2="270"/>
-<line x1="425" y1="215" x2="425" y2="270"/>
-<line x1="675" y1="215" x2="675" y2="270"/>
-<line x1="905" y1="215" x2="905" y2="270"/>
+<!-- Arrows to cores -->
+<g stroke="#2563eb" stroke-width="2" marker-end="url(#arrowPower)">
+<line x1="80" y1="212" x2="80" y2="238"/>
+<line x1="213" y1="212" x2="213" y2="238"/>
+<line x1="347" y1="212" x2="347" y2="238"/>
+<line x1="480" y1="212" x2="480" y2="238"/>
 </g>
-<!-- Cores row -->
-<g fill="#bfdbfe" stroke="#2563eb" stroke-width="2">
-<!-- Cluster 0 cores -->
-<rect x="110" y="270" width="42" height="50" rx="8"/>
-<rect x="157" y="270" width="42" height="50" rx="8"/>
-<rect x="204" y="270" width="42" height="50" rx="8"/>
-<rect x="251" y="270" width="42" height="50" rx="8"/>
-<!-- Cluster 1 cores -->
-<rect x="340" y="270" width="42" height="50" rx="8"/>
-<rect x="387" y="270" width="42" height="50" rx="8"/>
-<rect x="434" y="270" width="42" height="50" rx="8"/>
-<rect x="481" y="270" width="42" height="50" rx="8"/>
-<!-- Cluster 2 cores -->
-<rect x="590" y="270" width="42" height="50" rx="8"/>
-<rect x="637" y="270" width="42" height="50" rx="8"/>
-<rect x="684" y="270" width="42" height="50" rx="8"/>
-<rect x="731" y="270" width="42" height="50" rx="8"/>
-<!-- Cluster 3 cores -->
-<rect x="820" y="270" width="42" height="50" rx="8"/>
-<rect x="867" y="270" width="42" height="50" rx="8"/>
-<rect x="914" y="270" width="42" height="50" rx="8"/>
-<rect x="961" y="270" width="42" height="50" rx="8"/>
+<!-- Core boxes (4 per cluster, spaced in groups) -->
+<g fill="#bfdbfe" stroke="#2563eb" stroke-width="1.5">
+<rect x="22" y="238" width="28" height="34" rx="5"/>
+<rect x="54" y="238" width="28" height="34" rx="5"/>
+<rect x="86" y="238" width="28" height="34" rx="5"/>
+<rect x="118" y="238" width="28" height="34" rx="5"/>
+<rect x="155" y="238" width="28" height="34" rx="5"/>
+<rect x="187" y="238" width="28" height="34" rx="5"/>
+<rect x="219" y="238" width="28" height="34" rx="5"/>
+<rect x="251" y="238" width="28" height="34" rx="5"/>
+<rect x="289" y="238" width="28" height="34" rx="5"/>
+<rect x="321" y="238" width="28" height="34" rx="5"/>
+<rect x="353" y="238" width="28" height="34" rx="5"/>
+<rect x="385" y="238" width="28" height="34" rx="5"/>
+<rect x="422" y="238" width="28" height="34" rx="5"/>
+<rect x="454" y="238" width="28" height="34" rx="5"/>
+<rect x="486" y="238" width="28" height="34" rx="5"/>
+<rect x="518" y="238" width="28" height="34" rx="5"/>
 </g>
-<g fill="#10203b" font-size="12" font-weight="700" text-anchor="middle">
-<text x="131" y="300">C0</text><text x="178" y="300">C1</text><text x="225" y="300">C2</text><text x="272" y="300">C3</text>
-<text x="361" y="300">C4</text><text x="408" y="300">C5</text><text x="455" y="300">C6</text><text x="502" y="300">C7</text>
-<text x="611" y="300">C8</text><text x="658" y="300">C9</text><text x="705" y="300">C10</text><text x="752" y="300">C11</text>
-<text x="841" y="300">C12</text><text x="888" y="300">C13</text><text x="935" y="300">C14</text><text x="982" y="300">C15</text>
+<g fill="#10203b" font-size="9" font-weight="700" text-anchor="middle">
+<text x="36" y="260">C0</text><text x="68" y="260">C1</text><text x="100" y="260">C2</text><text x="132" y="260">C3</text>
+<text x="169" y="260">C4</text><text x="201" y="260">C5</text><text x="233" y="260">C6</text><text x="265" y="260">C7</text>
+<text x="303" y="260">C8</text><text x="335" y="260">C9</text><text x="367" y="260">C10</text><text x="399" y="260">C11</text>
+<text x="436" y="260">C12</text><text x="468" y="260">C13</text><text x="500" y="260">C14</text><text x="532" y="260">C15</text>
 </g>
-<!-- Separator label -->
-<text x="550" y="380" text-anchor="middle" fill="var(--svg-text)" font-size="16" font-weight="700" opacity="0.6">── Peripheral Power Domains ──</text>
-<!-- Arrows from SYSTOP to Peripherals (clean routed bus) -->
-<g stroke="#d97706" stroke-width="3" fill="none">
-<line x1="550" y1="94" x2="550" y2="395"/>
-<line x1="185" y1="395" x2="935" y2="395"/>
+<!-- === PERIPHERAL SIDE === -->
+<line x1="870" y1="133" x2="870" y2="148" stroke="#d97706" stroke-width="2.5"/>
+<line x1="720" y1="148" x2="1020" y2="148" stroke="#d97706" stroke-width="2.5"/>
+<g stroke="#d97706" stroke-width="2.5" marker-end="url(#arrowOrange)">
+<line x1="720" y1="148" x2="720" y2="168"/>
+<line x1="820" y1="148" x2="820" y2="168"/>
+<line x1="920" y1="148" x2="920" y2="168"/>
+<line x1="1020" y1="148" x2="1020" y2="168"/>
 </g>
-<g stroke="#d97706" stroke-width="3" fill="none" marker-end="url(#arrowPower)">
-<line x1="185" y1="395" x2="185" y2="410"/>
-<line x1="465" y1="395" x2="465" y2="410"/>
-<line x1="705" y1="395" x2="705" y2="410"/>
-<line x1="935" y1="395" x2="935" y2="410"/>
+<!-- Peripheral boxes -->
+<g fill="#fcd34d" stroke="#d97706" stroke-width="2">
+<rect x="655" y="168" width="130" height="44" rx="10"/>
+<rect x="755" y="168" width="130" height="44" rx="10"/>
+<rect x="855" y="168" width="130" height="44" rx="10"/>
+<rect x="955" y="168" width="130" height="44" rx="10"/>
 </g>
-<!-- Peripherals -->
-<g fill="#fcd34d" stroke="#d97706" stroke-width="2.5">
-<rect x="100" y="410" width="170" height="64" rx="14"/>
-<rect x="380" y="410" width="170" height="64" rx="14"/>
-<rect x="620" y="410" width="170" height="64" rx="14"/>
-<rect x="850" y="410" width="170" height="64" rx="14"/>
-</g>
-<g fill="#4b3200" font-size="18" font-weight="800" text-anchor="middle">
-<text x="185" y="448">PCIe</text>
-<text x="465" y="448">Debug</text>
-<text x="705" y="448">IO Macro A</text>
-<text x="935" y="448">IO Macro B</text>
+<g fill="#4b3200" font-size="14" font-weight="800" text-anchor="middle">
+<text x="720" y="195">PCIe</text>
+<text x="820" y="195">Debug</text>
+<text x="920" y="195">IO Macro A</text>
+<text x="1020" y="195">IO Macro B</text>
 </g>
 <!-- Legend -->
-<text x="550" y="540" text-anchor="middle" fill="var(--svg-text)" font-size="15" font-weight="700">PPUs drive transitions using head switches (PMOS), isolation cells, and reset sequencing.</text>
-<!-- Legend items -->
-<g font-size="13" fill="var(--svg-text)">
-<rect x="320" y="560" width="20" height="14" rx="4" fill="#a7f3d0" stroke="#0f9f7c"/>
-<text x="346" y="572">= Cluster domain</text>
-<rect x="480" y="560" width="20" height="14" rx="4" fill="#bfdbfe" stroke="#2563eb"/>
-<text x="506" y="572">= Core domain</text>
-<rect x="620" y="560" width="20" height="14" rx="4" fill="#fcd34d" stroke="#d97706"/>
-<text x="646" y="572">= Peripheral domain</text>
+<text x="550" y="330" text-anchor="middle" fill="var(--svg-text)" font-size="13" font-weight="700">PPUs drive transitions using head switches (PMOS), isolation cells, and reset sequencing.</text>
+<g font-size="12" fill="var(--svg-text)">
+<rect x="310" y="355" width="16" height="12" rx="3" fill="#a7f3d0" stroke="#0f9f7c"/>
+<text x="332" y="365">= Cluster domain</text>
+<rect x="460" y="355" width="16" height="12" rx="3" fill="#bfdbfe" stroke="#2563eb"/>
+<text x="482" y="365">= Core domain</text>
+<rect x="590" y="355" width="16" height="12" rx="3" fill="#fcd34d" stroke="#d97706"/>
+<text x="612" y="365">= Peripheral domain</text>
 </g>
 </svg>
 </div>
