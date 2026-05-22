@@ -145,7 +145,7 @@ When Linux finally boots, it didn’t get there by magic. The SCP initialized pl
 <rect x="640" y="95" width="340" height="110" rx="18" fill="#fff7ed" stroke="#fed7aa"/>
 <text x="662" y="130" font-size="22" fill="#d97706" font-weight="700">Platform I/O + security</text>
 <text x="662" y="165" font-size="18" fill="#334155">GIC-700, SMMUv3, TZC-400, PCIe</text>
-<text x="662" y="192" font-size="16" fill="#64748b">Interrupts, isolation, DMA translation</text>
+<text x="662" y="192" font-size="15" fill="#64748b">Interrupts, isolation, DMA translation</text>
 <rect x="90" y="270" width="350" height="110" rx="18" fill="#f8fafc" stroke="#dbe3f1"/>
 <text x="116" y="306" font-size="24" fill="#1c2434" font-weight="700">Control subsystem</text>
 <text x="116" y="338" font-size="20" fill="#334155">SCP + MCP (Cortex-M7)</text>
@@ -153,7 +153,7 @@ When Linux finally boots, it didn’t get there by magic. The SCP initialized pl
 <rect x="490" y="270" width="420" height="110" rx="18" fill="#f5f3ff" stroke="#ddd6fe"/>
 <text x="515" y="306" font-size="22" fill="#6d28d9" font-weight="700">Boot-facing storage + comms</text>
 <text x="515" y="338" font-size="18" fill="#334155">NOR flash, virtio block, MHU mailboxes</text>
-<text x="515" y="364" font-size="16" fill="#64748b">Firmware images, boot media, AP↔SCP signaling</text>
+<text x="515" y="364" font-size="15" fill="#64748b">Firmware images, boot media, AP↔SCP signaling</text>
 <path d="M342 150 H365" stroke="url(#g1)" stroke-width="6" stroke-linecap="round"/>
 <path d="M615 150 H640" stroke="url(#g1)" stroke-width="6" stroke-linecap="round"/>
 <path d="M490 325 H440" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
@@ -229,17 +229,17 @@ The exact top-level build command can vary with the reference solution layout yo
 <text x="52" y="72" font-size="24" fill="#2952ff" font-weight="700">SCP firmware</text>
 <text x="52" y="102" font-size="18" fill="#475569">Bring-up + power-on</text>
 <rect x="230" y="35" width="160" height="92" rx="18" fill="#f8fafc" stroke="#dbe3f1"/>
-<text x="275" y="72" font-size="24" fill="#0f172a" font-weight="700">TF-A</text>
-<text x="255" y="102" font-size="18" fill="#475569">BL1 → BL2 → BL31</text>
+<text x="310" y="72" text-anchor="middle" font-size="24" fill="#0f172a" font-weight="700">TF-A</text>
+<text x="310" y="102" text-anchor="middle" font-size="17" fill="#475569">BL1 → BL2 → BL31</text>
 <rect x="430" y="35" width="170" height="92" rx="18" fill="#eefcf7" stroke="#bbf7d0"/>
-<text x="484" y="72" font-size="24" fill="#0f9d7a" font-weight="700">UEFI</text>
-<text x="468" y="102" font-size="18" fill="#475569">DXE + boot manager</text>
+<text x="515" y="72" text-anchor="middle" font-size="24" fill="#0f9d7a" font-weight="700">UEFI</text>
+<text x="515" y="102" text-anchor="middle" font-size="17" fill="#475569">DXE + boot manager</text>
 <rect x="640" y="35" width="160" height="92" rx="18" fill="#fff7ed" stroke="#fed7aa"/>
-<text x="690" y="72" font-size="24" fill="#d97706" font-weight="700">GRUB</text>
-<text x="673" y="102" font-size="18" fill="#475569">Loads kernel + cmdline</text>
+<text x="720" y="72" text-anchor="middle" font-size="24" fill="#d97706" font-weight="700">GRUB</text>
+<text x="720" y="102" text-anchor="middle" font-size="16" fill="#475569">Loads kernel + args</text>
 <rect x="840" y="35" width="220" height="92" rx="18" fill="#f5f3ff" stroke="#ddd6fe"/>
-<text x="910" y="72" font-size="24" fill="#6d28d9" font-weight="700">Linux</text>
-<text x="876" y="102" font-size="16" fill="#475569">Kernel + buildroot userspace</text>
+<text x="950" y="72" text-anchor="middle" font-size="24" fill="#6d28d9" font-weight="700">Linux</text>
+<text x="950" y="102" text-anchor="middle" font-size="15" fill="#475569">Kernel + Buildroot userspace</text>
 <path d="M190 81 H230" stroke="#6e7dff" stroke-width="6" stroke-linecap="round"/>
 <path d="M390 81 H430" stroke="#6e7dff" stroke-width="6" stroke-linecap="round"/>
 <path d="M600 81 H640" stroke="#6e7dff" stroke-width="6" stroke-linecap="round"/>

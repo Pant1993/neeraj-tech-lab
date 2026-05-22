@@ -557,17 +557,17 @@ But the tree also extends to non-CPU resources: **PCIe**, debug blocks, and othe
 <path d="M0 0 L10 5 L0 10 z" fill="#667b97"/>
 </marker>
 </defs>
-            <!-- SYSTOP -->
+<!-- SYSTOP -->
 <rect x="420" y="30" width="260" height="64" rx="16" fill="#5b7cfa" opacity="0.9" stroke="#284bcb" stroke-width="3"/>
 <text x="550" y="70" text-anchor="middle" fill="#ffffff" font-size="26" font-weight="800">SYSTOP</text>
-            <!-- Arrows from SYSTOP to Clusters -->
+<!-- Arrows from SYSTOP to Clusters -->
 <g stroke="#667b97" stroke-width="3" fill="none" marker-end="url(#arrowPower)">
 <line x1="460" y1="94" x2="195" y2="155"/>
 <line x1="500" y1="94" x2="425" y2="155"/>
 <line x1="600" y1="94" x2="675" y2="155"/>
 <line x1="640" y1="94" x2="905" y2="155"/>
 </g>
-            <!-- Clusters -->
+<!-- Clusters -->
 <g fill="#a7f3d0" stroke="#0f9f7c" stroke-width="2.5">
 <rect x="100" y="155" width="190" height="60" rx="14"/>
 <rect x="330" y="155" width="190" height="60" rx="14"/>
@@ -580,31 +580,31 @@ But the tree also extends to non-CPU resources: **PCIe**, debug blocks, and othe
 <text x="675" y="192">Cluster 2</text>
 <text x="905" y="192">Cluster 3</text>
 </g>
-            <!-- Arrows from Clusters to Cores -->
+<!-- Arrows from Clusters to Cores -->
 <g stroke="#2563eb" stroke-width="2" fill="none" marker-end="url(#arrowPower)">
 <line x1="195" y1="215" x2="195" y2="270"/>
 <line x1="425" y1="215" x2="425" y2="270"/>
 <line x1="675" y1="215" x2="675" y2="270"/>
 <line x1="905" y1="215" x2="905" y2="270"/>
 </g>
-            <!-- Cores row -->
+<!-- Cores row -->
 <g fill="#bfdbfe" stroke="#2563eb" stroke-width="2">
-              <!-- Cluster 0 cores -->
+<!-- Cluster 0 cores -->
 <rect x="110" y="270" width="42" height="50" rx="8"/>
 <rect x="157" y="270" width="42" height="50" rx="8"/>
 <rect x="204" y="270" width="42" height="50" rx="8"/>
 <rect x="251" y="270" width="42" height="50" rx="8"/>
-              <!-- Cluster 1 cores -->
+<!-- Cluster 1 cores -->
 <rect x="340" y="270" width="42" height="50" rx="8"/>
 <rect x="387" y="270" width="42" height="50" rx="8"/>
 <rect x="434" y="270" width="42" height="50" rx="8"/>
 <rect x="481" y="270" width="42" height="50" rx="8"/>
-              <!-- Cluster 2 cores -->
+<!-- Cluster 2 cores -->
 <rect x="590" y="270" width="42" height="50" rx="8"/>
 <rect x="637" y="270" width="42" height="50" rx="8"/>
 <rect x="684" y="270" width="42" height="50" rx="8"/>
 <rect x="731" y="270" width="42" height="50" rx="8"/>
-              <!-- Cluster 3 cores -->
+<!-- Cluster 3 cores -->
 <rect x="820" y="270" width="42" height="50" rx="8"/>
 <rect x="867" y="270" width="42" height="50" rx="8"/>
 <rect x="914" y="270" width="42" height="50" rx="8"/>
@@ -616,20 +616,20 @@ But the tree also extends to non-CPU resources: **PCIe**, debug blocks, and othe
 <text x="611" y="300">C8</text><text x="658" y="300">C9</text><text x="705" y="300">C10</text><text x="752" y="300">C11</text>
 <text x="841" y="300">C12</text><text x="888" y="300">C13</text><text x="935" y="300">C14</text><text x="982" y="300">C15</text>
 </g>
-            <!-- Separator label -->
+<!-- Separator label -->
 <text x="550" y="380" text-anchor="middle" fill="var(--svg-text)" font-size="16" font-weight="700" opacity="0.6">── Peripheral Power Domains ──</text>
-            <!-- Arrows from SYSTOP to Peripherals (routed around cores) -->
-<g stroke="#d97706" stroke-width="3" fill="none" marker-end="url(#arrowPower)">
-<line x1="420" y1="70" x2="60" y2="70"/>
-<line x1="60" y1="70" x2="60" y2="430"/>
-<line x1="60" y1="430" x2="155" y2="430"/>
-<line x1="500" y1="94" x2="470" y2="420"/>
-<line x1="680" y1="70" x2="1050" y2="70"/>
-<line x1="1050" y1="70" x2="1050" y2="430"/>
-<line x1="1050" y1="430" x2="935" y2="430"/>
-<line x1="600" y1="94" x2="700" y2="420"/>
+<!-- Arrows from SYSTOP to Peripherals (clean routed bus) -->
+<g stroke="#d97706" stroke-width="3" fill="none">
+<line x1="550" y1="94" x2="550" y2="395"/>
+<line x1="185" y1="395" x2="935" y2="395"/>
 </g>
-            <!-- Peripherals -->
+<g stroke="#d97706" stroke-width="3" fill="none" marker-end="url(#arrowPower)">
+<line x1="185" y1="395" x2="185" y2="410"/>
+<line x1="465" y1="395" x2="465" y2="410"/>
+<line x1="705" y1="395" x2="705" y2="410"/>
+<line x1="935" y1="395" x2="935" y2="410"/>
+</g>
+<!-- Peripherals -->
 <g fill="#fcd34d" stroke="#d97706" stroke-width="2.5">
 <rect x="100" y="410" width="170" height="64" rx="14"/>
 <rect x="380" y="410" width="170" height="64" rx="14"/>
@@ -642,9 +642,9 @@ But the tree also extends to non-CPU resources: **PCIe**, debug blocks, and othe
 <text x="705" y="448">IO Macro A</text>
 <text x="935" y="448">IO Macro B</text>
 </g>
-            <!-- Legend -->
+<!-- Legend -->
 <text x="550" y="540" text-anchor="middle" fill="var(--svg-text)" font-size="15" font-weight="700">PPUs drive transitions using head switches (PMOS), isolation cells, and reset sequencing.</text>
-            <!-- Legend items -->
+<!-- Legend items -->
 <g font-size="13" fill="var(--svg-text)">
 <rect x="320" y="560" width="20" height="14" rx="4" fill="#a7f3d0" stroke="#0f9f7c"/>
 <text x="346" y="572">= Cluster domain</text>
