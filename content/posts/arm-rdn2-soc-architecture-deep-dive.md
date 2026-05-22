@@ -85,82 +85,74 @@ At the top level, the RD-N2 SoC brings together a pretty muscular set of buildin
 *Inline SVG: RD-N2 SoC Block Diagram*
 <div class="svg-diagram">
 <svg viewBox="0 0 1100 640" role="img" aria-label="RD-N2 SoC block diagram">
-            <defs>
-              <linearGradient id="socGrad" x1="0" x2="1">
-                <stop offset="0%" stop-color="#5b7cfa" />
-                <stop offset="100%" stop-color="#20c997" />
-              </linearGradient>
-            </defs>
-            <rect x="10" y="10" width="1080" height="620" rx="24" fill="none" stroke="var(--svg-grid)" stroke-width="2" />
-            <rect x="250" y="180" width="600" height="240" rx="22" fill="url(#socGrad)" opacity="0.15" stroke="#5b7cfa" stroke-width="3"/>
-            <text x="550" y="214" text-anchor="middle" fill="var(--svg-text)" font-size="24" font-weight="800">CMN-700 Coherent Mesh</text>
-
-            <g fill="#8ea5ff" stroke="#3759d7" stroke-width="2">
-              <rect x="290" y="245" width="110" height="56" rx="12"/>
-              <rect x="420" y="245" width="110" height="56" rx="12"/>
-              <rect x="550" y="245" width="110" height="56" rx="12"/>
-              <rect x="680" y="245" width="110" height="56" rx="12"/>
-            </g>
-            <g fill="#b2f5ea" stroke="#0f9f7c" stroke-width="2">
-              <rect x="290" y="320" width="110" height="56" rx="12"/>
-              <rect x="420" y="320" width="110" height="56" rx="12"/>
-              <rect x="550" y="320" width="110" height="56" rx="12"/>
-              <rect x="680" y="320" width="110" height="56" rx="12"/>
-            </g>
-            <g fill="var(--svg-text)" font-size="16" font-weight="700">
-              <text x="345" y="278" text-anchor="middle">Cluster 0</text>
-              <text x="475" y="278" text-anchor="middle">Cluster 1</text>
-              <text x="605" y="278" text-anchor="middle">Cluster 2</text>
-              <text x="735" y="278" text-anchor="middle">Cluster 3</text>
-              <text x="345" y="352" text-anchor="middle">4× N2 cores</text>
-              <text x="475" y="352" text-anchor="middle">4× N2 cores</text>
-              <text x="605" y="352" text-anchor="middle">4× N2 cores</text>
-              <text x="735" y="352" text-anchor="middle">4× N2 cores</text>
-            </g>
-
-            <g>
-              <rect x="40" y="90" width="170" height="90" rx="16" fill="#ffd166" stroke="#c98900" stroke-width="2"/>
-              <text x="125" y="126" text-anchor="middle" fill="#422800" font-size="20" font-weight="800">SCP</text>
-              <text x="125" y="152" text-anchor="middle" fill="#422800" font-size="15">Cortex-M7</text>
-
-              <rect x="40" y="220" width="170" height="90" rx="16" fill="#ff9b9b" stroke="#d9485f" stroke-width="2"/>
-              <text x="125" y="255" text-anchor="middle" fill="#3f1111" font-size="20" font-weight="800">GIC-700</text>
-              <text x="125" y="279" text-anchor="middle" fill="#3f1111" font-size="15">Interrupt fabric</text>
-
-              <rect x="40" y="350" width="170" height="90" rx="16" fill="#a7f3d0" stroke="#0f9f7c" stroke-width="2"/>
-              <text x="125" y="385" text-anchor="middle" fill="#0a2b21" font-size="20" font-weight="800">MHU + SRAM</text>
-              <text x="125" y="409" text-anchor="middle" fill="#0a2b21" font-size="15">SCMI transport</text>
-            </g>
-
-            <g>
-              <rect x="890" y="95" width="160" height="90" rx="16" fill="#c4b5fd" stroke="#7c3aed" stroke-width="2"/>
-              <text x="970" y="130" text-anchor="middle" fill="#29124d" font-size="20" font-weight="800">SMMUv3</text>
-              <text x="970" y="154" text-anchor="middle" fill="#29124d" font-size="15">I/O translation</text>
-
-              <rect x="890" y="225" width="160" height="90" rx="16" fill="#fdba74" stroke="#ea580c" stroke-width="2"/>
-              <text x="970" y="260" text-anchor="middle" fill="#4a2207" font-size="20" font-weight="800">PCIe / IO</text>
-              <text x="970" y="284" text-anchor="middle" fill="#4a2207" font-size="15">RN-I / RN-D traffic</text>
-
-              <rect x="890" y="355" width="160" height="145" rx="16" fill="#93c5fd" stroke="#2563eb" stroke-width="2"/>
-              <text x="970" y="388" text-anchor="middle" fill="#10203b" font-size="20" font-weight="800">8 × TZC-400</text>
-              <text x="970" y="414" text-anchor="middle" fill="#10203b" font-size="15">Per DRAM channel</text>
-              <text x="970" y="438" text-anchor="middle" fill="#10203b" font-size="15">Protect Secure regions</text>
-              <text x="970" y="462" text-anchor="middle" fill="#10203b" font-size="15">Feeds memory system</text>
-            </g>
-
-            <g stroke="#5a6e8b" stroke-width="3" fill="none" marker-end="url(#arrowSoc)"></g>
-            <defs>
-              <marker id="arrowSoc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#5a6e8b"/>
-              </marker>
-            </defs>
-            <line x1="210" y1="135" x2="250" y2="210" stroke="#5a6e8b" stroke-width="3" marker-end="url(#arrowSoc)"/>
-            <line x1="210" y1="265" x2="250" y2="265" stroke="#5a6e8b" stroke-width="3" marker-end="url(#arrowSoc)"/>
-            <line x1="210" y1="395" x2="250" y2="350" stroke="#5a6e8b" stroke-width="3" marker-end="url(#arrowSoc)"/>
-            <line x1="850" y1="210" x2="890" y2="140" stroke="#5a6e8b" stroke-width="3" marker-end="url(#arrowSoc)"/>
-            <line x1="850" y1="270" x2="890" y2="270" stroke="#5a6e8b" stroke-width="3" marker-end="url(#arrowSoc)"/>
-            <line x1="850" y1="330" x2="890" y2="420" stroke="#5a6e8b" stroke-width="3" marker-end="url(#arrowSoc)"/>
-          </svg>
+<defs>
+<linearGradient id="socGrad" x1="0" x2="1">
+<stop offset="0%" stop-color="#5b7cfa" />
+<stop offset="100%" stop-color="#20c997" />
+</linearGradient>
+</defs>
+<rect x="10" y="10" width="1080" height="620" rx="24" fill="none" stroke="var(--svg-grid)" stroke-width="2" />
+<rect x="250" y="180" width="600" height="240" rx="22" fill="url(#socGrad)" opacity="0.15" stroke="#5b7cfa" stroke-width="3"/>
+<text x="550" y="214" text-anchor="middle" fill="var(--svg-text)" font-size="24" font-weight="800">CMN-700 Coherent Mesh</text>
+<g fill="#8ea5ff" stroke="#3759d7" stroke-width="2">
+<rect x="290" y="245" width="110" height="56" rx="12"/>
+<rect x="420" y="245" width="110" height="56" rx="12"/>
+<rect x="550" y="245" width="110" height="56" rx="12"/>
+<rect x="680" y="245" width="110" height="56" rx="12"/>
+</g>
+<g fill="#b2f5ea" stroke="#0f9f7c" stroke-width="2">
+<rect x="290" y="320" width="110" height="56" rx="12"/>
+<rect x="420" y="320" width="110" height="56" rx="12"/>
+<rect x="550" y="320" width="110" height="56" rx="12"/>
+<rect x="680" y="320" width="110" height="56" rx="12"/>
+</g>
+<g fill="var(--svg-text)" font-size="16" font-weight="700">
+<text x="345" y="278" text-anchor="middle">Cluster 0</text>
+<text x="475" y="278" text-anchor="middle">Cluster 1</text>
+<text x="605" y="278" text-anchor="middle">Cluster 2</text>
+<text x="735" y="278" text-anchor="middle">Cluster 3</text>
+<text x="345" y="352" text-anchor="middle">4× N2 cores</text>
+<text x="475" y="352" text-anchor="middle">4× N2 cores</text>
+<text x="605" y="352" text-anchor="middle">4× N2 cores</text>
+<text x="735" y="352" text-anchor="middle">4× N2 cores</text>
+</g>
+<g>
+<rect x="40" y="90" width="170" height="90" rx="16" fill="#ffd166" stroke="#c98900" stroke-width="2"/>
+<text x="125" y="126" text-anchor="middle" fill="#422800" font-size="20" font-weight="800">SCP</text>
+<text x="125" y="152" text-anchor="middle" fill="#422800" font-size="15">Cortex-M7</text>
+<rect x="40" y="220" width="170" height="90" rx="16" fill="#ff9b9b" stroke="#d9485f" stroke-width="2"/>
+<text x="125" y="255" text-anchor="middle" fill="#3f1111" font-size="20" font-weight="800">GIC-700</text>
+<text x="125" y="279" text-anchor="middle" fill="#3f1111" font-size="15">Interrupt fabric</text>
+<rect x="40" y="350" width="170" height="90" rx="16" fill="#a7f3d0" stroke="#0f9f7c" stroke-width="2"/>
+<text x="125" y="385" text-anchor="middle" fill="#0a2b21" font-size="20" font-weight="800">MHU + SRAM</text>
+<text x="125" y="409" text-anchor="middle" fill="#0a2b21" font-size="15">SCMI transport</text>
+</g>
+<g>
+<rect x="890" y="95" width="160" height="90" rx="16" fill="#c4b5fd" stroke="#7c3aed" stroke-width="2"/>
+<text x="970" y="130" text-anchor="middle" fill="#29124d" font-size="20" font-weight="800">SMMUv3</text>
+<text x="970" y="154" text-anchor="middle" fill="#29124d" font-size="15">I/O translation</text>
+<rect x="890" y="225" width="160" height="90" rx="16" fill="#fdba74" stroke="#ea580c" stroke-width="2"/>
+<text x="970" y="260" text-anchor="middle" fill="#4a2207" font-size="20" font-weight="800">PCIe / IO</text>
+<text x="970" y="284" text-anchor="middle" fill="#4a2207" font-size="15">RN-I / RN-D traffic</text>
+<rect x="890" y="355" width="160" height="145" rx="16" fill="#93c5fd" stroke="#2563eb" stroke-width="2"/>
+<text x="970" y="388" text-anchor="middle" fill="#10203b" font-size="20" font-weight="800">8 × TZC-400</text>
+<text x="970" y="414" text-anchor="middle" fill="#10203b" font-size="15">Per DRAM channel</text>
+<text x="970" y="438" text-anchor="middle" fill="#10203b" font-size="15">Protect Secure regions</text>
+<text x="970" y="462" text-anchor="middle" fill="#10203b" font-size="15">Feeds memory system</text>
+</g>
+<g stroke="#5a6e8b" stroke-width="3" fill="none" marker-end="url(#arrowSoc)"></g>
+<defs>
+<marker id="arrowSoc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="#5a6e8b"/>
+</marker>
+</defs>
+<line x1="210" y1="135" x2="250" y2="210" stroke="#5a6e8b" stroke-width="3" marker-end="url(#arrowSoc)"/>
+<line x1="210" y1="265" x2="250" y2="265" stroke="#5a6e8b" stroke-width="3" marker-end="url(#arrowSoc)"/>
+<line x1="210" y1="395" x2="250" y2="350" stroke="#5a6e8b" stroke-width="3" marker-end="url(#arrowSoc)"/>
+<line x1="850" y1="210" x2="890" y2="140" stroke="#5a6e8b" stroke-width="3" marker-end="url(#arrowSoc)"/>
+<line x1="850" y1="270" x2="890" y2="270" stroke="#5a6e8b" stroke-width="3" marker-end="url(#arrowSoc)"/>
+<line x1="850" y1="330" x2="890" y2="420" stroke="#5a6e8b" stroke-width="3" marker-end="url(#arrowSoc)"/>
+</svg>
 </div>
 
 The overall feel is this: the application processors do the heavy compute, the mesh keeps their memory view coherent, the SCP sets the rules of the house, and the rest of the platform makes sure data, power, interrupts, and security boundaries behave themselves.
@@ -204,50 +196,43 @@ The RD-N2 boot path is a staged handoff. Picture a relay team where every runner
 *Inline SVG: Boot Flow*
 <div class="svg-diagram">
 <svg viewBox="0 0 940 1080" role="img" aria-label="RD-N2 boot flow stages">
-            <defs>
-              <linearGradient id="bootGrad" x1="0" x2="1">
-                <stop offset="0%" stop-color="#5b7cfa" />
-                <stop offset="100%" stop-color="#34d399" />
-              </linearGradient>
-              <marker id="arrowBoot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
-                <path d="M0 0 L10 5 L0 10 z" fill="#7287a4"/>
-              </marker>
-            </defs>
-            <rect x="310" y="30" width="320" height="88" rx="18" fill="#ffd166" stroke="#c98900" stroke-width="2"/>
-            <text x="470" y="67" text-anchor="middle" fill="#4a2c00" font-size="24" font-weight="800">SCP ROM</text>
-            <text x="470" y="95" text-anchor="middle" fill="#4a2c00" font-size="14">Reset vector, tiny immutable first step</text>
-
-            <rect x="320" y="175" width="300" height="96" rx="18" fill="#a7f3d0" stroke="#0f9f7c" stroke-width="2"/>
-            <text x="470" y="212" text-anchor="middle" fill="#0b2f24" font-size="24" font-weight="800">SCP RAM Firmware</text>
-            <text x="470" y="240" text-anchor="middle" fill="#0b2f24" font-size="16">Clock, power, interconnect, SCMI, policy</text>
-
-            <rect x="290" y="328" width="360" height="96" rx="18" fill="#c4b5fd" stroke="#7c3aed" stroke-width="2"/>
-            <text x="470" y="365" text-anchor="middle" fill="#2d1752" font-size="24" font-weight="800">Power Up AP Complex</text>
-            <text x="470" y="393" text-anchor="middle" fill="#2d1752" font-size="16">Release reset, set boot address, enable clocks</text>
-
-            <rect x="340" y="481" width="260" height="84" rx="18" fill="#93c5fd" stroke="#2563eb" stroke-width="2"/>
-            <text x="470" y="517" text-anchor="middle" fill="#10203b" font-size="24" font-weight="800">TF-A BL1</text>
-            <text x="470" y="542" text-anchor="middle" fill="#10203b" font-size="16">Trusted minimal first-stage loader</text>
-
-            <rect x="340" y="622" width="260" height="84" rx="18" fill="#93c5fd" stroke="#2563eb" stroke-width="2"/>
-            <text x="470" y="658" text-anchor="middle" fill="#10203b" font-size="24" font-weight="800">TF-A BL2</text>
-            <text x="470" y="683" text-anchor="middle" fill="#10203b" font-size="16">Loads later firmware images</text>
-
-            <rect x="230" y="763" width="480" height="96" rx="18" fill="#fdba74" stroke="#ea580c" stroke-width="2"/>
-            <text x="470" y="800" text-anchor="middle" fill="#4a2207" font-size="24" font-weight="800">BL31 + StandaloneMM</text>
-            <text x="470" y="828" text-anchor="middle" fill="#4a2207" font-size="16">EL3 runtime firmware + secure management mode</text>
-
-            <rect x="280" y="916" width="380" height="84" rx="18" fill="url(#bootGrad)" opacity="0.85" stroke="#0f766e" stroke-width="2"/>
-            <text x="470" y="952" text-anchor="middle" fill="#052420" font-size="24" font-weight="800">UEFI → GRUB → Linux</text>
-            <text x="470" y="977" text-anchor="middle" fill="#052420" font-size="14">OS handoff, kernel boot, normal life begins</text>
-
-            <line x1="470" y1="118" x2="470" y2="175" stroke="#7287a4" stroke-width="4" marker-end="url(#arrowBoot)"/>
-            <line x1="470" y1="271" x2="470" y2="328" stroke="#7287a4" stroke-width="4" marker-end="url(#arrowBoot)"/>
-            <line x1="470" y1="424" x2="470" y2="481" stroke="#7287a4" stroke-width="4" marker-end="url(#arrowBoot)"/>
-            <line x1="470" y1="565" x2="470" y2="622" stroke="#7287a4" stroke-width="4" marker-end="url(#arrowBoot)"/>
-            <line x1="470" y1="706" x2="470" y2="763" stroke="#7287a4" stroke-width="4" marker-end="url(#arrowBoot)"/>
-            <line x1="470" y1="859" x2="470" y2="916" stroke="#7287a4" stroke-width="4" marker-end="url(#arrowBoot)"/>
-          </svg>
+<defs>
+<linearGradient id="bootGrad" x1="0" x2="1">
+<stop offset="0%" stop-color="#5b7cfa" />
+<stop offset="100%" stop-color="#34d399" />
+</linearGradient>
+<marker id="arrowBoot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+<path d="M0 0 L10 5 L0 10 z" fill="#7287a4"/>
+</marker>
+</defs>
+<rect x="310" y="30" width="320" height="88" rx="18" fill="#ffd166" stroke="#c98900" stroke-width="2"/>
+<text x="470" y="67" text-anchor="middle" fill="#4a2c00" font-size="24" font-weight="800">SCP ROM</text>
+<text x="470" y="95" text-anchor="middle" fill="#4a2c00" font-size="14">Reset vector, tiny immutable first step</text>
+<rect x="320" y="175" width="300" height="96" rx="18" fill="#a7f3d0" stroke="#0f9f7c" stroke-width="2"/>
+<text x="470" y="212" text-anchor="middle" fill="#0b2f24" font-size="24" font-weight="800">SCP RAM Firmware</text>
+<text x="470" y="240" text-anchor="middle" fill="#0b2f24" font-size="16">Clock, power, interconnect, SCMI, policy</text>
+<rect x="290" y="328" width="360" height="96" rx="18" fill="#c4b5fd" stroke="#7c3aed" stroke-width="2"/>
+<text x="470" y="365" text-anchor="middle" fill="#2d1752" font-size="24" font-weight="800">Power Up AP Complex</text>
+<text x="470" y="393" text-anchor="middle" fill="#2d1752" font-size="16">Release reset, set boot address, enable clocks</text>
+<rect x="340" y="481" width="260" height="84" rx="18" fill="#93c5fd" stroke="#2563eb" stroke-width="2"/>
+<text x="470" y="517" text-anchor="middle" fill="#10203b" font-size="24" font-weight="800">TF-A BL1</text>
+<text x="470" y="542" text-anchor="middle" fill="#10203b" font-size="16">Trusted minimal first-stage loader</text>
+<rect x="340" y="622" width="260" height="84" rx="18" fill="#93c5fd" stroke="#2563eb" stroke-width="2"/>
+<text x="470" y="658" text-anchor="middle" fill="#10203b" font-size="24" font-weight="800">TF-A BL2</text>
+<text x="470" y="683" text-anchor="middle" fill="#10203b" font-size="16">Loads later firmware images</text>
+<rect x="230" y="763" width="480" height="96" rx="18" fill="#fdba74" stroke="#ea580c" stroke-width="2"/>
+<text x="470" y="800" text-anchor="middle" fill="#4a2207" font-size="24" font-weight="800">BL31 + StandaloneMM</text>
+<text x="470" y="828" text-anchor="middle" fill="#4a2207" font-size="16">EL3 runtime firmware + secure management mode</text>
+<rect x="280" y="916" width="380" height="84" rx="18" fill="url(#bootGrad)" opacity="0.85" stroke="#0f766e" stroke-width="2"/>
+<text x="470" y="952" text-anchor="middle" fill="#052420" font-size="24" font-weight="800">UEFI → GRUB → Linux</text>
+<text x="470" y="977" text-anchor="middle" fill="#052420" font-size="14">OS handoff, kernel boot, normal life begins</text>
+<line x1="470" y1="118" x2="470" y2="175" stroke="#7287a4" stroke-width="4" marker-end="url(#arrowBoot)"/>
+<line x1="470" y1="271" x2="470" y2="328" stroke="#7287a4" stroke-width="4" marker-end="url(#arrowBoot)"/>
+<line x1="470" y1="424" x2="470" y2="481" stroke="#7287a4" stroke-width="4" marker-end="url(#arrowBoot)"/>
+<line x1="470" y1="565" x2="470" y2="622" stroke="#7287a4" stroke-width="4" marker-end="url(#arrowBoot)"/>
+<line x1="470" y1="706" x2="470" y2="763" stroke="#7287a4" stroke-width="4" marker-end="url(#arrowBoot)"/>
+<line x1="470" y1="859" x2="470" y2="916" stroke="#7287a4" stroke-width="4" marker-end="url(#arrowBoot)"/>
+</svg>
 </div>
 
 ### SCP ROM
@@ -293,50 +278,50 @@ If the CPUs are the office workers and memory is the filing system, then **CMN-7
 *Inline SVG: CMN-700 Mesh Topology*
 <div class="svg-diagram">
 <svg viewBox="0 0 1080 720" role="img" aria-label="CMN-700 mesh topology with node types">
-            <defs>
-              <marker id="arrowMesh" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto">
-                <path d="M0 0 L10 5 L0 10 z" fill="#70839f"/>
-              </marker>
-            </defs>
-            <rect x="40" y="40" width="1000" height="600" rx="26" fill="none" stroke="var(--svg-grid)" stroke-width="2"/>
-            <g stroke="#3c4f6d" stroke-width="4">
-              <line x1="190" y1="150" x2="890" y2="150"/>
-              <line x1="190" y1="300" x2="890" y2="300"/>
-              <line x1="190" y1="450" x2="890" y2="450"/>
-              <line x1="190" y1="600" x2="890" y2="600"/>
-              <line x1="190" y1="150" x2="190" y2="600"/>
-              <line x1="423" y1="150" x2="423" y2="600"/>
-              <line x1="656" y1="150" x2="656" y2="600"/>
-              <line x1="890" y1="150" x2="890" y2="600"/>
-            </g>
-            <g font-size="18" font-weight="800" text-anchor="middle">
-              <g>
-                <circle cx="190" cy="150" r="38" fill="#8ea5ff" stroke="#3457d5" stroke-width="3"/><text x="190" y="157" fill="#13233b">RN-F</text>
-                <circle cx="423" cy="150" r="38" fill="#8ea5ff" stroke="#3457d5" stroke-width="3"/><text x="423" y="157" fill="#13233b">RN-F</text>
-                <circle cx="656" cy="150" r="38" fill="#8ea5ff" stroke="#3457d5" stroke-width="3"/><text x="656" y="157" fill="#13233b">RN-F</text>
-                <circle cx="890" cy="150" r="38" fill="#8ea5ff" stroke="#3457d5" stroke-width="3"/><text x="890" y="157" fill="#13233b">RN-F</text>
-              </g>
-              <g>
-                <circle cx="190" cy="300" r="38" fill="#b2f5ea" stroke="#0f9f7c" stroke-width="3"/><text x="190" y="307" fill="#0b2f24">HN-F</text>
-                <circle cx="423" cy="300" r="38" fill="#b2f5ea" stroke="#0f9f7c" stroke-width="3"/><text x="423" y="307" fill="#0b2f24">HN-F</text>
-                <circle cx="656" cy="300" r="38" fill="#b2f5ea" stroke="#0f9f7c" stroke-width="3"/><text x="656" y="307" fill="#0b2f24">HN-F</text>
-                <circle cx="890" cy="300" r="38" fill="#b2f5ea" stroke="#0f9f7c" stroke-width="3"/><text x="890" y="307" fill="#0b2f24">HN-F</text>
-              </g>
-              <g>
-                <circle cx="190" cy="450" r="38" fill="#fcd34d" stroke="#d97706" stroke-width="3"/><text x="190" y="457" fill="#4b3200">SN-F</text>
-                <circle cx="423" cy="450" r="38" fill="#fcd34d" stroke="#d97706" stroke-width="3"/><text x="423" y="457" fill="#4b3200">SN-F</text>
-                <circle cx="656" cy="450" r="38" fill="#fcd34d" stroke="#d97706" stroke-width="3"/><text x="656" y="457" fill="#4b3200">RN-I</text>
-                <circle cx="890" cy="450" r="38" fill="#fda4af" stroke="#db2777" stroke-width="3"/><text x="890" y="457" fill="#4a1028">RN-D</text>
-              </g>
-              <g>
-                <circle cx="190" cy="600" r="38" fill="#fcd34d" stroke="#d97706" stroke-width="3"/><text x="190" y="607" fill="#4b3200">SN-F</text>
-                <circle cx="423" cy="600" r="38" fill="#fcd34d" stroke="#d97706" stroke-width="3"/><text x="423" y="607" fill="#4b3200">SN-F</text>
-                <circle cx="656" cy="600" r="38" fill="#93c5fd" stroke="#2563eb" stroke-width="3"/><text x="656" y="607" fill="#10203b">Cfg</text>
-                <circle cx="890" cy="600" r="38" fill="#c4b5fd" stroke="#7c3aed" stroke-width="3"/><text x="890" y="607" fill="#2d1752">Dbg</text>
-              </g>
-            </g>
-            <text x="540" y="680" text-anchor="middle" fill="var(--svg-text)" font-size="16" font-weight="700">RN-F = Fully Coherent Request Node • HN-F = Home Node + Snoop Filter • SN-F = Slave/Memory • RN-I = Coherent IO • RN-D = Non-coherent IO</text>
-          </svg>
+<defs>
+<marker id="arrowMesh" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+<path d="M0 0 L10 5 L0 10 z" fill="#70839f"/>
+</marker>
+</defs>
+<rect x="40" y="40" width="1000" height="600" rx="26" fill="none" stroke="var(--svg-grid)" stroke-width="2"/>
+<g stroke="#3c4f6d" stroke-width="4">
+<line x1="190" y1="150" x2="890" y2="150"/>
+<line x1="190" y1="300" x2="890" y2="300"/>
+<line x1="190" y1="450" x2="890" y2="450"/>
+<line x1="190" y1="600" x2="890" y2="600"/>
+<line x1="190" y1="150" x2="190" y2="600"/>
+<line x1="423" y1="150" x2="423" y2="600"/>
+<line x1="656" y1="150" x2="656" y2="600"/>
+<line x1="890" y1="150" x2="890" y2="600"/>
+</g>
+<g font-size="18" font-weight="800" text-anchor="middle">
+<g>
+<circle cx="190" cy="150" r="38" fill="#8ea5ff" stroke="#3457d5" stroke-width="3"/><text x="190" y="157" fill="#13233b">RN-F</text>
+<circle cx="423" cy="150" r="38" fill="#8ea5ff" stroke="#3457d5" stroke-width="3"/><text x="423" y="157" fill="#13233b">RN-F</text>
+<circle cx="656" cy="150" r="38" fill="#8ea5ff" stroke="#3457d5" stroke-width="3"/><text x="656" y="157" fill="#13233b">RN-F</text>
+<circle cx="890" cy="150" r="38" fill="#8ea5ff" stroke="#3457d5" stroke-width="3"/><text x="890" y="157" fill="#13233b">RN-F</text>
+</g>
+<g>
+<circle cx="190" cy="300" r="38" fill="#b2f5ea" stroke="#0f9f7c" stroke-width="3"/><text x="190" y="307" fill="#0b2f24">HN-F</text>
+<circle cx="423" cy="300" r="38" fill="#b2f5ea" stroke="#0f9f7c" stroke-width="3"/><text x="423" y="307" fill="#0b2f24">HN-F</text>
+<circle cx="656" cy="300" r="38" fill="#b2f5ea" stroke="#0f9f7c" stroke-width="3"/><text x="656" y="307" fill="#0b2f24">HN-F</text>
+<circle cx="890" cy="300" r="38" fill="#b2f5ea" stroke="#0f9f7c" stroke-width="3"/><text x="890" y="307" fill="#0b2f24">HN-F</text>
+</g>
+<g>
+<circle cx="190" cy="450" r="38" fill="#fcd34d" stroke="#d97706" stroke-width="3"/><text x="190" y="457" fill="#4b3200">SN-F</text>
+<circle cx="423" cy="450" r="38" fill="#fcd34d" stroke="#d97706" stroke-width="3"/><text x="423" y="457" fill="#4b3200">SN-F</text>
+<circle cx="656" cy="450" r="38" fill="#fcd34d" stroke="#d97706" stroke-width="3"/><text x="656" y="457" fill="#4b3200">RN-I</text>
+<circle cx="890" cy="450" r="38" fill="#fda4af" stroke="#db2777" stroke-width="3"/><text x="890" y="457" fill="#4a1028">RN-D</text>
+</g>
+<g>
+<circle cx="190" cy="600" r="38" fill="#fcd34d" stroke="#d97706" stroke-width="3"/><text x="190" y="607" fill="#4b3200">SN-F</text>
+<circle cx="423" cy="600" r="38" fill="#fcd34d" stroke="#d97706" stroke-width="3"/><text x="423" y="607" fill="#4b3200">SN-F</text>
+<circle cx="656" cy="600" r="38" fill="#93c5fd" stroke="#2563eb" stroke-width="3"/><text x="656" y="607" fill="#10203b">Cfg</text>
+<circle cx="890" cy="600" r="38" fill="#c4b5fd" stroke="#7c3aed" stroke-width="3"/><text x="890" y="607" fill="#2d1752">Dbg</text>
+</g>
+</g>
+<text x="540" y="680" text-anchor="middle" fill="var(--svg-text)" font-size="16" font-weight="700">RN-F = Fully Coherent Request Node • HN-F = Home Node + Snoop Filter • SN-F = Slave/Memory • RN-I = Coherent IO • RN-D = Non-coherent IO</text>
+</svg>
 </div>
 
 ### Key node types
@@ -367,26 +352,22 @@ RD-N2 uses multiple interconnect protocols because not all traffic deserves a Fo
 *Inline SVG: Bus Hierarchy from Simple Control to Coherent Fabric*
 <div class="svg-diagram">
 <svg viewBox="0 0 1080 560" role="img" aria-label="Bus hierarchy diagram APB AHB AXI CHI">
-            <rect x="70" y="60" width="940" height="80" rx="18" fill="#fde68a" stroke="#ca8a04" stroke-width="2"/>
-            <text x="540" y="102" text-anchor="middle" fill="#4b3200" font-size="28" font-weight="800">APB</text>
-            <text x="540" y="128" text-anchor="middle" fill="#4b3200" font-size="15">Low-speed config • simple handshake • 32-bit • no burst</text>
-
-            <rect x="120" y="180" width="840" height="80" rx="18" fill="#bfdbfe" stroke="#2563eb" stroke-width="2"/>
-            <text x="540" y="222" text-anchor="middle" fill="#10203b" font-size="28" font-weight="800">AHB</text>
-            <text x="540" y="248" text-anchor="middle" fill="#10203b" font-size="15">SCP-local and medium-complexity paths • supports bursts • pipelined</text>
-
-            <rect x="170" y="300" width="740" height="88" rx="18" fill="#a7f3d0" stroke="#0f9f7c" stroke-width="2"/>
-            <text x="540" y="344" text-anchor="middle" fill="#0b2f24" font-size="28" font-weight="800">AXI</text>
-            <text x="540" y="370" text-anchor="middle" fill="#0b2f24" font-size="15">High-bandwidth data movement • DMA/peripherals • multiple outstanding txns</text>
-
-            <rect x="220" y="430" width="640" height="92" rx="18" fill="#ddd6fe" stroke="#7c3aed" stroke-width="2"/>
-            <text x="540" y="474" text-anchor="middle" fill="#2d1752" font-size="28" font-weight="800">CHI</text>
-            <text x="540" y="500" text-anchor="middle" fill="#2d1752" font-size="15">High-performance coherent interconnect • flit-based • cache-state aware</text>
-
-            <line x1="540" y1="140" x2="540" y2="180" stroke="#60748e" stroke-width="4"/>
-            <line x1="540" y1="260" x2="540" y2="300" stroke="#60748e" stroke-width="4"/>
-            <line x1="540" y1="388" x2="540" y2="430" stroke="#60748e" stroke-width="4"/>
-          </svg>
+<rect x="70" y="60" width="940" height="80" rx="18" fill="#fde68a" stroke="#ca8a04" stroke-width="2"/>
+<text x="540" y="102" text-anchor="middle" fill="#4b3200" font-size="28" font-weight="800">APB</text>
+<text x="540" y="128" text-anchor="middle" fill="#4b3200" font-size="15">Low-speed config • simple handshake • 32-bit • no burst</text>
+<rect x="120" y="180" width="840" height="80" rx="18" fill="#bfdbfe" stroke="#2563eb" stroke-width="2"/>
+<text x="540" y="222" text-anchor="middle" fill="#10203b" font-size="28" font-weight="800">AHB</text>
+<text x="540" y="248" text-anchor="middle" fill="#10203b" font-size="15">SCP-local and medium-complexity paths • supports bursts • pipelined</text>
+<rect x="170" y="300" width="740" height="88" rx="18" fill="#a7f3d0" stroke="#0f9f7c" stroke-width="2"/>
+<text x="540" y="344" text-anchor="middle" fill="#0b2f24" font-size="28" font-weight="800">AXI</text>
+<text x="540" y="370" text-anchor="middle" fill="#0b2f24" font-size="15">High-bandwidth data movement • DMA/peripherals • multiple outstanding txns</text>
+<rect x="220" y="430" width="640" height="92" rx="18" fill="#ddd6fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="540" y="474" text-anchor="middle" fill="#2d1752" font-size="28" font-weight="800">CHI</text>
+<text x="540" y="500" text-anchor="middle" fill="#2d1752" font-size="15">High-performance coherent interconnect • flit-based • cache-state aware</text>
+<line x1="540" y1="140" x2="540" y2="180" stroke="#60748e" stroke-width="4"/>
+<line x1="540" y1="260" x2="540" y2="300" stroke="#60748e" stroke-width="4"/>
+<line x1="540" y1="388" x2="540" y2="430" stroke="#60748e" stroke-width="4"/>
+</svg>
 </div>
 
 | Bus | Best used for | Key traits |
@@ -439,37 +420,34 @@ The MHU is used so one side of the system can say to the other side, “Hey, wak
 *Inline SVG: MHU Doorbell + Shared Memory Mechanism*
 <div class="svg-diagram">
 <svg viewBox="0 0 1100 560" role="img" aria-label="MHU and shared memory signaling">
-            <defs>
-              <marker id="arrowMhu" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                <path d="M0 0 L10 5 L0 10 z" fill="#667b97"/>
-              </marker>
-            </defs>
-            <rect x="60" y="120" width="280" height="220" rx="20" fill="#bfdbfe" stroke="#2563eb" stroke-width="3"/>
-            <text x="200" y="170" text-anchor="middle" fill="#10203b" font-size="24" font-weight="800">Application Processors</text>
-            <text x="200" y="210" text-anchor="middle" fill="#10203b" font-size="17">Write SCMI payload</text>
-            <text x="200" y="236" text-anchor="middle" fill="#10203b" font-size="17">into shared SRAM</text>
-            <text x="200" y="286" text-anchor="middle" fill="#10203b" font-size="16">Then poke MHU SET register</text>
-
-            <rect x="380" y="90" width="340" height="300" rx="22" fill="#a7f3d0" stroke="#0f9f7c" stroke-width="3"/>
-            <text x="550" y="136" text-anchor="middle" fill="#0b2f24" font-size="22" font-weight="800">Shared Memory + MHU</text>
-            <rect x="420" y="170" width="260" height="82" rx="14" fill="#ecfeff" stroke="#0891b2" stroke-width="2"/>
-            <text x="550" y="205" text-anchor="middle" fill="#083344" font-size="22" font-weight="800">Dual-ported SRAM</text>
-            <text x="550" y="232" text-anchor="middle" fill="#083344" font-size="16">Payload lives here</text>
-            <rect x="420" y="280" width="260" height="72" rx="14" fill="#fde68a" stroke="#ca8a04" stroke-width="2"/>
-            <text x="550" y="312" text-anchor="middle" fill="#4b3200" font-size="20" font-weight="800">MHU doorbell bit</text>
-            <text x="550" y="336" text-anchor="middle" fill="#4b3200" font-size="16">SET → flip-flop → IRQ</text>
-
-            <rect x="810" y="120" width="230" height="220" rx="20" fill="#fbcfe8" stroke="#db2777" stroke-width="3"/>
-            <text x="925" y="170" text-anchor="middle" fill="#4a1028" font-size="28" font-weight="800">SCP</text>
-            <text x="925" y="210" text-anchor="middle" fill="#4a1028" font-size="17">Interrupt arrives</text>
-            <text x="925" y="236" text-anchor="middle" fill="#4a1028" font-size="17">Reads message from SRAM</text>
-            <text x="925" y="286" text-anchor="middle" fill="#4a1028" font-size="17">Processes SCMI command</text>
-
-            <line x1="290" y1="230" x2="420" y2="230" stroke="#667b97" stroke-width="4" marker-end="url(#arrowMhu)"/>
-            <line x1="680" y1="316" x2="810" y2="316" stroke="#667b97" stroke-width="4" marker-end="url(#arrowMhu)"/>
-            <line x1="810" y1="270" x2="680" y2="270" stroke="#667b97" stroke-width="4" marker-end="url(#arrowMhu)"/>
-            <text x="550" y="430" text-anchor="middle" fill="var(--svg-text)" font-size="18" font-weight="700">Important: MHU signals that data exists. The data itself is in shared memory.</text>
-          </svg>
+<defs>
+<marker id="arrowMhu" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M0 0 L10 5 L0 10 z" fill="#667b97"/>
+</marker>
+</defs>
+<rect x="60" y="120" width="280" height="220" rx="20" fill="#bfdbfe" stroke="#2563eb" stroke-width="3"/>
+<text x="200" y="170" text-anchor="middle" fill="#10203b" font-size="24" font-weight="800">Application Processors</text>
+<text x="200" y="210" text-anchor="middle" fill="#10203b" font-size="17">Write SCMI payload</text>
+<text x="200" y="236" text-anchor="middle" fill="#10203b" font-size="17">into shared SRAM</text>
+<text x="200" y="286" text-anchor="middle" fill="#10203b" font-size="16">Then poke MHU SET register</text>
+<rect x="380" y="90" width="340" height="300" rx="22" fill="#a7f3d0" stroke="#0f9f7c" stroke-width="3"/>
+<text x="550" y="136" text-anchor="middle" fill="#0b2f24" font-size="22" font-weight="800">Shared Memory + MHU</text>
+<rect x="420" y="170" width="260" height="82" rx="14" fill="#ecfeff" stroke="#0891b2" stroke-width="2"/>
+<text x="550" y="205" text-anchor="middle" fill="#083344" font-size="22" font-weight="800">Dual-ported SRAM</text>
+<text x="550" y="232" text-anchor="middle" fill="#083344" font-size="16">Payload lives here</text>
+<rect x="420" y="280" width="260" height="72" rx="14" fill="#fde68a" stroke="#ca8a04" stroke-width="2"/>
+<text x="550" y="312" text-anchor="middle" fill="#4b3200" font-size="20" font-weight="800">MHU doorbell bit</text>
+<text x="550" y="336" text-anchor="middle" fill="#4b3200" font-size="16">SET → flip-flop → IRQ</text>
+<rect x="810" y="120" width="230" height="220" rx="20" fill="#fbcfe8" stroke="#db2777" stroke-width="3"/>
+<text x="925" y="170" text-anchor="middle" fill="#4a1028" font-size="28" font-weight="800">SCP</text>
+<text x="925" y="210" text-anchor="middle" fill="#4a1028" font-size="17">Interrupt arrives</text>
+<text x="925" y="236" text-anchor="middle" fill="#4a1028" font-size="17">Reads message from SRAM</text>
+<text x="925" y="286" text-anchor="middle" fill="#4a1028" font-size="17">Processes SCMI command</text>
+<line x1="290" y1="230" x2="420" y2="230" stroke="#667b97" stroke-width="4" marker-end="url(#arrowMhu)"/>
+<line x1="680" y1="316" x2="810" y2="316" stroke="#667b97" stroke-width="4" marker-end="url(#arrowMhu)"/>
+<line x1="810" y1="270" x2="680" y2="270" stroke="#667b97" stroke-width="4" marker-end="url(#arrowMhu)"/>
+<text x="550" y="430" text-anchor="middle" fill="var(--svg-text)" font-size="18" font-weight="700">Important: MHU signals that data exists. The data itself is in shared memory.</text>
+</svg>
 </div>
 
 ### How the mechanism works
@@ -562,121 +540,108 @@ But the tree also extends to non-CPU resources: **PCIe**, debug blocks, and othe
 *Inline SVG: Power Domain Tree*
 <div class="svg-diagram">
 <svg viewBox="0 0 1100 700" role="img" aria-label="Power domain tree for RD-N2">
-            <defs>
-              <marker id="arrowPower" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
-                <path d="M0 0 L10 5 L0 10 z" fill="#667b97"/>
-              </marker>
-            </defs>
-
+<defs>
+<marker id="arrowPower" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+<path d="M0 0 L10 5 L0 10 z" fill="#667b97"/>
+</marker>
+</defs>
             <!-- SYSTOP -->
-            <rect x="420" y="30" width="260" height="64" rx="16" fill="#5b7cfa" opacity="0.9" stroke="#284bcb" stroke-width="3"/>
-            <text x="550" y="70" text-anchor="middle" fill="#ffffff" font-size="26" font-weight="800">SYSTOP</text>
-
+<rect x="420" y="30" width="260" height="64" rx="16" fill="#5b7cfa" opacity="0.9" stroke="#284bcb" stroke-width="3"/>
+<text x="550" y="70" text-anchor="middle" fill="#ffffff" font-size="26" font-weight="800">SYSTOP</text>
             <!-- Arrows from SYSTOP to Clusters -->
-            <g stroke="#667b97" stroke-width="3" fill="none" marker-end="url(#arrowPower)">
-              <line x1="460" y1="94" x2="195" y2="155"/>
-              <line x1="500" y1="94" x2="425" y2="155"/>
-              <line x1="600" y1="94" x2="675" y2="155"/>
-              <line x1="640" y1="94" x2="905" y2="155"/>
-            </g>
-
+<g stroke="#667b97" stroke-width="3" fill="none" marker-end="url(#arrowPower)">
+<line x1="460" y1="94" x2="195" y2="155"/>
+<line x1="500" y1="94" x2="425" y2="155"/>
+<line x1="600" y1="94" x2="675" y2="155"/>
+<line x1="640" y1="94" x2="905" y2="155"/>
+</g>
             <!-- Clusters -->
-            <g fill="#a7f3d0" stroke="#0f9f7c" stroke-width="2.5">
-              <rect x="100" y="155" width="190" height="60" rx="14"/>
-              <rect x="330" y="155" width="190" height="60" rx="14"/>
-              <rect x="580" y="155" width="190" height="60" rx="14"/>
-              <rect x="810" y="155" width="190" height="60" rx="14"/>
-            </g>
-            <g fill="#0b2f24" font-size="20" font-weight="800" text-anchor="middle">
-              <text x="195" y="192">Cluster 0</text>
-              <text x="425" y="192">Cluster 1</text>
-              <text x="675" y="192">Cluster 2</text>
-              <text x="905" y="192">Cluster 3</text>
-            </g>
-
+<g fill="#a7f3d0" stroke="#0f9f7c" stroke-width="2.5">
+<rect x="100" y="155" width="190" height="60" rx="14"/>
+<rect x="330" y="155" width="190" height="60" rx="14"/>
+<rect x="580" y="155" width="190" height="60" rx="14"/>
+<rect x="810" y="155" width="190" height="60" rx="14"/>
+</g>
+<g fill="#0b2f24" font-size="20" font-weight="800" text-anchor="middle">
+<text x="195" y="192">Cluster 0</text>
+<text x="425" y="192">Cluster 1</text>
+<text x="675" y="192">Cluster 2</text>
+<text x="905" y="192">Cluster 3</text>
+</g>
             <!-- Arrows from Clusters to Cores -->
-            <g stroke="#2563eb" stroke-width="2" fill="none" marker-end="url(#arrowPower)">
-              <line x1="195" y1="215" x2="195" y2="270"/>
-              <line x1="425" y1="215" x2="425" y2="270"/>
-              <line x1="675" y1="215" x2="675" y2="270"/>
-              <line x1="905" y1="215" x2="905" y2="270"/>
-            </g>
-
+<g stroke="#2563eb" stroke-width="2" fill="none" marker-end="url(#arrowPower)">
+<line x1="195" y1="215" x2="195" y2="270"/>
+<line x1="425" y1="215" x2="425" y2="270"/>
+<line x1="675" y1="215" x2="675" y2="270"/>
+<line x1="905" y1="215" x2="905" y2="270"/>
+</g>
             <!-- Cores row -->
-            <g fill="#bfdbfe" stroke="#2563eb" stroke-width="2">
+<g fill="#bfdbfe" stroke="#2563eb" stroke-width="2">
               <!-- Cluster 0 cores -->
-              <rect x="110" y="270" width="42" height="50" rx="8"/>
-              <rect x="157" y="270" width="42" height="50" rx="8"/>
-              <rect x="204" y="270" width="42" height="50" rx="8"/>
-              <rect x="251" y="270" width="42" height="50" rx="8"/>
+<rect x="110" y="270" width="42" height="50" rx="8"/>
+<rect x="157" y="270" width="42" height="50" rx="8"/>
+<rect x="204" y="270" width="42" height="50" rx="8"/>
+<rect x="251" y="270" width="42" height="50" rx="8"/>
               <!-- Cluster 1 cores -->
-              <rect x="340" y="270" width="42" height="50" rx="8"/>
-              <rect x="387" y="270" width="42" height="50" rx="8"/>
-              <rect x="434" y="270" width="42" height="50" rx="8"/>
-              <rect x="481" y="270" width="42" height="50" rx="8"/>
+<rect x="340" y="270" width="42" height="50" rx="8"/>
+<rect x="387" y="270" width="42" height="50" rx="8"/>
+<rect x="434" y="270" width="42" height="50" rx="8"/>
+<rect x="481" y="270" width="42" height="50" rx="8"/>
               <!-- Cluster 2 cores -->
-              <rect x="590" y="270" width="42" height="50" rx="8"/>
-              <rect x="637" y="270" width="42" height="50" rx="8"/>
-              <rect x="684" y="270" width="42" height="50" rx="8"/>
-              <rect x="731" y="270" width="42" height="50" rx="8"/>
+<rect x="590" y="270" width="42" height="50" rx="8"/>
+<rect x="637" y="270" width="42" height="50" rx="8"/>
+<rect x="684" y="270" width="42" height="50" rx="8"/>
+<rect x="731" y="270" width="42" height="50" rx="8"/>
               <!-- Cluster 3 cores -->
-              <rect x="820" y="270" width="42" height="50" rx="8"/>
-              <rect x="867" y="270" width="42" height="50" rx="8"/>
-              <rect x="914" y="270" width="42" height="50" rx="8"/>
-              <rect x="961" y="270" width="42" height="50" rx="8"/>
-            </g>
-            <g fill="#10203b" font-size="12" font-weight="700" text-anchor="middle">
-              <text x="131" y="300">C0</text><text x="178" y="300">C1</text><text x="225" y="300">C2</text><text x="272" y="300">C3</text>
-              <text x="361" y="300">C4</text><text x="408" y="300">C5</text><text x="455" y="300">C6</text><text x="502" y="300">C7</text>
-              <text x="611" y="300">C8</text><text x="658" y="300">C9</text><text x="705" y="300">C10</text><text x="752" y="300">C11</text>
-              <text x="841" y="300">C12</text><text x="888" y="300">C13</text><text x="935" y="300">C14</text><text x="982" y="300">C15</text>
-            </g>
-
+<rect x="820" y="270" width="42" height="50" rx="8"/>
+<rect x="867" y="270" width="42" height="50" rx="8"/>
+<rect x="914" y="270" width="42" height="50" rx="8"/>
+<rect x="961" y="270" width="42" height="50" rx="8"/>
+</g>
+<g fill="#10203b" font-size="12" font-weight="700" text-anchor="middle">
+<text x="131" y="300">C0</text><text x="178" y="300">C1</text><text x="225" y="300">C2</text><text x="272" y="300">C3</text>
+<text x="361" y="300">C4</text><text x="408" y="300">C5</text><text x="455" y="300">C6</text><text x="502" y="300">C7</text>
+<text x="611" y="300">C8</text><text x="658" y="300">C9</text><text x="705" y="300">C10</text><text x="752" y="300">C11</text>
+<text x="841" y="300">C12</text><text x="888" y="300">C13</text><text x="935" y="300">C14</text><text x="982" y="300">C15</text>
+</g>
             <!-- Separator label -->
-            <text x="550" y="380" text-anchor="middle" fill="var(--svg-text)" font-size="16" font-weight="700" opacity="0.6">── Peripheral Power Domains ──</text>
-
+<text x="550" y="380" text-anchor="middle" fill="var(--svg-text)" font-size="16" font-weight="700" opacity="0.6">── Peripheral Power Domains ──</text>
             <!-- Arrows from SYSTOP to Peripherals (routed around cores) -->
-            <g stroke="#d97706" stroke-width="3" fill="none" marker-end="url(#arrowPower)">
-              <line x1="420" y1="70" x2="60" y2="70"/>
-              <line x1="60" y1="70" x2="60" y2="430"/>
-              <line x1="60" y1="430" x2="155" y2="430"/>
-
-              <line x1="500" y1="94" x2="470" y2="420"/>
-
-              <line x1="680" y1="70" x2="1050" y2="70"/>
-              <line x1="1050" y1="70" x2="1050" y2="430"/>
-              <line x1="1050" y1="430" x2="935" y2="430"/>
-
-              <line x1="600" y1="94" x2="700" y2="420"/>
-            </g>
-
+<g stroke="#d97706" stroke-width="3" fill="none" marker-end="url(#arrowPower)">
+<line x1="420" y1="70" x2="60" y2="70"/>
+<line x1="60" y1="70" x2="60" y2="430"/>
+<line x1="60" y1="430" x2="155" y2="430"/>
+<line x1="500" y1="94" x2="470" y2="420"/>
+<line x1="680" y1="70" x2="1050" y2="70"/>
+<line x1="1050" y1="70" x2="1050" y2="430"/>
+<line x1="1050" y1="430" x2="935" y2="430"/>
+<line x1="600" y1="94" x2="700" y2="420"/>
+</g>
             <!-- Peripherals -->
-            <g fill="#fcd34d" stroke="#d97706" stroke-width="2.5">
-              <rect x="100" y="410" width="170" height="64" rx="14"/>
-              <rect x="380" y="410" width="170" height="64" rx="14"/>
-              <rect x="620" y="410" width="170" height="64" rx="14"/>
-              <rect x="850" y="410" width="170" height="64" rx="14"/>
-            </g>
-            <g fill="#4b3200" font-size="18" font-weight="800" text-anchor="middle">
-              <text x="185" y="448">PCIe</text>
-              <text x="465" y="448">Debug</text>
-              <text x="705" y="448">IO Macro A</text>
-              <text x="935" y="448">IO Macro B</text>
-            </g>
-
+<g fill="#fcd34d" stroke="#d97706" stroke-width="2.5">
+<rect x="100" y="410" width="170" height="64" rx="14"/>
+<rect x="380" y="410" width="170" height="64" rx="14"/>
+<rect x="620" y="410" width="170" height="64" rx="14"/>
+<rect x="850" y="410" width="170" height="64" rx="14"/>
+</g>
+<g fill="#4b3200" font-size="18" font-weight="800" text-anchor="middle">
+<text x="185" y="448">PCIe</text>
+<text x="465" y="448">Debug</text>
+<text x="705" y="448">IO Macro A</text>
+<text x="935" y="448">IO Macro B</text>
+</g>
             <!-- Legend -->
-            <text x="550" y="540" text-anchor="middle" fill="var(--svg-text)" font-size="15" font-weight="700">PPUs drive transitions using head switches (PMOS), isolation cells, and reset sequencing.</text>
-
+<text x="550" y="540" text-anchor="middle" fill="var(--svg-text)" font-size="15" font-weight="700">PPUs drive transitions using head switches (PMOS), isolation cells, and reset sequencing.</text>
             <!-- Legend items -->
-            <g font-size="13" fill="var(--svg-text)">
-              <rect x="320" y="560" width="20" height="14" rx="4" fill="#a7f3d0" stroke="#0f9f7c"/>
-              <text x="346" y="572">= Cluster domain</text>
-              <rect x="480" y="560" width="20" height="14" rx="4" fill="#bfdbfe" stroke="#2563eb"/>
-              <text x="506" y="572">= Core domain</text>
-              <rect x="620" y="560" width="20" height="14" rx="4" fill="#fcd34d" stroke="#d97706"/>
-              <text x="646" y="572">= Peripheral domain</text>
-            </g>
-          </svg>
+<g font-size="13" fill="var(--svg-text)">
+<rect x="320" y="560" width="20" height="14" rx="4" fill="#a7f3d0" stroke="#0f9f7c"/>
+<text x="346" y="572">= Cluster domain</text>
+<rect x="480" y="560" width="20" height="14" rx="4" fill="#bfdbfe" stroke="#2563eb"/>
+<text x="506" y="572">= Core domain</text>
+<rect x="620" y="560" width="20" height="14" rx="4" fill="#fcd34d" stroke="#d97706"/>
+<text x="646" y="572">= Peripheral domain</text>
+</g>
+</svg>
 </div>
 
 ### PPU: the power transition orchestrator
@@ -697,53 +662,45 @@ A **PLL** or **Phase-Locked Loop** is used to generate a stable higher-frequency
 *Inline SVG: PLL Block Diagram*
 <div class="svg-diagram">
 <svg viewBox="0 0 1080 430" role="img" aria-label="PLL block diagram">
-            <defs>
-              <marker id="arrowPll" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                <path d="M0 0 L10 5 L0 10 z" fill="#667b97"/>
-              </marker>
-            </defs>
-            <rect x="30" y="170" width="120" height="70" rx="16" fill="#fde68a" stroke="#ca8a04" stroke-width="2"/>
-            <text x="90" y="213" text-anchor="middle" fill="#4b3200" font-size="20" font-weight="800">REFCLK</text>
-
-            <rect x="200" y="155" width="180" height="100" rx="18" fill="#bfdbfe" stroke="#2563eb" stroke-width="2"/>
-            <text x="290" y="198" text-anchor="middle" fill="#10203b" font-size="16" font-weight="800">PFD / Charge Pump</text>
-            <text x="290" y="220" text-anchor="middle" fill="#10203b" font-size="13">Compare phase &amp; freq</text>
-
-            <rect x="430" y="155" width="160" height="100" rx="18" fill="#a7f3d0" stroke="#0f9f7c" stroke-width="2"/>
-            <text x="510" y="198" text-anchor="middle" fill="#0b2f24" font-size="16" font-weight="800">Loop Filter</text>
-            <text x="510" y="220" text-anchor="middle" fill="#0b2f24" font-size="13">Smooth control signal</text>
-
-            <rect x="640" y="155" width="160" height="100" rx="18" fill="#fbcfe8" stroke="#db2777" stroke-width="2"/>
-            <text x="720" y="198" text-anchor="middle" fill="#4a1028" font-size="16" font-weight="800">VCO</text>
-            <text x="720" y="220" text-anchor="middle" fill="#4a1028" font-size="13">Voltage-controlled osc.</text>
-
-            <rect x="850" y="155" width="170" height="100" rx="18" fill="#ddd6fe" stroke="#7c3aed" stroke-width="2"/>
-            <text x="935" y="198" text-anchor="middle" fill="#2d1752" font-size="16" font-weight="800">POSTDIV</text>
-            <text x="935" y="220" text-anchor="middle" fill="#2d1752" font-size="13">Final output division</text>
-
+<defs>
+<marker id="arrowPll" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M0 0 L10 5 L0 10 z" fill="#667b97"/>
+</marker>
+</defs>
+<rect x="30" y="170" width="120" height="70" rx="16" fill="#fde68a" stroke="#ca8a04" stroke-width="2"/>
+<text x="90" y="213" text-anchor="middle" fill="#4b3200" font-size="20" font-weight="800">REFCLK</text>
+<rect x="200" y="155" width="180" height="100" rx="18" fill="#bfdbfe" stroke="#2563eb" stroke-width="2"/>
+<text x="290" y="198" text-anchor="middle" fill="#10203b" font-size="16" font-weight="800">PFD / Charge Pump</text>
+<text x="290" y="220" text-anchor="middle" fill="#10203b" font-size="13">Compare phase &amp; freq</text>
+<rect x="430" y="155" width="160" height="100" rx="18" fill="#a7f3d0" stroke="#0f9f7c" stroke-width="2"/>
+<text x="510" y="198" text-anchor="middle" fill="#0b2f24" font-size="16" font-weight="800">Loop Filter</text>
+<text x="510" y="220" text-anchor="middle" fill="#0b2f24" font-size="13">Smooth control signal</text>
+<rect x="640" y="155" width="160" height="100" rx="18" fill="#fbcfe8" stroke="#db2777" stroke-width="2"/>
+<text x="720" y="198" text-anchor="middle" fill="#4a1028" font-size="16" font-weight="800">VCO</text>
+<text x="720" y="220" text-anchor="middle" fill="#4a1028" font-size="13">Voltage-controlled osc.</text>
+<rect x="850" y="155" width="170" height="100" rx="18" fill="#ddd6fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="935" y="198" text-anchor="middle" fill="#2d1752" font-size="16" font-weight="800">POSTDIV</text>
+<text x="935" y="220" text-anchor="middle" fill="#2d1752" font-size="13">Final output division</text>
             <!-- Forward arrows -->
-            <line x1="150" y1="205" x2="200" y2="205" stroke="#667b97" stroke-width="4" marker-end="url(#arrowPll)"/>
-            <line x1="380" y1="205" x2="430" y2="205" stroke="#667b97" stroke-width="4" marker-end="url(#arrowPll)"/>
-            <line x1="590" y1="205" x2="640" y2="205" stroke="#667b97" stroke-width="4" marker-end="url(#arrowPll)"/>
-            <line x1="800" y1="205" x2="850" y2="205" stroke="#667b97" stroke-width="4" marker-end="url(#arrowPll)"/>
-
+<line x1="150" y1="205" x2="200" y2="205" stroke="#667b97" stroke-width="4" marker-end="url(#arrowPll)"/>
+<line x1="380" y1="205" x2="430" y2="205" stroke="#667b97" stroke-width="4" marker-end="url(#arrowPll)"/>
+<line x1="590" y1="205" x2="640" y2="205" stroke="#667b97" stroke-width="4" marker-end="url(#arrowPll)"/>
+<line x1="800" y1="205" x2="850" y2="205" stroke="#667b97" stroke-width="4" marker-end="url(#arrowPll)"/>
             <!-- Output arrow -->
-            <line x1="1020" y1="205" x2="1060" y2="205" stroke="#667b97" stroke-width="4" marker-end="url(#arrowPll)"/>
-            <text x="1060" y="190" fill="var(--svg-text)" font-size="16" font-weight="800">OUT</text>
-
+<line x1="1020" y1="205" x2="1060" y2="205" stroke="#667b97" stroke-width="4" marker-end="url(#arrowPll)"/>
+<text x="1060" y="190" fill="var(--svg-text)" font-size="16" font-weight="800">OUT</text>
             <!-- Feedback path -->
-            <rect x="640" y="320" width="160" height="60" rx="16" fill="#fde68a" stroke="#ca8a04" stroke-width="2"/>
-            <text x="720" y="357" text-anchor="middle" fill="#4b3200" font-size="18" font-weight="800">FBDIV</text>
-            <line x1="935" y1="255" x2="935" y2="290" stroke="#667b97" stroke-width="3"/>
-            <line x1="935" y1="290" x2="720" y2="290" stroke="#667b97" stroke-width="3"/>
-            <line x1="720" y1="290" x2="720" y2="320" stroke="#667b97" stroke-width="3" marker-end="url(#arrowPll)"/>
-            <line x1="640" y1="350" x2="290" y2="350" stroke="#667b97" stroke-width="3"/>
-            <line x1="290" y1="350" x2="290" y2="255" stroke="#667b97" stroke-width="3" marker-end="url(#arrowPll)"/>
-
+<rect x="640" y="320" width="160" height="60" rx="16" fill="#fde68a" stroke="#ca8a04" stroke-width="2"/>
+<text x="720" y="357" text-anchor="middle" fill="#4b3200" font-size="18" font-weight="800">FBDIV</text>
+<line x1="935" y1="255" x2="935" y2="290" stroke="#667b97" stroke-width="3"/>
+<line x1="935" y1="290" x2="720" y2="290" stroke="#667b97" stroke-width="3"/>
+<line x1="720" y1="290" x2="720" y2="320" stroke="#667b97" stroke-width="3" marker-end="url(#arrowPll)"/>
+<line x1="640" y1="350" x2="290" y2="350" stroke="#667b97" stroke-width="3"/>
+<line x1="290" y1="350" x2="290" y2="255" stroke="#667b97" stroke-width="3" marker-end="url(#arrowPll)"/>
             <!-- Labels -->
-            <text x="540" y="50" text-anchor="middle" fill="var(--svg-text)" font-size="20" font-weight="800">PLL Block Diagram</text>
-            <text x="540" y="410" text-anchor="middle" fill="var(--svg-text)" font-size="15">Output = REFCLK × FBDIV / POSTDIV</text>
-          </svg>
+<text x="540" y="50" text-anchor="middle" fill="var(--svg-text)" font-size="20" font-weight="800">PLL Block Diagram</text>
+<text x="540" y="410" text-anchor="middle" fill="var(--svg-text)" font-size="15">Output = REFCLK × FBDIV / POSTDIV</text>
+</svg>
 </div>
 
 ### The main pieces
@@ -781,32 +738,29 @@ That square on voltage is the big deal. Frequency matters, but voltage is the dr
 *Inline SVG: Safe DVFS Transition Flow*
 <div class="svg-diagram">
 <svg viewBox="0 0 1100 520" role="img" aria-label="DVFS transition flow diagram">
-            <defs>
-              <marker id="arrowDvfs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                <path d="M0 0 L10 5 L0 10 z" fill="#667b97"/>
-              </marker>
-            </defs>
-            <rect x="370" y="40" width="360" height="74" rx="16" fill="#5b7cfa" stroke="#284bcb" stroke-width="3"/>
-            <text x="550" y="85" text-anchor="middle" fill="#ffffff" font-size="24" font-weight="800">Need new performance point?</text>
-
-            <rect x="120" y="190" width="350" height="240" rx="20" fill="#a7f3d0" stroke="#0f9f7c" stroke-width="3"/>
-            <text x="295" y="234" text-anchor="middle" fill="#0b2f24" font-size="28" font-weight="800">Speeding Up</text>
-            <text x="295" y="280" text-anchor="middle" fill="#0b2f24" font-size="20">1. Raise voltage first</text>
-            <text x="295" y="316" text-anchor="middle" fill="#0b2f24" font-size="20">2. Wait until rail is stable</text>
-            <text x="295" y="352" text-anchor="middle" fill="#0b2f24" font-size="18">3. Increase PLL / clock frequency</text>
-            <text x="295" y="388" text-anchor="middle" fill="#0b2f24" font-size="18">4. Resume higher-performance operation</text>
-
-            <rect x="630" y="190" width="350" height="240" rx="20" fill="#fde68a" stroke="#ca8a04" stroke-width="3"/>
-            <text x="805" y="234" text-anchor="middle" fill="#4b3200" font-size="28" font-weight="800">Slowing Down</text>
-            <text x="805" y="280" text-anchor="middle" fill="#4b3200" font-size="20">1. Reduce frequency first</text>
-            <text x="805" y="316" text-anchor="middle" fill="#4b3200" font-size="20">2. Confirm timing margin is safe</text>
-            <text x="805" y="352" text-anchor="middle" fill="#4b3200" font-size="20">3. Lower voltage afterward</text>
-            <text x="805" y="388" text-anchor="middle" fill="#4b3200" font-size="18">4. Save power without violating timing</text>
-
-            <line x1="550" y1="114" x2="295" y2="190" stroke="#667b97" stroke-width="4" marker-end="url(#arrowDvfs)"/>
-            <line x1="550" y1="114" x2="805" y2="190" stroke="#667b97" stroke-width="4" marker-end="url(#arrowDvfs)"/>
-            <text x="550" y="482" text-anchor="middle" fill="var(--svg-text)" font-size="19" font-weight="700">Golden rule: upshift = voltage first; downshift = frequency first.</text>
-          </svg>
+<defs>
+<marker id="arrowDvfs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M0 0 L10 5 L0 10 z" fill="#667b97"/>
+</marker>
+</defs>
+<rect x="370" y="40" width="360" height="74" rx="16" fill="#5b7cfa" stroke="#284bcb" stroke-width="3"/>
+<text x="550" y="85" text-anchor="middle" fill="#ffffff" font-size="24" font-weight="800">Need new performance point?</text>
+<rect x="120" y="190" width="350" height="240" rx="20" fill="#a7f3d0" stroke="#0f9f7c" stroke-width="3"/>
+<text x="295" y="234" text-anchor="middle" fill="#0b2f24" font-size="28" font-weight="800">Speeding Up</text>
+<text x="295" y="280" text-anchor="middle" fill="#0b2f24" font-size="20">1. Raise voltage first</text>
+<text x="295" y="316" text-anchor="middle" fill="#0b2f24" font-size="20">2. Wait until rail is stable</text>
+<text x="295" y="352" text-anchor="middle" fill="#0b2f24" font-size="18">3. Increase PLL / clock frequency</text>
+<text x="295" y="388" text-anchor="middle" fill="#0b2f24" font-size="18">4. Resume higher-performance operation</text>
+<rect x="630" y="190" width="350" height="240" rx="20" fill="#fde68a" stroke="#ca8a04" stroke-width="3"/>
+<text x="805" y="234" text-anchor="middle" fill="#4b3200" font-size="28" font-weight="800">Slowing Down</text>
+<text x="805" y="280" text-anchor="middle" fill="#4b3200" font-size="20">1. Reduce frequency first</text>
+<text x="805" y="316" text-anchor="middle" fill="#4b3200" font-size="20">2. Confirm timing margin is safe</text>
+<text x="805" y="352" text-anchor="middle" fill="#4b3200" font-size="20">3. Lower voltage afterward</text>
+<text x="805" y="388" text-anchor="middle" fill="#4b3200" font-size="18">4. Save power without violating timing</text>
+<line x1="550" y1="114" x2="295" y2="190" stroke="#667b97" stroke-width="4" marker-end="url(#arrowDvfs)"/>
+<line x1="550" y1="114" x2="805" y2="190" stroke="#667b97" stroke-width="4" marker-end="url(#arrowDvfs)"/>
+<text x="550" y="482" text-anchor="middle" fill="var(--svg-text)" font-size="19" font-weight="700">Golden rule: upshift = voltage first; downshift = frequency first.</text>
+</svg>
 </div>
 
 ### Why order matters

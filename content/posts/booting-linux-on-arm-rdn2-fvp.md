@@ -114,46 +114,40 @@ When Linux finally boots, it didn’t get there by magic. The SCP initialized pl
 
 <div class="svg-diagram">
 <svg width="100%" viewBox="0 0 1060 470" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="RD-N2 FVP architecture overview">
-              <defs>
-                <linearGradient id="g1" x1="0" x2="1">
-                  <stop offset="0%" stop-color="#2952ff"/>
-                  <stop offset="100%" stop-color="#6e7dff"/>
-                </linearGradient>
-              </defs>
-              <rect x="20" y="20" width="940" height="430" rx="26" fill="#ffffff" stroke="#dbe3f1"/>
-              <text x="50" y="58" font-size="28" font-family="Segoe UI, Arial" fill="#1c2434" font-weight="700">RD-N2 FVP architecture overview</text>
-
-              <rect x="52" y="95" width="290" height="110" rx="18" fill="#edf2ff" stroke="#cfd9ff"/>
-              <text x="72" y="130" font-size="24" fill="#2952ff" font-weight="700">Compute complex</text>
-              <text x="72" y="165" font-size="20" fill="#334155">16× Neoverse N2 cores</text>
-              <text x="72" y="192" font-size="16" fill="#64748b">Clustered server-class CPU subsystem</text>
-
-              <rect x="365" y="95" width="250" height="110" rx="18" fill="#eefcf7" stroke="#c8efe2"/>
-              <text x="388" y="130" font-size="24" fill="#0f9d7a" font-weight="700">CMN-700</text>
-              <text x="388" y="165" font-size="20" fill="#334155">Coherent mesh fabric</text>
-              <text x="388" y="192" font-size="16" fill="#64748b">System coherency + memory routing</text>
-
-              <rect x="640" y="95" width="340" height="110" rx="18" fill="#fff7ed" stroke="#fed7aa"/>
-              <text x="662" y="130" font-size="22" fill="#d97706" font-weight="700">Platform I/O + security</text>
-              <text x="662" y="165" font-size="18" fill="#334155">GIC-700, SMMUv3, TZC-400, PCIe</text>
-              <text x="662" y="192" font-size="16" fill="#64748b">Interrupts, isolation, DMA translation</text>
-
-              <rect x="90" y="270" width="350" height="110" rx="18" fill="#f8fafc" stroke="#dbe3f1"/>
-              <text x="116" y="306" font-size="24" fill="#1c2434" font-weight="700">Control subsystem</text>
-              <text x="116" y="338" font-size="20" fill="#334155">SCP + MCP (Cortex-M7)</text>
-              <text x="116" y="364" font-size="16" fill="#64748b">Power, clocks, topology, system coordination</text>
-
-              <rect x="490" y="270" width="420" height="110" rx="18" fill="#f5f3ff" stroke="#ddd6fe"/>
-              <text x="515" y="306" font-size="22" fill="#6d28d9" font-weight="700">Boot-facing storage + comms</text>
-              <text x="515" y="338" font-size="18" fill="#334155">NOR flash, virtio block, MHU mailboxes</text>
-              <text x="515" y="364" font-size="16" fill="#64748b">Firmware images, boot media, AP↔SCP signaling</text>
-
-              <path d="M342 150 H365" stroke="url(#g1)" stroke-width="6" stroke-linecap="round"/>
-              <path d="M615 150 H640" stroke="url(#g1)" stroke-width="6" stroke-linecap="round"/>
-              <path d="M490 325 H440" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
-              <path d="M615 205 V250 H677" stroke="#94a3b8" stroke-width="6" fill="none" stroke-linecap="round"/>
-              <path d="M230 205 V270" stroke="#94a3b8" stroke-width="6" fill="none" stroke-linecap="round"/>
-            </svg>
+<defs>
+<linearGradient id="g1" x1="0" x2="1">
+<stop offset="0%" stop-color="#2952ff"/>
+<stop offset="100%" stop-color="#6e7dff"/>
+</linearGradient>
+</defs>
+<rect x="20" y="20" width="940" height="430" rx="26" fill="#ffffff" stroke="#dbe3f1"/>
+<text x="50" y="58" font-size="28" font-family="Segoe UI, Arial" fill="#1c2434" font-weight="700">RD-N2 FVP architecture overview</text>
+<rect x="52" y="95" width="290" height="110" rx="18" fill="#edf2ff" stroke="#cfd9ff"/>
+<text x="72" y="130" font-size="24" fill="#2952ff" font-weight="700">Compute complex</text>
+<text x="72" y="165" font-size="20" fill="#334155">16× Neoverse N2 cores</text>
+<text x="72" y="192" font-size="16" fill="#64748b">Clustered server-class CPU subsystem</text>
+<rect x="365" y="95" width="250" height="110" rx="18" fill="#eefcf7" stroke="#c8efe2"/>
+<text x="388" y="130" font-size="24" fill="#0f9d7a" font-weight="700">CMN-700</text>
+<text x="388" y="165" font-size="20" fill="#334155">Coherent mesh fabric</text>
+<text x="388" y="192" font-size="16" fill="#64748b">System coherency + memory routing</text>
+<rect x="640" y="95" width="340" height="110" rx="18" fill="#fff7ed" stroke="#fed7aa"/>
+<text x="662" y="130" font-size="22" fill="#d97706" font-weight="700">Platform I/O + security</text>
+<text x="662" y="165" font-size="18" fill="#334155">GIC-700, SMMUv3, TZC-400, PCIe</text>
+<text x="662" y="192" font-size="16" fill="#64748b">Interrupts, isolation, DMA translation</text>
+<rect x="90" y="270" width="350" height="110" rx="18" fill="#f8fafc" stroke="#dbe3f1"/>
+<text x="116" y="306" font-size="24" fill="#1c2434" font-weight="700">Control subsystem</text>
+<text x="116" y="338" font-size="20" fill="#334155">SCP + MCP (Cortex-M7)</text>
+<text x="116" y="364" font-size="16" fill="#64748b">Power, clocks, topology, system coordination</text>
+<rect x="490" y="270" width="420" height="110" rx="18" fill="#f5f3ff" stroke="#ddd6fe"/>
+<text x="515" y="306" font-size="22" fill="#6d28d9" font-weight="700">Boot-facing storage + comms</text>
+<text x="515" y="338" font-size="18" fill="#334155">NOR flash, virtio block, MHU mailboxes</text>
+<text x="515" y="364" font-size="16" fill="#64748b">Firmware images, boot media, AP↔SCP signaling</text>
+<path d="M342 150 H365" stroke="url(#g1)" stroke-width="6" stroke-linecap="round"/>
+<path d="M615 150 H640" stroke="url(#g1)" stroke-width="6" stroke-linecap="round"/>
+<path d="M490 325 H440" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
+<path d="M615 205 V250 H677" stroke="#94a3b8" stroke-width="6" fill="none" stroke-linecap="round"/>
+<path d="M230 205 V270" stroke="#94a3b8" stroke-width="6" fill="none" stroke-linecap="round"/>
+</svg>
 </div>
 
 ## 5 Setting up the build environment
@@ -219,34 +213,28 @@ The exact top-level build command can vary with the reference solution layout yo
 
 <div class="svg-diagram">
 <svg width="100%" viewBox="0 0 1100 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Boot flow diagram">
-              <rect x="20" y="35" width="170" height="92" rx="18" fill="#eef2ff" stroke="#c7d2fe"/>
-              <text x="52" y="72" font-size="24" fill="#2952ff" font-weight="700">SCP firmware</text>
-              <text x="52" y="102" font-size="18" fill="#475569">Bring-up + power-on</text>
-
-              <rect x="230" y="35" width="160" height="92" rx="18" fill="#f8fafc" stroke="#dbe3f1"/>
-              <text x="275" y="72" font-size="24" fill="#0f172a" font-weight="700">TF-A</text>
-              <text x="255" y="102" font-size="18" fill="#475569">BL1 → BL2 → BL31</text>
-
-              <rect x="430" y="35" width="170" height="92" rx="18" fill="#eefcf7" stroke="#bbf7d0"/>
-              <text x="484" y="72" font-size="24" fill="#0f9d7a" font-weight="700">UEFI</text>
-              <text x="468" y="102" font-size="18" fill="#475569">DXE + boot manager</text>
-
-              <rect x="640" y="35" width="160" height="92" rx="18" fill="#fff7ed" stroke="#fed7aa"/>
-              <text x="690" y="72" font-size="24" fill="#d97706" font-weight="700">GRUB</text>
-              <text x="673" y="102" font-size="18" fill="#475569">Loads kernel + cmdline</text>
-
-              <rect x="840" y="35" width="220" height="92" rx="18" fill="#f5f3ff" stroke="#ddd6fe"/>
-              <text x="910" y="72" font-size="24" fill="#6d28d9" font-weight="700">Linux</text>
-              <text x="876" y="102" font-size="16" fill="#475569">Kernel + buildroot userspace</text>
-
-              <path d="M190 81 H230" stroke="#6e7dff" stroke-width="6" stroke-linecap="round"/>
-              <path d="M390 81 H430" stroke="#6e7dff" stroke-width="6" stroke-linecap="round"/>
-              <path d="M600 81 H640" stroke="#6e7dff" stroke-width="6" stroke-linecap="round"/>
-              <path d="M800 81 H840" stroke="#6e7dff" stroke-width="6" stroke-linecap="round"/>
-
-              <text x="20" y="180" font-size="20" fill="#334155">Firmware images used by the FVP:</text>
-              <text x="20" y="214" font-size="15" fill="#64748b">scp_romfw.bin / scp_ramfw.bin • mcp_romfw.bin / mcp_ramfw.bin • tf-bl1.bin • fip-uefi.bin • grub-buildroot.img</text>
-            </svg>
+<rect x="20" y="35" width="170" height="92" rx="18" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="52" y="72" font-size="24" fill="#2952ff" font-weight="700">SCP firmware</text>
+<text x="52" y="102" font-size="18" fill="#475569">Bring-up + power-on</text>
+<rect x="230" y="35" width="160" height="92" rx="18" fill="#f8fafc" stroke="#dbe3f1"/>
+<text x="275" y="72" font-size="24" fill="#0f172a" font-weight="700">TF-A</text>
+<text x="255" y="102" font-size="18" fill="#475569">BL1 → BL2 → BL31</text>
+<rect x="430" y="35" width="170" height="92" rx="18" fill="#eefcf7" stroke="#bbf7d0"/>
+<text x="484" y="72" font-size="24" fill="#0f9d7a" font-weight="700">UEFI</text>
+<text x="468" y="102" font-size="18" fill="#475569">DXE + boot manager</text>
+<rect x="640" y="35" width="160" height="92" rx="18" fill="#fff7ed" stroke="#fed7aa"/>
+<text x="690" y="72" font-size="24" fill="#d97706" font-weight="700">GRUB</text>
+<text x="673" y="102" font-size="18" fill="#475569">Loads kernel + cmdline</text>
+<rect x="840" y="35" width="220" height="92" rx="18" fill="#f5f3ff" stroke="#ddd6fe"/>
+<text x="910" y="72" font-size="24" fill="#6d28d9" font-weight="700">Linux</text>
+<text x="876" y="102" font-size="16" fill="#475569">Kernel + buildroot userspace</text>
+<path d="M190 81 H230" stroke="#6e7dff" stroke-width="6" stroke-linecap="round"/>
+<path d="M390 81 H430" stroke="#6e7dff" stroke-width="6" stroke-linecap="round"/>
+<path d="M600 81 H640" stroke="#6e7dff" stroke-width="6" stroke-linecap="round"/>
+<path d="M800 81 H840" stroke="#6e7dff" stroke-width="6" stroke-linecap="round"/>
+<text x="20" y="180" font-size="20" fill="#334155">Firmware images used by the FVP:</text>
+<text x="20" y="214" font-size="15" fill="#64748b">scp_romfw.bin / scp_ramfw.bin • mcp_romfw.bin / mcp_ramfw.bin • tf-bl1.bin • fip-uefi.bin • grub-buildroot.img</text>
+</svg>
 </div>
 
 A very practical habit here: once the build completes, copy the final artifacts into your Windows image directory so the model launch path stays clean and deterministic.
