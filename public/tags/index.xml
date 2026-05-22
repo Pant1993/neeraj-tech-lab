@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Tags on Neeraj&#39;s Tech Lab</title>
+    <link>http://localhost:1313/neeraj-tech-lab/tags/</link>
+    <description>Recent content in Tags on Neeraj&#39;s Tech Lab</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 22 May 2026 15:00:00 +0530</lastBuildDate>
+    <atom:link href="http://localhost:1313/neeraj-tech-lab/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>ARM</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/arm/</link>
+      <pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/arm/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>CMN-700</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/cmn-700/</link>
+      <pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/cmn-700/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>DVFS</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/dvfs/</link>
+      <pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/dvfs/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Firmware</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/firmware/</link>
+      <pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/firmware/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Neoverse</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/neoverse/</link>
+      <pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/neoverse/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>PLL</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/pll/</link>
+      <pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/pll/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Power-Management</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/power-management/</link>
+      <pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/power-management/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>SCP</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/scp/</link>
+      <pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/scp/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>SoC</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/soc/</link>
+      <pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/soc/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Boot</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/boot/</link>
+      <pubDate>Fri, 22 May 2026 14:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/boot/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>FVP</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/fvp/</link>
+      <pubDate>Fri, 22 May 2026 14:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/fvp/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Linux</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/linux/</link>
+      <pubDate>Fri, 22 May 2026 14:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/linux/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>TF-A</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/tf-a/</link>
+      <pubDate>Fri, 22 May 2026 14:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/tf-a/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Tutorial</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/tutorial/</link>
+      <pubDate>Fri, 22 May 2026 14:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/tutorial/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>UEFI</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/uefi/</link>
+      <pubDate>Fri, 22 May 2026 14:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/uefi/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>

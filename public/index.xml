@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Neeraj&#39;s Tech Lab</title>
+    <link>http://localhost:1313/neeraj-tech-lab/</link>
+    <description>Recent content on Neeraj&#39;s Tech Lab</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 22 May 2026 15:00:00 +0530</lastBuildDate>
+    <atom:link href="http://localhost:1313/neeraj-tech-lab/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>ARM RD-N2 SoC Architecture — A Friendly Deep Dive</title>
+      <link>http://localhost:1313/neeraj-tech-lab/posts/arm-rdn2-soc-architecture-deep-dive/</link>
+      <pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/posts/arm-rdn2-soc-architecture-deep-dive/</guid>
+      <description>A comprehensive deep-dive into the ARM RD-N2 reference design SoC — covering the SCP, CMN-700 mesh, bus hierarchy, MHU, SCMI, power domains, PLL, and DVFS — explained like a friend over coffee.</description>
+    </item>
+    <item>
+      <title>Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide</title>
+      <link>http://localhost:1313/neeraj-tech-lab/posts/booting-linux-on-arm-rdn2-fvp/</link>
+      <pubDate>Fri, 22 May 2026 14:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/posts/booting-linux-on-arm-rdn2-fvp/</guid>
+      <description>A friendly step-by-step guide to booting Linux on the ARM Neoverse RD-N2 Fixed Virtual Platform — from installation through firmware build to successful boot.</description>
+    </item>
+    <item>
+      <title>About</title>
+      <link>http://localhost:1313/neeraj-tech-lab/about/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/about/</guid>
+      <description>&lt;h2 id=&#34;hi-im-neeraj-&#34;&gt;Hi, I&amp;rsquo;m Neeraj 👋&lt;/h2&gt;
+&lt;p&gt;I&amp;rsquo;m a systems engineer fascinated by what happens &lt;em&gt;before&lt;/em&gt; the OS boots — the firmware, the silicon, the power sequencing, the interconnects, and all the invisible choreography that makes modern processors work.&lt;/p&gt;
+&lt;p&gt;This blog is my lab notebook. I write about:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;ARM Architecture&lt;/strong&gt; — Neoverse, Cortex-M, SoC design&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Firmware &amp;amp; Boot&lt;/strong&gt; — SCP, TF-A, UEFI, secure boot chains&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Silicon Internals&lt;/strong&gt; — Interconnects (CMN-700), power domains, PLLs, DVFS&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Hands-on Experiments&lt;/strong&gt; — Building and booting on FVPs, QEMU, real hardware&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Everything here is written in a conversational tone because I believe complex topics deserve clear explanations, not jargon walls.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

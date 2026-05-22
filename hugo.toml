@@ -1,0 +1,59 @@
+baseURL = "https://neerajpant.github.io/neeraj-tech-lab/"
+languageCode = "en-us"
+title = "Neeraj's Tech Lab"
+theme = "PaperMod"
+paginate = 10
+
+[params]
+  env = "production"
+  description = "Deep dives into ARM architecture, embedded systems, firmware, and silicon internals"
+  author = "Neeraj Pant"
+  ShowReadingTime = true
+  ShowShareButtons = true
+  ShowPostNavLinks = true
+  ShowBreadCrumbs = true
+  ShowCodeCopyButtons = true
+  ShowToc = true
+  TocOpen = false
+  comments = true
+
+  [params.homeInfoParams]
+    Title = "Welcome to Neeraj's Tech Lab 🔬"
+    Content = "Deep dives into ARM architecture, SoC internals, firmware bring-up, and everything that happens before Linux says hello."
+
+  [[params.socialIcons]]
+    name = "github"
+    url = "https://github.com/neerajpant"
+
+[params.assets]
+  favicon = "🔬"
+
+[markup]
+  [markup.highlight]
+    style = "dracula"
+    lineNos = false
+    noClasses = false
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
+
+[[menu.main]]
+  identifier = "posts"
+  name = "Posts"
+  url = "/posts/"
+  weight = 10
+
+[[menu.main]]
+  identifier = "tags"
+  name = "Tags"
+  url = "/tags/"
+  weight = 20
+
+[[menu.main]]
+  identifier = "about"
+  name = "About"
+  url = "/about/"
+  weight = 30

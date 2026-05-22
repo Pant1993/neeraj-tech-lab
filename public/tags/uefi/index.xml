@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>UEFI on Neeraj&#39;s Tech Lab</title>
+    <link>http://localhost:1313/neeraj-tech-lab/tags/uefi/</link>
+    <description>Recent content in UEFI on Neeraj&#39;s Tech Lab</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 22 May 2026 14:00:00 +0530</lastBuildDate>
+    <atom:link href="http://localhost:1313/neeraj-tech-lab/tags/uefi/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide</title>
+      <link>http://localhost:1313/neeraj-tech-lab/posts/booting-linux-on-arm-rdn2-fvp/</link>
+      <pubDate>Fri, 22 May 2026 14:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/posts/booting-linux-on-arm-rdn2-fvp/</guid>
+      <description>A friendly step-by-step guide to booting Linux on the ARM Neoverse RD-N2 Fixed Virtual Platform — from installation through firmware build to successful boot.</description>
+    </item>
+  </channel>
+</rss>
