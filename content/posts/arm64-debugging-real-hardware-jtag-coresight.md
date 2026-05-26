@@ -32,6 +32,94 @@ This is the companion to our [ARM64 Debugging Handbook](/posts/arm64-debugging-h
 
 On the RD-N2 or similar ARM platforms, you'll typically use **SWD for Cortex-M cores (like SCP)** and **JTAG or SWD for Cortex-A/Neoverse cores** (board-dependent).
 
+---
+
+### JTAG and SWD Signal Timing — How Data Travels
+
+**JTAG timing diagram (showing register read operation):**
+
+```
+       TCK: ───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌─
+               └───┘   └───┘   └───┘   └───┘   └───┘   └───┘   └───┘   └───┘
+             Clock period: 50ns (20 MHz typical)
+
+       TMS: ────────┐       ┌───────────┐       ┌───────────────────────────
+                    └───────┘           └───────┘
+             Navigate TAP state machine: Test-Logic-Reset → Shift-IR → Shift-DR
+
+       TDI: ────────[0][1][0][1][0][0][1][1]────[Addr:0x4][Data:0x0000]───────
+             Shift in: Instruction (read register) → Address → Data (if write)
+
+       TDO: ────────────────────────────────────[0][1][1][0][1][1][0][1]──────
+                                       Shift out: Previous data / status
+
+  Operations:
+    Cycle 0-7:   Shift instruction "READ_REG" into IR (Instruction Register)
+    Cycle 8-15:  Shift register address (e.g., PC = 0x4) into DR (Data Register)
+    Cycle 16-79: Shift out 64-bit PC value from previous read (pipelined!)
+    Cycle 80+:   Shift in next command...
+
+  Latency: ~80 clock cycles for 64-bit read (4 μs @ 20 MHz)
+```
+
+**SWD timing diagram (same register read, much faster):**
+
+```
+    SWCLK: ───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌─
+              └───┘   └───┘   └───┘   └───┘   └───┘   └───┘   └───┘   └───┘
+            Clock period: 20ns (50 MHz capable with DAP v2)
+
+    SWDIO: ──[1][0][1][0][0][1][0][1]──[Park]◄─[ACK]──[Data 32 bits]──[Par]──
+            Request packet (8 bits)    Turnaround  ACK  Response data  Parity
+              ▲
+              └─ Start=1, APnDP=0 (access DP), RnW=1 (read), Addr=A[3:2], Parity
+
+  Request packet format (8 bits):
+    [Start=1][APnDP][RnW][A3][A2][Parity][Stop=0][Park=1]
+    Example: Read DP register 0x4 (CTRL/STAT):
+    [1][0][1][0][1][0][0][1]
+
+  Response:
+    Turnaround: 1 clock (probe releases SWDIO, target drives it)
+    ACK: 3 bits ([001] = OK, [010] = WAIT, [100] = FAULT)
+    Data: 32 bits (register value)
+    Parity: 1 bit (even parity over data)
+    Turnaround: 1 clock (target releases, probe drives)
+
+  Operations:
+    Cycle 0-7:   Send request packet (read PC register)
+    Cycle 8:     Turnaround (1 clock)
+    Cycle 9-11:  Read ACK (3 bits, [001] = OK)
+    Cycle 12-43: Read 32-bit PC value
+    Cycle 44:    Read parity bit
+    Cycle 45:    Turnaround (1 clock)
+    Total: 46 cycles
+
+  Latency: 46 clock cycles for 32-bit read (0.92 μs @ 50 MHz) ← **4× faster!**
+
+  For 64-bit reads (like X0-X30, PC, SP):
+    Two 32-bit reads → 92 cycles total (1.84 μs @ 50 MHz)
+    Still faster than JTAG's 80 cycles @ 20 MHz (4 μs)
+```
+
+**Why SWD is faster:**
+
+1. **No instruction register shifting** — JTAG requires navigating TAP state machine, SWD is direct access
+2. **Higher clock speed** — 50 MHz vs JTAG's 10-20 MHz (signal integrity on 4 wires is harder)
+3. **Simpler protocol** — 8-bit request + 3-bit ACK + data, vs JTAG's state machine overhead
+4. **Pipelined** — Can send next request while previous data is clocking out
+
+**Practical example: Halting and reading all 31 GPRs + PC + SP + CPSR:**
+
+| Interface | Operations | Total Cycles | Time @ Typical Speed |
+|-----------|-----------|--------------|---------------------|
+| **JTAG** | 34 reads × 80 cycles | 2,720 cycles | **136 μs @ 20 MHz** |
+| **SWD** | 34 reads × 92 cycles | 3,128 cycles | **62.6 μs @ 50 MHz** | ← **2× faster** |
+
+For **single-stepping** (halt, read regs, step, read regs, repeat), SWD's speed advantage adds up quickly.
+
+---
+
 ### The CoreSight Debug Architecture
 
 ARM's CoreSight is the debug infrastructure inside every ARM SoC. Think of it as the hardware equivalent of Iris — but distributed across the chip.
@@ -1466,6 +1554,137 @@ The UART output is identical:
 ```
 
 If you see 'A' on the console, the UART hardware is working — the problem is in software.
+
+---
+
+### UART Troubleshooting Flowchart — No Console Output?
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│              UART Silent — No Console Output Flowchart                  │
+│                                                                         │
+│  START: Power on board, expect "SCP Firmware v2.11", see nothing       │
+│                                   │                                     │
+│                                   ▼                                     │
+│              ┌─────────────────────────────────────┐                    │
+│              │  Step 1: Physical Connection Check  │                    │
+│              └─────────────────┬───────────────────┘                    │
+│                                │                                        │
+│         ┌──────────────────────┼──────────────────────┐                │
+│         ▼                      ▼                      ▼                │
+│  ┌────────────┐      ┌────────────────┐      ┌──────────────┐         │
+│  │ TX/RX      │      │ Baud rate      │      │ GND connected│         │
+│  │ swapped?   │      │ mismatch?      │      │ properly?    │         │
+│  └─────┬──────┘      └────────┬───────┘      └──────┬───────┘         │
+│        │                      │                     │                  │
+│        │ Try swapping         │ Try 9600,           │ Check continuity │
+│        │ TX ↔ RX wires        │ 38400, 115200       │ with multimeter  │
+│        │                      │                     │                  │
+│        └──────────────────────┼──────────────────────┘                 │
+│                               │ Still silent?                          │
+│                               ▼                                        │
+│              ┌─────────────────────────────────────┐                   │
+│              │  Step 2: Hardware Level Check       │                   │
+│              │  Use JTAG/SWD to read UART regs     │                   │
+│              └─────────────────┬───────────────────┘                   │
+│                                │                                       │
+│   # Connect OpenOCD, read PL011 UART registers                        │
+│   > mdw 0x2A400000 0x10   ← UARTDR (Data Register)                    │
+│   > mdw 0x2A400018 0x10   ← UARTFR (Flag Register)                    │
+│                                │                                       │
+│         ┌──────────────────────┼──────────────────────┐               │
+│         ▼                      ▼                      ▼               │
+│  ┌────────────┐      ┌────────────────┐      ┌──────────────┐        │
+│  │ UARTFR =   │  YES │ UARTCR =       │  NO  │ UART clock   │        │
+│  │ 0xFFFFFFFF?├─────►│ 0x0000?        ├─────►│ disabled?    │        │
+│  │ (not clocked)     │ (disabled)     │      │ Check SCP    │        │
+│  └────────────┘      └────────────────┘      └──────────────┘        │
+│       │                      │                      │                 │
+│       │ UART clock OFF       │ UART not enabled     │ Check SCMI     │
+│       │ Fix: Enable in       │ Fix: Set UARTCR      │ clock settings │
+│       │ SCP clock config     │ bit 0 (UARTEN)       │                 │
+│       │                      │                      │                 │
+│       └──────────────────────┼──────────────────────┘                 │
+│                              │ Fixed? Test again                      │
+│                              ▼                                        │
+│              ┌─────────────────────────────────────┐                  │
+│              │  Step 3: Software TX Test           │                  │
+│              │  Manually write to UARTDR           │                  │
+│              └─────────────────┬───────────────────┘                  │
+│                                │                                      │
+│   # Write ASCII 'H' to UART data register                            │
+│   > mww 0x2A400000 0x48   ← UARTDR = 0x48 ('H')                      │
+│   # Check flag register                                              │
+│   > mdw 0x2A400018        ← UARTFR bit 7 (TXFE) should be 0 (not empty) │
+│                                │                                      │
+│         ┌──────────────────────┼──────────────────────┐              │
+│         ▼                      ▼                      ▼              │
+│  ┌────────────┐  YES  ┌────────────────┐  NO  ┌──────────────┐      │
+│  │ See 'H' on │──────►│ UART HW works! │      │ Pinmux wrong?│      │
+│  │ console?   │       │ Soft problem   │      │ Check SCP DT │      │
+│  └────────────┘       └────────────────┘      └──────────────┘      │
+│       │                      │                      │                │
+│       │                      │                      │ UART TX may   │
+│       │                      │                      │ be routed to  │
+│       │                      │                      │ wrong GPIO pin│
+│       │                      ▼                      │                │
+│       │       ┌────────────────────────────┐        │                │
+│       │       │  Step 4: Firmware Debug    │        │                │
+│       │       │  Why isn't code printing?  │        │                │
+│       │       └────────────┬───────────────┘        │                │
+│       │                    │                        │                │
+│       │         ┌──────────┼──────────────┐         │                │
+│       │         ▼          ▼              ▼         │                │
+│       │  ┌──────────┐ ┌─────────┐ ┌──────────────┐ │                │
+│       │  │ SCP hung │ │ BL31    │ │ UART init    │ │                │
+│       │  │ before   │ │ crashed │ │ function     │ │                │
+│       │  │ UART     │ │ before  │ │ never called │ │                │
+│       │  │ init?    │ │ print?  │ │ (link error) │ │                │
+│       │  └──────────┘ └─────────┘ └──────────────┘ │                │
+│       │       │            │              │         │                │
+│       │       │ Halt CPU,  │ Check PC,    │ Check  │                │
+│       │       │ check PC   │ read crash   │ symbol │                │
+│       │       │            │ registers    │ map    │                │
+│       │       │            │              │         │                │
+│       └───────┴────────────┴──────────────┴─────────┘                │
+│                              │                                       │
+│                              ▼                                       │
+│              ┌─────────────────────────────────────┐                 │
+│              │  SUCCESS: Found root cause!         │                 │
+│              │  • Apply fix to firmware/config     │                 │
+│              │  • Rebuild, reflash, test           │                 │
+│              └─────────────────────────────────────┘                 │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Real example: RDN2 board, no SCP output on UART0:**
+
+```bash
+# Step 1: Check wiring — looks OK (TX→RX, RX→TX, GND connected)
+# Step 2: Connect OpenOCD, read UART registers
+
+$ openocd -f board/rdn2.cfg
+> halt
+> mdw 0x7FF80000 0x10   ← SCP UART0 base address
+0x7FF80000: 0xFFFFFFFF   ← UARTDR reads all 1s
+
+# Diagnosis: UART not clocked! All regs read 0xFFFFFFFF when clock is off.
+
+# Step 3: Check SCP clock configuration (in scp_ramfw_fwk_module_list.c)
+# Found: UART module not in module list → clock never enabled
+
+# Fix: Add UART module to SCP module list, rebuild SCP firmware
+
+# Step 4: Reflash and test
+> reset
+... wait 3 seconds ...
+```
+
+**UART console output:**
+```
+SCP Firmware v2.11.0
+[MCP] UART initialized successfully  ← SUCCESS!
+```
 
 ---
 
