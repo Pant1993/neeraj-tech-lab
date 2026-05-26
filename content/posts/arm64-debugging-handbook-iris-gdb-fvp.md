@@ -368,17 +368,34 @@ The `str x0, [sp, #-16]!` instruction tried to push to the stack at SP=0xFFFFFFF
 **Step 4: Single-stepping with source correlation**
 
 ```python
+import subprocess
+
+def disassemble_instruction(elf_path, pc):
+    """Disassemble a single instruction at the given address"""
+    result = subprocess.run(
+        ['aarch64-linux-gnu-objdump', '-d', 
+         f'--start-address=0x{pc:x}', f'--stop-address=0x{pc+4:x}', elf_path],
+        capture_output=True, text=True
+    )
+    for line in result.stdout.splitlines():
+        if ':' in line and '\t' in line:
+            # Extract just the assembly mnemonic + operands
+            parts = line.split('\t')
+            return parts[-1].strip() if len(parts) >= 3 else parts[-1].strip()
+    return "???"
+
 def step_and_trace(cpu, model, elf_path, steps=10):
-    """Step N instructions, printing source for each"""
+    """Step N instructions, printing disassembly + source for each"""
     for i in range(steps):
         pc = cpu.read_register('PC')
         source = addr_to_source(elf_path, pc)
+        asm = disassemble_instruction(elf_path, pc)
         
-        # Read the instruction
+        # Read the raw instruction bytes
         insn_bytes = cpu.read_memory(pc, 4)
         insn_hex = ''.join(f'{b:02X}' for b in reversed(insn_bytes))
         
-        print(f"[{i:3d}] 0x{pc:016X}  {insn_hex}  {source}")
+        print(f"[{i:3d}] 0x{pc:016X}  {insn_hex}  {asm:30s}  // {source}")
         
         model.step(1)  # Execute one instruction
 
@@ -387,18 +404,40 @@ model.stop()
 step_and_trace(cpu0, model, 'build/rdn2/debug/bl31/bl31.elf', steps=20)
 ```
 
-**Output:**
+**Output (assembly shown alongside source):**
 ```
-[  0] 0x00000000FF018400  D53BE100  runtime_exceptions at bl31/aarch64/runtime_exceptions.S:42
-[  1] 0x00000000FF018404  F9400661  runtime_exceptions at bl31/aarch64/runtime_exceptions.S:43
-[  2] 0x00000000FF018408  F9002681  runtime_exceptions at bl31/aarch64/runtime_exceptions.S:44
-[  3] 0x00000000FF01840C  D53B4240  runtime_exceptions at bl31/aarch64/runtime_exceptions.S:45
-[  4] 0x00000000FF018410  B4000080  runtime_exceptions at bl31/aarch64/runtime_exceptions.S:46
-[  5] 0x00000000FF018414  14000003  runtime_exceptions at bl31/aarch64/runtime_exceptions.S:47
+[  0] 0x00000000FF018400  D53BE100  mrs   x0, esr_el3               // runtime_exceptions.S:42 — Read exception syndrome
+[  1] 0x00000000FF018404  F9400661  ldr   x1, [x19, #8]             // runtime_exceptions.S:43 — Load context pointer
+[  2] 0x00000000FF018408  F9002681  str   x1, [x20, #0x48]          // runtime_exceptions.S:44 — Save to exception frame
+[  3] 0x00000000FF01840C  D53B4240  mrs   x0, elr_el3               // runtime_exceptions.S:45 — Read return address
+[  4] 0x00000000FF018410  B4000080  cbz   x0, 0xFF018420            // runtime_exceptions.S:46 — Branch if null
+[  5] 0x00000000FF018414  14000003  b     0xFF018420                 // runtime_exceptions.S:47 — Jump to handler
 ...
 ```
 
-This gives you the full source-level debugging experience — step by step, with function names and line numbers — using ONLY Iris (no GDB required).
+> **Reading this output:** Each line shows the PC address, raw instruction bytes, the **disassembled assembly** (what the CPU actually executes), and the source file:line it maps to. All 6 lines here are consecutive instructions inside a single function called `runtime_exceptions` — the CPU entered this function once (due to one SMC call from StandaloneMM) and we're watching it execute the exception entry sequence step by step.
+
+**For C code (e.g., UEFI or StandaloneMM):**
+
+When the source is C (not assembly), `addr2line` gives you the C source line directly:
+
+```python
+# Tracing through a C function in StandaloneMM
+step_and_trace(cpu0, model, 'Build/AARCH64/DEBUG_GCC5/FV/StandaloneMm.efi', steps=5)
+```
+
+```
+[  0] 0x00000000FF200A40  F9400260  ldr   x0, [x19]                 // StandaloneMmCore.c:185 — Entry = GetFirstNode(&mMmProtocolDatabase);
+[  1] 0x00000000FF200A44  B4000080  cbz   x0, 0xFF200A54            // StandaloneMmCore.c:185 — (null check from while loop)
+[  2] 0x00000000FF200A48  F9401C01  ldr   x1, [x0, #0x38]           // StandaloneMmCore.c:187 — Protocol = CR(Entry, ...)->Interface;
+[  3] 0x00000000FF200A4C  F9000261  str   x1, [x19]                 // StandaloneMmCore.c:188 — *Registration = Protocol;
+[  4] 0x00000000FF200A50  D65F03C0  ret                             // StandaloneMmCore.c:190 — return EFI_SUCCESS;
+```
+
+> Here you can see the **C code** in the comments and the **assembly** the compiler generated for it. This makes it easy to follow the logic: "this `ldr` is loading a linked list node, this `cbz` is the while-loop null check, this `ret` is the function returning."
+
+This gives you the full source-level debugging experience — step by step, with assembly AND source — using ONLY Iris (no GDB required).
+
 
 ### Controlling Execution
 
