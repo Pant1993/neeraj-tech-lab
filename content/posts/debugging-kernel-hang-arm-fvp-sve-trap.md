@@ -1,6 +1,6 @@
 ---
 title: "The Hunt for the Silent Kernel — Debugging a Linux Boot Hang on ARM RD-N2 FVP"
-date: 2026-05-26T12:30:00+05:30
+date: 2026-05-26T12:10:00+05:30
 draft: false
 tags: ["ARM", "FVP", "Linux", "debugging", "SVE", "TF-A", "kernel", "UEFI", "Iris", "firmware", "EL3", "exception-levels"]
 categories: ["Debugging Stories"]
