@@ -581,7 +581,23 @@ The SCP produced this assertion:
 [SCP_ROMFW] ASSERT: pcid != MOD_PD_INVALID_ID
 ```
 
-This meant the Power Domain module couldn't find a valid power domain configuration ID. Using the SCP's address map and the assertion source, we traced it to an incompatibility between the SCP firmware version and the platform configuration. The fix was using matching firmware versions from the same ARM reference release.
+This meant the **SID (System Identification) module's** `mod_pcid_check_registers()` function was failing. Here's exactly what happened:
+
+1. **FVP 11.25.23** models the CMN-700 mesh network as **revision r1p0**
+2. Our firmware source (`RD-INFRA-2022.12.22`) was compiled with hardcoded **r0p0 PCID values**
+3. At boot, SCP's SID module reads the CMN-700 PCID registers and compares against expected values
+4. Mismatch → returns `FWK_E_DATA` → **SCP stops initialization silently** (before UART is initialized!)
+
+```c
+// module/sid/src/mod_sid.c — the killer
+if (!mod_pcid_check_registers()) {
+    return FWK_E_DATA;  // ← SCP dies here, no UART output yet
+}
+```
+
+The fix: Comment out `return FWK_E_DATA` in both `scp_romfw` and `scp_ramfw` builds to make the check non-fatal. This lets boot continue despite the PCID mismatch (which is benign on FVP).
+
+Even after this fix, the SCP hung again on **CMN-700 register access** because the FVP's `powerStateGate` model thought the power domain was still off (not tracking SCP's PPU writes). We bypassed this with: `css.cmn700.force_rnsam_power=true` in the FVP parameters.
 
 ---
 
