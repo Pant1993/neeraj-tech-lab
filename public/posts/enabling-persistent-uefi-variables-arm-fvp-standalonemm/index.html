@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><script src="/neeraj-tech-lab/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=neeraj-tech-lab/livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Making Variables Survive Reboot — Enabling StandaloneMM on ARM RD-N2 FVP | Neeraj&#39;s Tech Lab</title>
+<meta name="keywords" content="ARM, FVP, StandaloneMM, UEFI, FF-A, SPMC, TF-A, secure-partition, NOR-flash, debugging, Iris, persistence, efivarfs">
+<meta name="description" content="The complete story of enabling persistent UEFI variables on the ARM RD-N2 FVP — from understanding the Secure Partition Manager to debugging a stack pointer that was never initialized, and finally watching a variable survive a full power cycle.">
+<meta name="author" content="Neeraj Pant">
+<link rel="canonical" href="http://localhost:1313/neeraj-tech-lab/posts/enabling-persistent-uefi-variables-arm-fvp-standalonemm/">
+<link crossorigin="anonymous" href="/neeraj-tech-lab/assets/css/stylesheet.cd9298b33628769aa1bc1acebbbfd7aa11ce81dfe03484d479e1907760249a1d.css" integrity="sha256-zZKYszYodpqhvBrOu7/XqhHOgd/gNITUeeGQd2Akmh0=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/neeraj-tech-lab/%F0%9F%94%AC">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/neeraj-tech-lab/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/neeraj-tech-lab/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/neeraj-tech-lab/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/neeraj-tech-lab/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/neeraj-tech-lab/posts/enabling-persistent-uefi-variables-arm-fvp-standalonemm/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="http://localhost:1313/neeraj-tech-lab/posts/enabling-persistent-uefi-variables-arm-fvp-standalonemm/">
+  <meta property="og:site_name" content="Neeraj&#39;s Tech Lab">
+  <meta property="og:title" content="Making Variables Survive Reboot — Enabling StandaloneMM on ARM RD-N2 FVP">
+  <meta property="og:description" content="The complete story of enabling persistent UEFI variables on the ARM RD-N2 FVP — from understanding the Secure Partition Manager to debugging a stack pointer that was never initialized, and finally watching a variable survive a full power cycle.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-05-26T18:00:00+05:30">
+    <meta property="article:modified_time" content="2026-05-26T18:00:00+05:30">
+    <meta property="article:tag" content="ARM">
+    <meta property="article:tag" content="FVP">
+    <meta property="article:tag" content="StandaloneMM">
+    <meta property="article:tag" content="UEFI">
+    <meta property="article:tag" content="FF-A">
+    <meta property="article:tag" content="SPMC">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Making Variables Survive Reboot — Enabling StandaloneMM on ARM RD-N2 FVP">
+  <meta name="twitter:description" content="The complete story of enabling persistent UEFI variables on the ARM RD-N2 FVP — from understanding the Secure Partition Manager to debugging a stack pointer that was never initialized, and finally watching a variable survive a full power cycle.">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "http://localhost:1313/neeraj-tech-lab/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Making Variables Survive Reboot — Enabling StandaloneMM on ARM RD-N2 FVP",
+      "item": "http://localhost:1313/neeraj-tech-lab/posts/enabling-persistent-uefi-variables-arm-fvp-standalonemm/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Making Variables Survive Reboot — Enabling StandaloneMM on ARM RD-N2 FVP",
+  "name": "Making Variables Survive Reboot — Enabling StandaloneMM on ARM RD-N2 FVP",
+  "description": "The complete story of enabling persistent UEFI variables on the ARM RD-N2 FVP — from understanding the Secure Partition Manager to debugging a stack pointer that was never initialized, and finally watching a variable survive a full power cycle.",
+  "keywords": [
+    "ARM", "FVP", "StandaloneMM", "UEFI", "FF-A", "SPMC", "TF-A", "secure-partition", "NOR-flash", "debugging", "Iris", "persistence", "efivarfs"
+  ],
+  "articleBody": " A story about a Secure Partition that crashed before executing its first C instruction, a stack pointer pointing to 0xFFFFFFFFFFFFFD90, and the single build flag that made the difference.\nThe Problem After days of firmware bring-up and debugging the SVE kernel trap, we had a fully booting ARM RD-N2 FVP system:\nSCP → TF-A (BL1 → BL2 → BL31) → UEFI → GRUB → Linux (buildroot) Everything worked. But there was one glaring limitation: UEFI variables didn’t persist across reboots.\nEvery time the FVP powered off and restarted, the EFI variable store was wiped clean. Boot order preferences, OS settings, any runtime configuration — all gone. The reason? Without a Secure Partition handling NOR flash writes, UEFI had no mechanism to commit variables to non-volatile storage in a security-compliant way.\nThe solution: StandaloneMM (Management Mode) — a Secure Partition that runs inside the Secure Partition Manager Core (SPMC), handles variable read/write requests from the normal world via FF-A (Firmware Framework for Arm), and persists them to NOR flash.\nHow hard could it be?\nChapter 1: Understanding the Architecture What is StandaloneMM? In the ARM firmware architecture, UEFI variables marked as Non-Volatile (NV) need to be written to persistent storage. But on TrustZone-enabled systems, the flash is in the secure world — the normal-world OS (Linux) can’t write to it directly.\nThe flow is:\nLinux userspace (efivarfs)\r↓ ioctl\rLinux kernel (EFI runtime services)\r↓ SMC (Secure Monitor Call)\rTF-A BL31 / SPMC (EL3)\r↓ FF-A message passing\rStandaloneMM Secure Partition (S-EL0/S-EL1)\r↓ MMIO\rNOR Flash (0x1054000000) StandaloneMM is an EDK2-based firmware binary that:\nReceives variable read/write requests via FF-A from the normal world Validates them (authentication, size limits, garbage collection) Writes to NOR flash using the Fault Tolerant Write (FTW) protocol Returns status back through the same FF-A channel The Components To enable this, we needed to modify TF-A to include the SPMC (Secure Partition Manager Core) at EL3, which would:\nLoad the StandaloneMM binary (BL32) during boot Set up the secure partition’s memory regions and device access Handle FF-A calls between the normal world and the SP The Golden Rule We had a golden backup of our working firmware at C:\\Users\\neerajpant\\rdn2-golden\\. The rule was simple: never modify the golden copy. All experiments happen on a working copy.\nChapter 2: Building StandaloneMM First Attempt — CPU-Only MM (No Storage) The initial build was straightforward. EDK2’s platform code for SGI/RD-N2 already had a PlatformStandaloneMm.dsc file:\ncd /root/rdn2/uefi/edk2 \u0026\u0026 source edksetup.sh export GCC5_AARCH64_PREFIX=aarch64-linux-gnu- export PACKAGES_PATH=/root/rdn2/uefi/edk2:/root/rdn2/uefi/edk2/edk2-platforms build -a AARCH64 -t GCC5 -p Platform/ARM/SgiPkg/PlatformStandaloneMm.dsc -b DEBUG This produced BL32_AP_MM.fd — a minimal MM binary with just the StandaloneMmCpu driver (handles FF-A communication) but no storage drivers.\nTF-A with SPMC The TF-A build needed significant new flags:\nmake -j$(nproc) PLAT=rdn2 CROSS_COMPILE=aarch64-linux-gnu- DEBUG=1 LOG_LEVEL=40 \\ TRUSTED_BOARD_BOOT=1 GENERATE_COT=1 CREATE_KEYS=1 \\ ROT_KEY=plat/arm/board/common/rotpk/arm_rotprivk_rsa.pem \\ ARM_ROTPK_LOCATION=devel_rsa MBEDTLS_DIR=/root/rdn2/mbedtls \\ CTX_INCLUDE_FPREGS=0 ENABLE_SVE_FOR_NS=1 ENABLE_SME_FOR_NS=0 \\ ENABLE_SVE_FOR_SWD=1 \\ ARM_BL31_IN_DRAM=1 SPMC_AT_EL3=1 SPD=spmd SPMD_SPM_AT_SEL2=0 \\ EL3_EXCEPTION_HANDLING=1 PLAT_RO_XLAT_TABLES=1 \\ BL32=/root/rdn2/uefi/edk2/Build/SgiMmStandalone/DEBUG_GCC5/FV/BL32_AP_MM.fd \\ BL33=/root/rdn2/output/rdn2/components/css-common/uefi.bin \\ all fip Key new flags:\nSPMC_AT_EL3=1 — Run the Secure Partition Manager at EL3 (inside BL31) SPD=spmd — Use the SPM Dispatcher SPMD_SPM_AT_SEL2=0 — Don’t use S-EL2 (no secure hypervisor) EL3_EXCEPTION_HANDLING=1 — Handle exceptions from secure partitions ENABLE_SVE_FOR_SWD=1 — Critical! Clear CPTR_EL3.TFP so the SP can use FP/SIMD BL32=...BL32_AP_MM.fd — The StandaloneMM binary to embed First Boot with SPMC — The FP Trap The first SPMC-enabled boot hung immediately. The secure UART showed:\nSecure Partition (0x8001) init start And then silence. We’d seen this pattern before with the SVE kernel trap. The CPTR_EL3.TFP bit was set, trapping floating-point access from the secure world. The fix was ENABLE_SVE_FOR_SWD=1 which clears TFP for secure world dispatch.\nAfter that fix, the CPU-only MM booted fine. But variables still weren’t persistent — because there were no NOR flash drivers.\nChapter 3: Adding Storage Drivers — The Crash Building with SECURE_STORAGE_ENABLE The EDK2 platform DSC gates the NOR flash, FTW, and Variable drivers behind a build flag:\nbuild -a AARCH64 -t GCC5 -p Platform/ARM/SgiPkg/PlatformStandaloneMm.dsc \\ -D SECURE_STORAGE_ENABLE -b DEBUG This adds three critical drivers to the MM binary:\nNorFlashStandaloneMm.efi — Intel P30 StrataFlash driver for the NOR at 0x1054000000 FaultTolerantWriteStandaloneMm.efi — Crash-safe write protocol VariableStandaloneMm.efi — The actual UEFI variable service The Immediate Hang Rebuilt TF-A with the new MM binary, deployed, booted. The secure UART showed:\nSecure Partition (0x8001) init start And then — nothing. Again. But this time ENABLE_SVE_FOR_SWD was already set. The old MM binary (without storage drivers) still worked with the exact same TF-A build. Something in the new MM binary was crashing before it could even log a message.\nWhat We Knew Same TF-A build works with old MM → problem is in the new MM binary Crash happens before any C-level logging The SP manifest (rdn2_stmm_config.dts) has correct NOR2 device region: nor_flash2 { base-address = \u003c0x00000010 0x54000000\u003e; pages-count = \u003c16384\u003e; /* 64MB */ attributes = \u003c0x3\u003e; /* read-write */ \"smccc-id\" = \u003c0x00000000\u003e; }; NOR2 address 0x1054000000 is correct (matches hardware configuration) The guessing game began. Was it a memory mapping issue? A driver initialization problem? An incompatible PCD?\nChapter 4: The Debugger — No More Guessing We’d been down this road before with the SVE trap. The answer then was “use the debugger.” The answer now was the same.\nConnecting via Iris The ARM FVP comes with Iris — a Python-based debug API accessible over TCP port 7100:\nimport sys sys.path.insert(0, r'C:\\Program Files\\ARM\\FVP_RD_N2\\Iris\\Python') from iris.debug.Model import NetworkModel model = NetworkModel('localhost', 7100) cpu0 = model.get_target('component.RD_N2.css.cluster0.cpu0') Reading the Exception State Since the SP had crashed and trapped back into EL3, we could read the exception registers:\npc = cpu0.read_register('PC') # 0xFF01843C — infinite loop in BL31 elr_el3 = cpu0.read_register('ELR_EL3') # The return address into EL3 esr_el3 = cpu0.read_register('ESR_EL3') # 0x5E000000 — SMC from lower EL But we needed the SP’s exception state — the registers at the moment it faulted:\nelr_el1 = cpu0.read_register('ELR_EL1') # 0xFF207DA0 — faulting instruction esr_el1 = cpu0.read_register('ESR_EL1') # 0x92000044 far_el1 = cpu0.read_register('FAR_EL1') # 0xFFFFFFFFFFFFFD90 sp_el0 = cpu0.read_register('SP_EL0') # 0xFFFFFFFFFFFFFD90 Decoding the Exception ESR_EL1 = 0x92000044:\nBits [31:26] EC = 0x24 → Data Abort from same exception level Bits [5:0] DFSC = 0x04 → Translation fault at Level 0 FAR_EL1 = 0xFFFFFFFFFFFFFD90 — the address that caused the fault.\nAnd there it was. The Fault Address Register equaled the Stack Pointer:\nFAR_EL1 = SP_EL0 = 0xFFFFFFFFFFFFFD90 The SP tried to access its own stack, and the stack was at an unmapped, garbage address. This wasn’t a driver bug. This wasn’t a NOR flash issue. The stack pointer was never initialized.\nChapter 5: The Root Cause — One Build Flag Following the Assembly StandaloneMM’s entry point is in ModuleEntryPoint.S:\n// StandaloneMmPkg/Library/StandaloneMmCoreEntryPoint/Arm/AArch64/ModuleEntryPoint.S .section .data.stack .balign 4096 StackBase: .fill 8192, 1, 0 // 8KB embedded stack StackEnd: _ModuleEntryPoint: // ... register setup ... // Check if FFA is enabled ldr w8, PcdGet32(PcdFfaEnable) cbz w8, FfaNotEnabled // \u003c-- THIS BRANCH // FFA enabled path: set memory permissions via SVC, then init stack mov x0, #0 adr x1, StackBase // ... FfaMemPermSet call ... adr x0, StackEnd mov sp, x0 // \u003c-- STACK INITIALIZED HERE b SetupGdt FfaNotEnabled: // SKIPS EVERYTHING ABOVE // Falls through to C code with WHATEVER was in SP_EL0 When PcdFfaEnable = 0 (FALSE), the code takes the FfaNotEnabled branch which skips stack initialization entirely. The SP jumps to C code with whatever garbage the SPMC left in SP_EL0.\nThe PCD Chain In SgiPlatformMm.dsc.inc (line 20):\nDEFINE EDK2_ENABLE_FFA = FALSE # The default! This propagates to:\ngArmTokenSpaceGuid.PcdFfaEnable|0 # When EDK2_ENABLE_FFA=FALSE Which the assembly reads at boot:\nldr w8, PcdGet32(PcdFfaEnable) # Loads 0 cbz w8, FfaNotEnabled # Branch taken! Skip stack setup! Why It Worked Before The old MM binary (without SECURE_STORAGE_ENABLE) was smaller and by coincidence, the SPMC initialized SP_EL0 to a region that happened to be mapped. The moment we added NOR flash drivers, the binary layout changed, and SP_EL0 pointed to unmapped space. The bug was always there — it was just latent.\nThe Fix One flag:\nbuild -a AARCH64 -t GCC5 -p Platform/ARM/SgiPkg/PlatformStandaloneMm.dsc \\ -D SECURE_STORAGE_ENABLE -D EDK2_ENABLE_FFA=TRUE -b DEBUG That’s it. -D EDK2_ENABLE_FFA=TRUE overrides the platform default, sets PcdFfaEnable=1, and the entry point properly initializes the stack from the embedded 8KB StackBase/StackEnd region.\nChapter 6: StandaloneMM Comes Alive With EDK2_ENABLE_FFA=TRUE, the secure UART log transformed:\nSecure Partition (0x8001) init start\rINFO: Mapping Software delegated exception access page\rINFO: Software Delegated Exception buffer setup done\rBooting Secure Partition (0x8001)...\rStandaloneMm[0x8001] entry point\rNorFlashPlatformInitialization: enabling NOR flash write (FLASH_RWEN at 0x0C01004C)\rNorFlashInitialise: found NOR flash device at 0x1054000000 (256KB blocks, 64MB)\rFvbInitialize: Locating FVB header in NOR flash...\rValidateFvHeader: Initializing new variable store (fresh flash)\rInitializeFvAndVariableStoreHeaders: Writing FV + variable headers\rFtwInitialize: Fault Tolerant Write initialized with spare block at offset 0x80000\rVariable driver will work with auth variable support!\rStandaloneMmCpu: FF-A communication driver loaded\rINFO: Secure Partition (0x8001) initialized successfully All four drivers loaded:\n✅ NorFlashStandaloneMm — Initialized NOR2 at 0x1054000000 ✅ FaultTolerantWrite — Configured spare block for crash recovery ✅ Variable — Ready to service authenticated variable operations ✅ StandaloneMmCpu — FF-A message handler active The full system booted all the way to Linux:\nBL1 → BL2 → BL31/SPMC → StandaloneMM (initialized) → UEFI → GRUB → Linux Chapter 7: Writing Our First Persistent Variable From Linux The Linux kernel exposes UEFI variables through efivarfs:\n# Login to buildroot buildroot login: root # Mount the EFI variable filesystem mount -t efivarfs efivarfs /sys/firmware/efi/efivars # Write a test variable # Format: 4 bytes attributes + data # 0x07 = NV (0x01) + BS (0x02) + RT (0x04) = Non-Volatile + Boot Service + Runtime printf '\\x07\\x00\\x00\\x00REBOOT_OK' \u003e \\ /sys/firmware/efi/efivars/BootSurvival-12345678-1234-1234-1234-123456789abc # Verify it was written hexdump -C /sys/firmware/efi/efivars/BootSurvival-12345678-1234-1234-1234-123456789abc Output:\n00000000 07 00 00 00 52 45 42 4f 4f 54 5f 4f 4b |....REBOOT_OK|\r0000000d The write went through! The FF-A call chain worked:\nLinux efivarfs → kernel SMC → BL31 SPMC → StandaloneMM → NOR flash write But the real question: does it survive a reboot?\nChapter 8: The Persistence Problem — FVP Flash Write-Back The Discovery We issued poweroff from Linux. The kernel shut down cleanly:\nThe system is going down NOW!\rStopping network: OK\rStopping klogd: OK\rreboot: Power down But the FVP process didn’t exit. It just stopped the simulation. And when we force-killed the FVP and rebooted — the variable was gone.\nUnderstanding FVP Flash Behavior The FVP’s NOR flash model has two parameters:\nboard.flashloader2.fname — File to load flash contents FROM at startup board.flashloader2.fnameWrite — File to save flash contents TO on simulation exit The key word is “on simulation exit.” The FVP only writes flash contents back to disk when it performs a graceful simulation termination. Force-killing the process (Kill()) skips the write-back entirely.\nWhat Doesn’t Work We tried everything:\nCloseMainWindow() — Sends WM_CLOSE but FVP doesn’t exit after guest poweroff Kill() / Stop-Process — Force terminates, no write-back Iris model.release() — Disconnects debug client, doesn’t end simulation Guest poweroff — Halts CPUs but FVP process stays alive The Solution: shutdown_tag Buried in the FVP’s parameter list (--list-params) was exactly what we needed:\ncss.pl011_ns_uart_ap.shutdown_tag= # Shutdown simulation when a string is transmitted When the kernel prints \"reboot: Power down\" during shutdown, the UART transmits those exact bytes. If we set shutdown_tag to match that string, the FVP will end the simulation gracefully — triggering the flash write-back!\n\"-C\", \"css.pl011_ns_uart_ap.shutdown_tag=reboot: Power down\", The Write-Back in Action With shutdown_tag configured, the FVP output on poweroff:\nInfo: /OSCI/SystemC: Simulation stopped by user.\rInfo: RD_N2: RD_N2.board.flashloader1: FlashLoader: Saved 64MB to file 'nor1_flash.img'\rInfo: RD_N2: RD_N2.board.flashloader2: FlashLoader: Saved 64MB to file 'nor2_flash.img' Flash saved! And an important detail: the FVP saves flash in gzip-compressed format (file starts with 1F 8B 08 00), but transparently decompresses it on load.\nChapter 9: The Final Test — Does It Survive? Boot 1: Write the Variable mount -t efivarfs efivarfs /sys/firmware/efi/efivars printf '\\x07\\x00\\x00\\x00REBOOT_OK' \u003e \\ /sys/firmware/efi/efivars/BootSurvival-12345678-1234-1234-1234-123456789abc hexdump -C /sys/firmware/efi/efivars/BootSurvival-12345678-1234-1234-1234-123456789abc # 00000000 07 00 00 00 52 45 42 4f 4f 54 5f 4f 4b |....REBOOT_OK| poweroff FVP exits gracefully. Flash written to disk. Hash changes from all-zeros to 2D24384A....\nBoot 2: Read It Back Fresh FVP launch with the same nor2_flash.img:\nmount -t efivarfs efivarfs /sys/firmware/efi/efivars ls /sys/firmware/efi/efivars/ | grep BootSurvival # BootSurvival-12345678-1234-1234-1234-123456789abc hexdump -C /sys/firmware/efi/efivars/BootSurvival-12345678-1234-1234-1234-123456789abc # 00000000 07 00 00 00 52 45 42 4f 4f 54 5f 4f 4b |....REBOOT_OK| 🎉 PERSISTENCE CONFIRMED.\nThe variable REBOOT_OK survived a complete power cycle. Written on boot 1, read back identically on boot 2. The entire chain works:\nWrite: Linux → SMC → SPMC → StandaloneMM → NOR flash → disk (via shutdown_tag)\rRead: Disk → FVP flash model → StandaloneMM → FF-A → Linux efivarfs The Final Architecture ┌─────────────────────────────────────────────────────────┐\r│ Linux (Normal World) │\r│ efivarfs: /sys/firmware/efi/efivars/ │\r│ ┌─────────────────────────────────────────────────┐ │\r│ │ printf '\\x07\\x00\\x00\\x00DATA' \u003e VarName-GUID │ │\r│ └──────────────────────┬──────────────────────────┘ │\r└─────────────────────────┼───────────────────────────────┘\r│ SMC (FF-A)\r┌─────────────────────────┼───────────────────────────────┐\r│ TF-A BL31 / SPMC (EL3) │ │\r│ ┌──────────────────────┼──────────────────────────┐ │\r│ │ SPMD dispatches FF-A message to SP 0x8001 │ │\r│ └──────────────────────┼──────────────────────────┘ │\r└─────────────────────────┼───────────────────────────────┘\r│ FF-A msg_send_direct\r┌─────────────────────────┼───────────────────────────────┐\r│ StandaloneMM Secure Partition (S-EL0) │\r│ ┌──────────────┐ ┌──────────┐ ┌───────────────────┐ │\r│ │ Variable.efi │→│ FTW.efi │→│ NorFlash.efi │ │\r│ │ Auth + GC │ │ Crash- │ │ P30 StrataFlash │ │\r│ │ │ │ safe │ │ @ 0x1054000000 │ │\r│ └──────────────┘ └──────────┘ └─────────┬─────────┘ │\r└───────────────────────────────────────────┼─────────────┘\r│ MMIO\r┌───────────────────────────────────────────┼─────────────┐\r│ NOR Flash (64MB, 256KB blocks) │ │\r│ ┌────────────────────────────────────────┼────────┐ │\r│ │ FV Header │ Var Store │ FTW Spare │ ... │ │\r│ │ (block 0) │ (block 1) │ (block 2) │ │ │\r│ └────────────────────────────────────────────────┘ │\r│ Backed by: nor2_flash.img (gzip compressed) │\r│ Saved on: FVP graceful exit (shutdown_tag trigger) │\r└─────────────────────────────────────────────────────────┘ Lessons Learned 1. Build Defaults Are Dangerous The platform DSC had EDK2_ENABLE_FFA = FALSE as the default. This made perfect sense for legacy (non-FF-A) boot flows where the SPMC initializes the SP’s stack. But when using the modern FF-A SPMC at EL3, the SP must initialize its own stack. The default was wrong for our use case, and the failure was completely silent — no assert, no error log, just a crash before the first line of C code ran.\n2. The Debugger Beats Guessing Every Time We could have spent hours theorizing about NOR flash addresses, memory map conflicts, or driver initialization order. Instead, 30 seconds with the Iris debugger gave us:\nThe exact faulting instruction (ELR_EL1 = 0xFF207DA0) The exception type (Data Abort, Translation Fault Level 0) The smoking gun (FAR_EL1 = SP_EL0 = garbage) The call stack told us everything: the SP never had a valid stack.\n3. FVP Flash Requires Graceful Exit The FVP’s flash write-back only happens on graceful simulation termination. Force-killing the process loses all flash changes. The shutdown_tag parameter is the elegant solution — set it to match a kernel shutdown message, and the FVP auto-exits with flash saved:\ncss.pl011_ns_uart_ap.shutdown_tag=reboot: Power down 4. Latent Bugs Hide in Success The EDK2_ENABLE_FFA=FALSE bug was present in the CPU-only MM build too. It “worked” by accident because the SPMC happened to leave SP_EL0 in a mapped region. Adding NOR flash drivers changed the binary layout just enough to expose the real bug. A working system isn’t necessarily a correct system.\nQuick Reference Build Commands StandaloneMM (with persistent storage):\ncd /root/rdn2/uefi/edk2 \u0026\u0026 source edksetup.sh export GCC5_AARCH64_PREFIX=aarch64-linux-gnu- export PACKAGES_PATH=/root/rdn2/uefi/edk2:/root/rdn2/uefi/edk2/edk2-platforms build -a AARCH64 -t GCC5 -p Platform/ARM/SgiPkg/PlatformStandaloneMm.dsc \\ -D SECURE_STORAGE_ENABLE -D EDK2_ENABLE_FFA=TRUE -b DEBUG TF-A with SPMC:\nmake -j$(nproc) PLAT=rdn2 CROSS_COMPILE=aarch64-linux-gnu- DEBUG=1 LOG_LEVEL=40 \\ TRUSTED_BOARD_BOOT=1 GENERATE_COT=1 CREATE_KEYS=1 \\ ROT_KEY=plat/arm/board/common/rotpk/arm_rotprivk_rsa.pem \\ ARM_ROTPK_LOCATION=devel_rsa MBEDTLS_DIR=/root/rdn2/mbedtls \\ CTX_INCLUDE_FPREGS=0 ENABLE_SVE_FOR_NS=1 ENABLE_SME_FOR_NS=0 \\ ENABLE_SVE_FOR_SWD=1 \\ ARM_BL31_IN_DRAM=1 SPMC_AT_EL3=1 SPD=spmd SPMD_SPM_AT_SEL2=0 \\ EL3_EXCEPTION_HANDLING=1 PLAT_RO_XLAT_TABLES=1 \\ BL32=/root/rdn2/uefi/edk2/Build/SgiMmStandalone/DEBUG_GCC5/FV/BL32_AP_MM.fd \\ BL33=/root/rdn2/output/rdn2/components/css-common/uefi.bin \\ all fip FVP Parameters for Persistence # In run_rdn2.ps1: \"-C\", \"board.flashloader2.fname=$IMGDIR\\nor2_flash.img\", \"-C\", \"board.flashloader2.fnameWrite=$IMGDIR\\nor2_flash.img\", \"-C\", \"css.pl011_ns_uart_ap.shutdown_tag=reboot: Power down\", Writing Variables from Linux mount -t efivarfs efivarfs /sys/firmware/efi/efivars # Attributes: 0x07 = NV + BS + RT printf '\\x07\\x00\\x00\\x00YOUR_DATA' \u003e \\ /sys/firmware/efi/efivars/VarName-12345678-1234-1234-1234-123456789abc # Read back hexdump -C /sys/firmware/efi/efivars/VarName-12345678-1234-1234-1234-123456789abc # Delete (required before overwrite) chattr -i /sys/firmware/efi/efivars/VarName-* # Remove immutable flag rm /sys/firmware/efi/efivars/VarName-* Iris Debugger Quick Reference import sys sys.path.insert(0, r'C:\\Program Files\\ARM\\FVP_RD_N2\\Iris\\Python') from iris.debug.Model import NetworkModel model = NetworkModel('localhost', 7100) cpu0 = model.get_target('component.RD_N2.css.cluster0.cpu0') # Read exception state pc = cpu0.read_register('PC') elr_el1 = cpu0.read_register('ELR_EL1') # Faulting instruction esr_el1 = cpu0.read_register('ESR_EL1') # Exception syndrome far_el1 = cpu0.read_register('FAR_EL1') # Fault address sp_el0 = cpu0.read_register('SP_EL0') # Stack pointer # ESR decoding: # EC [31:26]: 0x24 = Data Abort, 0x25 = Data Abort (same EL) # DFSC [5:0]: 0x04 = Translation fault L0, 0x05 = L1, 0x06 = L2, 0x07 = L3 What’s Next With persistent UEFI variables working, the RD-N2 FVP platform is now a realistic emulation of a real ARM server:\nBoot preferences persist across power cycles Secure variable storage via TrustZone + FF-A Crash-safe writes via Fault Tolerant Write protocol Graceful shutdown with automatic flash save The natural next steps:\nSecure Boot: Use persistent variables to store PK/KEK/db for UEFI Secure Boot RELEASE build: Switch from DEBUG to RELEASE for faster simulation Automated testing: Script the boot-write-reboot-verify cycle Variable authentication: Test authenticated variable writes (db/dbx updates) From “FVP installed” to “persistent secure variables” — a journey through SCP hangs, UEFI DXE stalls, SVE traps, certificate errors, a crash-before-first-instruction bug, and FVP flash semantics. Every layer of the ARM firmware stack had its own surprise. But in the end, the variable survived the reboot. And that made it all worth it.\nThis is Part 3 in a series on ARM RD-N2 FVP firmware development:\nBringing Up Firmware — A Chronicle of Silent Failures The Hunt for the Silent Kernel — Debugging the SVE Trap Making Variables Survive Reboot — Enabling StandaloneMM (this post) ",
+  "wordCount" : "2915",
+  "inLanguage": "en",
+  "datePublished": "2026-05-26T18:00:00+05:30",
+  "dateModified": "2026-05-26T18:00:00+05:30",
+  "author":{
+    "@type": "Person",
+    "name": "Neeraj Pant"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "http://localhost:1313/neeraj-tech-lab/posts/enabling-persistent-uefi-variables-arm-fvp-standalonemm/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Neeraj's Tech Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "http://localhost:1313/neeraj-tech-lab/%F0%9F%94%AC"
+    }
+  }
+}
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="header-nav">
+        <div class="logo">
+            <a href="http://localhost:1313/neeraj-tech-lab/" accesskey="h" title="Neeraj&#39;s Tech Lab (Alt + H)">Neeraj&#39;s Tech Lab</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" class="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg class="moon" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg class="sun" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu" class="menu">
+            <li>
+                <a href="http://localhost:1313/neeraj-tech-lab/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/neeraj-tech-lab/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/neeraj-tech-lab/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <nav class="breadcrumbs" role="navigation" aria-label="Breadcrumb">
+            <a href="/neeraj-tech-lab/">Home</a>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+            <a href="/neeraj-tech-lab/posts/">Posts</a>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+        <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+</nav>
+    <h1 class="post-title entry-hint-parent">
+      Making Variables Survive Reboot — Enabling StandaloneMM on ARM RD-N2 FVP
+    </h1>
+    <div class="post-description">
+      The complete story of enabling persistent UEFI variables on the ARM RD-N2 FVP — from understanding the Secure Partition Manager to debugging a stack pointer that was never initialized, and finally watching a variable survive a full power cycle.
+    </div>
+    <div class="post-meta">
+
+<span title='2026-05-26 18:00:00 +0530 IST'>May 26, 2026</span>&nbsp;·&nbsp;<span>14 min</span>&nbsp;·&nbsp;<span>Neeraj Pant</span>
+
+</div>
+  </header> <details class="toc"  open>
+    <summary accesskey="c" title="(Alt + C)">
+        <span class="title">Table of Contents</span>
+    </summary>
+
+    <div class="inner"><ul>
+            <li>
+                <a href="#the-problem" aria-label="The Problem">The Problem</a></li>
+            <li>
+                <a href="#chapter-1-understanding-the-architecture" aria-label="Chapter 1: Understanding the Architecture">Chapter 1: Understanding the Architecture</a><ul>
+                    
+            <li>
+                <a href="#what-is-standalonemm" aria-label="What is StandaloneMM?">What is StandaloneMM?</a></li>
+            <li>
+                <a href="#the-components" aria-label="The Components">The Components</a></li>
+            <li>
+                <a href="#the-golden-rule" aria-label="The Golden Rule">The Golden Rule</a></li></ul>
+            </li>
+            <li>
+                <a href="#chapter-2-building-standalonemm" aria-label="Chapter 2: Building StandaloneMM">Chapter 2: Building StandaloneMM</a><ul>
+                    
+            <li>
+                <a href="#first-attempt--cpu-only-mm-no-storage" aria-label="First Attempt — CPU-Only MM (No Storage)">First Attempt — CPU-Only MM (No Storage)</a></li>
+            <li>
+                <a href="#tf-a-with-spmc" aria-label="TF-A with SPMC">TF-A with SPMC</a></li>
+            <li>
+                <a href="#first-boot-with-spmc--the-fp-trap" aria-label="First Boot with SPMC — The FP Trap">First Boot with SPMC — The FP Trap</a></li></ul>
+            </li>
+            <li>
+                <a href="#chapter-3-adding-storage-drivers--the-crash" aria-label="Chapter 3: Adding Storage Drivers — The Crash">Chapter 3: Adding Storage Drivers — The Crash</a><ul>
+                    
+            <li>
+                <a href="#building-with-secure_storage_enable" aria-label="Building with SECURE_STORAGE_ENABLE">Building with SECURE_STORAGE_ENABLE</a></li>
+            <li>
+                <a href="#the-immediate-hang" aria-label="The Immediate Hang">The Immediate Hang</a></li>
+            <li>
+                <a href="#what-we-knew" aria-label="What We Knew">What We Knew</a></li></ul>
+            </li>
+            <li>
+                <a href="#chapter-4-the-debugger--no-more-guessing" aria-label="Chapter 4: The Debugger — No More Guessing">Chapter 4: The Debugger — No More Guessing</a><ul>
+                    
+            <li>
+                <a href="#connecting-via-iris" aria-label="Connecting via Iris">Connecting via Iris</a></li>
+            <li>
+                <a href="#reading-the-exception-state" aria-label="Reading the Exception State">Reading the Exception State</a></li>
+            <li>
+                <a href="#decoding-the-exception" aria-label="Decoding the Exception">Decoding the Exception</a></li></ul>
+            </li>
+            <li>
+                <a href="#chapter-5-the-root-cause--one-build-flag" aria-label="Chapter 5: The Root Cause — One Build Flag">Chapter 5: The Root Cause — One Build Flag</a><ul>
+                    
+            <li>
+                <a href="#following-the-assembly" aria-label="Following the Assembly">Following the Assembly</a></li>
+            <li>
+                <a href="#the-pcd-chain" aria-label="The PCD Chain">The PCD Chain</a></li>
+            <li>
+                <a href="#why-it-worked-before" aria-label="Why It Worked Before">Why It Worked Before</a></li>
+            <li>
+                <a href="#the-fix" aria-label="The Fix">The Fix</a></li></ul>
+            </li>
+            <li>
+                <a href="#chapter-6-standalonemm-comes-alive" aria-label="Chapter 6: StandaloneMM Comes Alive">Chapter 6: StandaloneMM Comes Alive</a></li>
+            <li>
+                <a href="#chapter-7-writing-our-first-persistent-variable" aria-label="Chapter 7: Writing Our First Persistent Variable">Chapter 7: Writing Our First Persistent Variable</a><ul>
+                    
+            <li>
+                <a href="#from-linux" aria-label="From Linux">From Linux</a></li></ul>
+            </li>
+            <li>
+                <a href="#chapter-8-the-persistence-problem--fvp-flash-write-back" aria-label="Chapter 8: The Persistence Problem — FVP Flash Write-Back">Chapter 8: The Persistence Problem — FVP Flash Write-Back</a><ul>
+                    
+            <li>
+                <a href="#the-discovery" aria-label="The Discovery">The Discovery</a></li>
+            <li>
+                <a href="#understanding-fvp-flash-behavior" aria-label="Understanding FVP Flash Behavior">Understanding FVP Flash Behavior</a></li>
+            <li>
+                <a href="#what-doesnt-work" aria-label="What Doesn&rsquo;t Work">What Doesn&rsquo;t Work</a></li>
+            <li>
+                <a href="#the-solution-shutdown_tag" aria-label="The Solution: shutdown_tag">The Solution: shutdown_tag</a></li>
+            <li>
+                <a href="#the-write-back-in-action" aria-label="The Write-Back in Action">The Write-Back in Action</a></li></ul>
+            </li>
+            <li>
+                <a href="#chapter-9-the-final-test--does-it-survive" aria-label="Chapter 9: The Final Test — Does It Survive?">Chapter 9: The Final Test — Does It Survive?</a><ul>
+                    
+            <li>
+                <a href="#boot-1-write-the-variable" aria-label="Boot 1: Write the Variable">Boot 1: Write the Variable</a></li>
+            <li>
+                <a href="#boot-2-read-it-back" aria-label="Boot 2: Read It Back">Boot 2: Read It Back</a></li></ul>
+            </li>
+            <li>
+                <a href="#the-final-architecture" aria-label="The Final Architecture">The Final Architecture</a></li>
+            <li>
+                <a href="#lessons-learned" aria-label="Lessons Learned">Lessons Learned</a><ul>
+                    
+            <li>
+                <a href="#1-build-defaults-are-dangerous" aria-label="1. Build Defaults Are Dangerous">1. Build Defaults Are Dangerous</a></li>
+            <li>
+                <a href="#2-the-debugger-beats-guessing-every-time" aria-label="2. The Debugger Beats Guessing Every Time">2. The Debugger Beats Guessing Every Time</a></li>
+            <li>
+                <a href="#3-fvp-flash-requires-graceful-exit" aria-label="3. FVP Flash Requires Graceful Exit">3. FVP Flash Requires Graceful Exit</a></li>
+            <li>
+                <a href="#4-latent-bugs-hide-in-success" aria-label="4. Latent Bugs Hide in Success">4. Latent Bugs Hide in Success</a></li></ul>
+            </li>
+            <li>
+                <a href="#quick-reference" aria-label="Quick Reference">Quick Reference</a><ul>
+                    
+            <li>
+                <a href="#build-commands" aria-label="Build Commands">Build Commands</a></li>
+            <li>
+                <a href="#fvp-parameters-for-persistence" aria-label="FVP Parameters for Persistence">FVP Parameters for Persistence</a></li>
+            <li>
+                <a href="#writing-variables-from-linux" aria-label="Writing Variables from Linux">Writing Variables from Linux</a></li>
+            <li>
+                <a href="#iris-debugger-quick-reference" aria-label="Iris Debugger Quick Reference">Iris Debugger Quick Reference</a></li></ul>
+            </li>
+            <li>
+                <a href="#whats-next" aria-label="What&rsquo;s Next">What&rsquo;s Next</a>
+            </li>
+        </ul>
+    </div>
+</details>
+
+  <div class="post-content md-content"><blockquote>
+<p>A story about a Secure Partition that crashed before executing its first C instruction, a stack pointer pointing to <code>0xFFFFFFFFFFFFFD90</code>, and the single build flag that made the difference.</p>
+</blockquote>
+<hr>
+<h2 id="the-problem">The Problem<a hidden class="anchor" aria-hidden="true" href="#the-problem">#</a></h2>
+<p>After <a href="/posts/arm-rdn2-fvp-firmware-bringup-story/">days of firmware bring-up</a> and <a href="/posts/debugging-kernel-hang-arm-fvp-sve-trap/">debugging the SVE kernel trap</a>, we had a fully booting ARM RD-N2 FVP system:</p>
+<pre tabindex="0"><code>SCP → TF-A (BL1 → BL2 → BL31) → UEFI → GRUB → Linux (buildroot)
+</code></pre><p>Everything worked. But there was one glaring limitation: <strong>UEFI variables didn&rsquo;t persist across reboots</strong>.</p>
+<p>Every time the FVP powered off and restarted, the EFI variable store was wiped clean. Boot order preferences, OS settings, any runtime configuration — all gone. The reason? Without a Secure Partition handling NOR flash writes, UEFI had no mechanism to commit variables to non-volatile storage in a security-compliant way.</p>
+<p>The solution: <strong>StandaloneMM</strong> (Management Mode) — a Secure Partition that runs inside the Secure Partition Manager Core (SPMC), handles variable read/write requests from the normal world via FF-A (Firmware Framework for Arm), and persists them to NOR flash.</p>
+<p>How hard could it be?</p>
+<hr>
+<h2 id="chapter-1-understanding-the-architecture">Chapter 1: Understanding the Architecture<a hidden class="anchor" aria-hidden="true" href="#chapter-1-understanding-the-architecture">#</a></h2>
+<h3 id="what-is-standalonemm">What is StandaloneMM?<a hidden class="anchor" aria-hidden="true" href="#what-is-standalonemm">#</a></h3>
+<p>In the ARM firmware architecture, UEFI variables marked as Non-Volatile (NV) need to be written to persistent storage. But on TrustZone-enabled systems, the flash is in the secure world — the normal-world OS (Linux) can&rsquo;t write to it directly.</p>
+<p>The flow is:</p>
+<pre tabindex="0"><code>Linux userspace (efivarfs)
+    ↓ ioctl
+Linux kernel (EFI runtime services)
+    ↓ SMC (Secure Monitor Call)
+TF-A BL31 / SPMC (EL3)
+    ↓ FF-A message passing
+StandaloneMM Secure Partition (S-EL0/S-EL1)
+    ↓ MMIO
+NOR Flash (0x1054000000)
+</code></pre><p>StandaloneMM is an EDK2-based firmware binary that:</p>
+<ol>
+<li>Receives variable read/write requests via FF-A from the normal world</li>
+<li>Validates them (authentication, size limits, garbage collection)</li>
+<li>Writes to NOR flash using the Fault Tolerant Write (FTW) protocol</li>
+<li>Returns status back through the same FF-A channel</li>
+</ol>
+<h3 id="the-components">The Components<a hidden class="anchor" aria-hidden="true" href="#the-components">#</a></h3>
+<p>To enable this, we needed to modify TF-A to include the <strong>SPMC</strong> (Secure Partition Manager Core) at EL3, which would:</p>
+<ul>
+<li>Load the StandaloneMM binary (BL32) during boot</li>
+<li>Set up the secure partition&rsquo;s memory regions and device access</li>
+<li>Handle FF-A calls between the normal world and the SP</li>
+</ul>
+<h3 id="the-golden-rule">The Golden Rule<a hidden class="anchor" aria-hidden="true" href="#the-golden-rule">#</a></h3>
+<p>We had a golden backup of our working firmware at <code>C:\Users\neerajpant\rdn2-golden\</code>. The rule was simple: <strong>never modify the golden copy</strong>. All experiments happen on a working copy.</p>
+<hr>
+<h2 id="chapter-2-building-standalonemm">Chapter 2: Building StandaloneMM<a hidden class="anchor" aria-hidden="true" href="#chapter-2-building-standalonemm">#</a></h2>
+<h3 id="first-attempt--cpu-only-mm-no-storage">First Attempt — CPU-Only MM (No Storage)<a hidden class="anchor" aria-hidden="true" href="#first-attempt--cpu-only-mm-no-storage">#</a></h3>
+<p>The initial build was straightforward. EDK2&rsquo;s platform code for SGI/RD-N2 already had a <code>PlatformStandaloneMm.dsc</code> file:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nb">cd</span> /root/rdn2/uefi/edk2 <span class="o">&amp;&amp;</span> <span class="nb">source</span> edksetup.sh
+</span></span><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">GCC5_AARCH64_PREFIX</span><span class="o">=</span>aarch64-linux-gnu-
+</span></span><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">PACKAGES_PATH</span><span class="o">=</span>/root/rdn2/uefi/edk2:/root/rdn2/uefi/edk2/edk2-platforms
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">build -a AARCH64 -t GCC5 -p Platform/ARM/SgiPkg/PlatformStandaloneMm.dsc -b DEBUG
+</span></span></code></pre></div><p>This produced <code>BL32_AP_MM.fd</code> — a minimal MM binary with just the <code>StandaloneMmCpu</code> driver (handles FF-A communication) but no storage drivers.</p>
+<h3 id="tf-a-with-spmc">TF-A with SPMC<a hidden class="anchor" aria-hidden="true" href="#tf-a-with-spmc">#</a></h3>
+<p>The TF-A build needed significant new flags:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">make -j<span class="k">$(</span>nproc<span class="k">)</span> <span class="nv">PLAT</span><span class="o">=</span>rdn2 <span class="nv">CROSS_COMPILE</span><span class="o">=</span>aarch64-linux-gnu- <span class="nv">DEBUG</span><span class="o">=</span><span class="m">1</span> <span class="nv">LOG_LEVEL</span><span class="o">=</span><span class="m">40</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl">  <span class="nv">TRUSTED_BOARD_BOOT</span><span class="o">=</span><span class="m">1</span> <span class="nv">GENERATE_COT</span><span class="o">=</span><span class="m">1</span> <span class="nv">CREATE_KEYS</span><span class="o">=</span><span class="m">1</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl">  <span class="nv">ROT_KEY</span><span class="o">=</span>plat/arm/board/common/rotpk/arm_rotprivk_rsa.pem <span class="se">\
+</span></span></span><span class="line"><span class="cl">  <span class="nv">ARM_ROTPK_LOCATION</span><span class="o">=</span>devel_rsa <span class="nv">MBEDTLS_DIR</span><span class="o">=</span>/root/rdn2/mbedtls <span class="se">\
+</span></span></span><span class="line"><span class="cl">  <span class="nv">CTX_INCLUDE_FPREGS</span><span class="o">=</span><span class="m">0</span> <span class="nv">ENABLE_SVE_FOR_NS</span><span class="o">=</span><span class="m">1</span> <span class="nv">ENABLE_SME_FOR_NS</span><span class="o">=</span><span class="m">0</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl">  <span class="nv">ENABLE_SVE_FOR_SWD</span><span class="o">=</span><span class="m">1</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl">  <span class="nv">ARM_BL31_IN_DRAM</span><span class="o">=</span><span class="m">1</span> <span class="nv">SPMC_AT_EL3</span><span class="o">=</span><span class="m">1</span> <span class="nv">SPD</span><span class="o">=</span>spmd <span class="nv">SPMD_SPM_AT_SEL2</span><span class="o">=</span><span class="m">0</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl">  <span class="nv">EL3_EXCEPTION_HANDLING</span><span class="o">=</span><span class="m">1</span> <span class="nv">PLAT_RO_XLAT_TABLES</span><span class="o">=</span><span class="m">1</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl">  <span class="nv">BL32</span><span class="o">=</span>/root/rdn2/uefi/edk2/Build/SgiMmStandalone/DEBUG_GCC5/FV/BL32_AP_MM.fd <span class="se">\
+</span></span></span><span class="line"><span class="cl">  <span class="nv">BL33</span><span class="o">=</span>/root/rdn2/output/rdn2/components/css-common/uefi.bin <span class="se">\
+</span></span></span><span class="line"><span class="cl">  all fip
+</span></span></code></pre></div><p>Key new flags:</p>
+<ul>
+<li><code>SPMC_AT_EL3=1</code> — Run the Secure Partition Manager at EL3 (inside BL31)</li>
+<li><code>SPD=spmd</code> — Use the SPM Dispatcher</li>
+<li><code>SPMD_SPM_AT_SEL2=0</code> — Don&rsquo;t use S-EL2 (no secure hypervisor)</li>
+<li><code>EL3_EXCEPTION_HANDLING=1</code> — Handle exceptions from secure partitions</li>
+<li><code>ENABLE_SVE_FOR_SWD=1</code> — Critical! Clear CPTR_EL3.TFP so the SP can use FP/SIMD</li>
+<li><code>BL32=...BL32_AP_MM.fd</code> — The StandaloneMM binary to embed</li>
+</ul>
+<h3 id="first-boot-with-spmc--the-fp-trap">First Boot with SPMC — The FP Trap<a hidden class="anchor" aria-hidden="true" href="#first-boot-with-spmc--the-fp-trap">#</a></h3>
+<p>The first SPMC-enabled boot hung immediately. The secure UART showed:</p>
+<pre tabindex="0"><code>Secure Partition (0x8001) init start
+</code></pre><p>And then silence. We&rsquo;d seen this pattern before with the SVE kernel trap. The <code>CPTR_EL3.TFP</code> bit was set, trapping floating-point access from the secure world. The fix was <code>ENABLE_SVE_FOR_SWD=1</code> which clears TFP for secure world dispatch.</p>
+<p>After that fix, the CPU-only MM booted fine. But variables still weren&rsquo;t persistent — because there were no NOR flash drivers.</p>
+<hr>
+<h2 id="chapter-3-adding-storage-drivers--the-crash">Chapter 3: Adding Storage Drivers — The Crash<a hidden class="anchor" aria-hidden="true" href="#chapter-3-adding-storage-drivers--the-crash">#</a></h2>
+<h3 id="building-with-secure_storage_enable">Building with SECURE_STORAGE_ENABLE<a hidden class="anchor" aria-hidden="true" href="#building-with-secure_storage_enable">#</a></h3>
+<p>The EDK2 platform DSC gates the NOR flash, FTW, and Variable drivers behind a build flag:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">build -a AARCH64 -t GCC5 -p Platform/ARM/SgiPkg/PlatformStandaloneMm.dsc <span class="se">\
+</span></span></span><span class="line"><span class="cl">  -D SECURE_STORAGE_ENABLE -b DEBUG
+</span></span></code></pre></div><p>This adds three critical drivers to the MM binary:</p>
+<ul>
+<li><strong>NorFlashStandaloneMm.efi</strong> — Intel P30 StrataFlash driver for the NOR at <code>0x1054000000</code></li>
+<li><strong>FaultTolerantWriteStandaloneMm.efi</strong> — Crash-safe write protocol</li>
+<li><strong>VariableStandaloneMm.efi</strong> — The actual UEFI variable service</li>
+</ul>
+<h3 id="the-immediate-hang">The Immediate Hang<a hidden class="anchor" aria-hidden="true" href="#the-immediate-hang">#</a></h3>
+<p>Rebuilt TF-A with the new MM binary, deployed, booted. The secure UART showed:</p>
+<pre tabindex="0"><code>Secure Partition (0x8001) init start
+</code></pre><p>And then — <strong>nothing</strong>. Again. But this time <code>ENABLE_SVE_FOR_SWD</code> was already set. The old MM binary (without storage drivers) still worked with the exact same TF-A build. Something in the new MM binary was crashing before it could even log a message.</p>
+<h3 id="what-we-knew">What We Knew<a hidden class="anchor" aria-hidden="true" href="#what-we-knew">#</a></h3>
+<ul>
+<li>Same TF-A build works with old MM → problem is in the new MM binary</li>
+<li>Crash happens before any C-level logging</li>
+<li>The SP manifest (<code>rdn2_stmm_config.dts</code>) has correct NOR2 device region:
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-dts" data-lang="dts"><span class="line"><span class="cl"><span class="nf">nor_flash2</span><span class="cm"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="na">base-address</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="mh">0x00000010</span><span class="w"> </span><span class="mh">0x54000000</span><span class="o">&gt;</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="na">pages-count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="mi">16384</span><span class="o">&gt;</span><span class="p">;</span><span class="w">  </span><span class="cm">/* 64MB */</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="na">attributes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="mh">0x3</span><span class="o">&gt;</span><span class="p">;</span><span class="w">     </span><span class="cm">/* read-write */</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#34;smccc-id&#34;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="mh">0x00000000</span><span class="o">&gt;</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">};</span><span class="w">
+</span></span></span></code></pre></div></li>
+<li>NOR2 address 0x1054000000 is correct (matches hardware configuration)</li>
+</ul>
+<p>The guessing game began. Was it a memory mapping issue? A driver initialization problem? An incompatible PCD?</p>
+<hr>
+<h2 id="chapter-4-the-debugger--no-more-guessing">Chapter 4: The Debugger — No More Guessing<a hidden class="anchor" aria-hidden="true" href="#chapter-4-the-debugger--no-more-guessing">#</a></h2>
+<p>We&rsquo;d been down this road before with the SVE trap. The answer then was &ldquo;use the debugger.&rdquo; The answer now was the same.</p>
+<h3 id="connecting-via-iris">Connecting via Iris<a hidden class="anchor" aria-hidden="true" href="#connecting-via-iris">#</a></h3>
+<p>The ARM FVP comes with <strong>Iris</strong> — a Python-based debug API accessible over TCP port 7100:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">sys</span>
+</span></span><span class="line"><span class="cl"><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;C:\Program Files\ARM\FVP_RD_N2\Iris\Python&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">iris.debug.Model</span> <span class="kn">import</span> <span class="n">NetworkModel</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">model</span> <span class="o">=</span> <span class="n">NetworkModel</span><span class="p">(</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="mi">7100</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">cpu0</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_target</span><span class="p">(</span><span class="s1">&#39;component.RD_N2.css.cluster0.cpu0&#39;</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="reading-the-exception-state">Reading the Exception State<a hidden class="anchor" aria-hidden="true" href="#reading-the-exception-state">#</a></h3>
+<p>Since the SP had crashed and trapped back into EL3, we could read the exception registers:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">pc</span>     <span class="o">=</span> <span class="n">cpu0</span><span class="o">.</span><span class="n">read_register</span><span class="p">(</span><span class="s1">&#39;PC&#39;</span><span class="p">)</span>        <span class="c1"># 0xFF01843C — infinite loop in BL31</span>
+</span></span><span class="line"><span class="cl"><span class="n">elr_el3</span> <span class="o">=</span> <span class="n">cpu0</span><span class="o">.</span><span class="n">read_register</span><span class="p">(</span><span class="s1">&#39;ELR_EL3&#39;</span><span class="p">)</span>  <span class="c1"># The return address into EL3</span>
+</span></span><span class="line"><span class="cl"><span class="n">esr_el3</span> <span class="o">=</span> <span class="n">cpu0</span><span class="o">.</span><span class="n">read_register</span><span class="p">(</span><span class="s1">&#39;ESR_EL3&#39;</span><span class="p">)</span>  <span class="c1"># 0x5E000000 — SMC from lower EL</span>
+</span></span></code></pre></div><p>But we needed the <strong>SP&rsquo;s</strong> exception state — the registers at the moment it faulted:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">elr_el1</span> <span class="o">=</span> <span class="n">cpu0</span><span class="o">.</span><span class="n">read_register</span><span class="p">(</span><span class="s1">&#39;ELR_EL1&#39;</span><span class="p">)</span>  <span class="c1"># 0xFF207DA0 — faulting instruction</span>
+</span></span><span class="line"><span class="cl"><span class="n">esr_el1</span> <span class="o">=</span> <span class="n">cpu0</span><span class="o">.</span><span class="n">read_register</span><span class="p">(</span><span class="s1">&#39;ESR_EL1&#39;</span><span class="p">)</span>  <span class="c1"># 0x92000044</span>
+</span></span><span class="line"><span class="cl"><span class="n">far_el1</span> <span class="o">=</span> <span class="n">cpu0</span><span class="o">.</span><span class="n">read_register</span><span class="p">(</span><span class="s1">&#39;FAR_EL1&#39;</span><span class="p">)</span>  <span class="c1"># 0xFFFFFFFFFFFFFD90</span>
+</span></span><span class="line"><span class="cl"><span class="n">sp_el0</span>  <span class="o">=</span> <span class="n">cpu0</span><span class="o">.</span><span class="n">read_register</span><span class="p">(</span><span class="s1">&#39;SP_EL0&#39;</span><span class="p">)</span>   <span class="c1"># 0xFFFFFFFFFFFFFD90</span>
+</span></span></code></pre></div><h3 id="decoding-the-exception">Decoding the Exception<a hidden class="anchor" aria-hidden="true" href="#decoding-the-exception">#</a></h3>
+<p><strong>ESR_EL1 = 0x92000044:</strong></p>
+<ul>
+<li>Bits [31:26] EC = 0x24 → <strong>Data Abort from same exception level</strong></li>
+<li>Bits [5:0] DFSC = 0x04 → <strong>Translation fault at Level 0</strong></li>
+</ul>
+<p><strong>FAR_EL1 = 0xFFFFFFFFFFFFFD90</strong> — the address that caused the fault.</p>
+<p>And there it was. The <strong>Fault Address Register</strong> equaled the <strong>Stack Pointer</strong>:</p>
+<pre tabindex="0"><code>FAR_EL1 = SP_EL0 = 0xFFFFFFFFFFFFFD90
+</code></pre><p>The SP tried to access its own stack, and the stack was at an <strong>unmapped, garbage address</strong>. This wasn&rsquo;t a driver bug. This wasn&rsquo;t a NOR flash issue. <strong>The stack pointer was never initialized.</strong></p>
+<hr>
+<h2 id="chapter-5-the-root-cause--one-build-flag">Chapter 5: The Root Cause — One Build Flag<a hidden class="anchor" aria-hidden="true" href="#chapter-5-the-root-cause--one-build-flag">#</a></h2>
+<h3 id="following-the-assembly">Following the Assembly<a hidden class="anchor" aria-hidden="true" href="#following-the-assembly">#</a></h3>
+<p>StandaloneMM&rsquo;s entry point is in <code>ModuleEntryPoint.S</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-asm" data-lang="asm"><span class="line"><span class="cl"><span class="c1">// StandaloneMmPkg/Library/StandaloneMmCoreEntryPoint/Arm/AArch64/ModuleEntryPoint.S
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="na">.section</span> <span class="no">.data.stack</span>
+</span></span><span class="line"><span class="cl">    <span class="na">.balign</span> <span class="mi">4096</span>
+</span></span><span class="line"><span class="cl"><span class="nl">StackBase:</span>
+</span></span><span class="line"><span class="cl">    <span class="na">.fill</span> <span class="mi">8192</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span>    <span class="c1">// 8KB embedded stack
+</span></span></span><span class="line"><span class="cl"><span class="nl">StackEnd:</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nl">_ModuleEntryPoint:</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ... register setup ...
+</span></span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1">// Check if FFA is enabled
+</span></span></span><span class="line"><span class="cl">    <span class="nf">ldr</span>    <span class="no">w8</span><span class="p">,</span> <span class="no">PcdGet32</span><span class="p">(</span><span class="no">PcdFfaEnable</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">cbz</span>    <span class="no">w8</span><span class="p">,</span> <span class="no">FfaNotEnabled</span>      <span class="c1">// &lt;-- THIS BRANCH
+</span></span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1">// FFA enabled path: set memory permissions via SVC, then init stack
+</span></span></span><span class="line"><span class="cl">    <span class="nf">mov</span>    <span class="no">x0</span><span class="p">,</span> <span class="c1">#0
+</span></span></span><span class="line"><span class="cl">    <span class="nf">adr</span>    <span class="no">x1</span><span class="p">,</span> <span class="no">StackBase</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ... FfaMemPermSet call ...
+</span></span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="nf">adr</span>    <span class="no">x0</span><span class="p">,</span> <span class="no">StackEnd</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">mov</span>    <span class="no">sp</span><span class="p">,</span> <span class="no">x0</span>                 <span class="c1">// &lt;-- STACK INITIALIZED HERE
+</span></span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="nf">b</span>      <span class="no">SetupGdt</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nl">FfaNotEnabled:</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// SKIPS EVERYTHING ABOVE
+</span></span></span><span class="line"><span class="cl">    <span class="c1">// Falls through to C code with WHATEVER was in SP_EL0
+</span></span></span></code></pre></div><p>When <code>PcdFfaEnable = 0</code> (FALSE), the code takes the <code>FfaNotEnabled</code> branch which <strong>skips stack initialization entirely</strong>. The SP jumps to C code with whatever garbage the SPMC left in SP_EL0.</p>
+<h3 id="the-pcd-chain">The PCD Chain<a hidden class="anchor" aria-hidden="true" href="#the-pcd-chain">#</a></h3>
+<p>In <code>SgiPlatformMm.dsc.inc</code> (line 20):</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ini" data-lang="ini"><span class="line"><span class="cl"><span class="na">DEFINE EDK2_ENABLE_FFA</span> <span class="o">=</span> <span class="s">FALSE    # The default!</span>
+</span></span></code></pre></div><p>This propagates to:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ini" data-lang="ini"><span class="line"><span class="cl"><span class="na">gArmTokenSpaceGuid.PcdFfaEnable|0    # When EDK2_ENABLE_FFA</span><span class="o">=</span><span class="s">FALSE</span>
+</span></span></code></pre></div><p>Which the assembly reads at boot:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-asm" data-lang="asm"><span class="line"><span class="cl"><span class="nf">ldr</span>    <span class="no">w8</span><span class="p">,</span> <span class="no">PcdGet32</span><span class="p">(</span><span class="no">PcdFfaEnable</span><span class="p">)</span>   <span class="c1"># Loads 0
+</span></span></span><span class="line"><span class="cl"><span class="nf">cbz</span>    <span class="no">w8</span><span class="p">,</span> <span class="no">FfaNotEnabled</span>             <span class="c1"># Branch taken! Skip stack setup!
+</span></span></span></code></pre></div><h3 id="why-it-worked-before">Why It Worked Before<a hidden class="anchor" aria-hidden="true" href="#why-it-worked-before">#</a></h3>
+<p>The old MM binary (without <code>SECURE_STORAGE_ENABLE</code>) was smaller and by coincidence, the SPMC initialized SP_EL0 to a region that happened to be mapped. The moment we added NOR flash drivers, the binary layout changed, and SP_EL0 pointed to unmapped space. <strong>The bug was always there</strong> — it was just latent.</p>
+<h3 id="the-fix">The Fix<a hidden class="anchor" aria-hidden="true" href="#the-fix">#</a></h3>
+<p>One flag:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">build -a AARCH64 -t GCC5 -p Platform/ARM/SgiPkg/PlatformStandaloneMm.dsc <span class="se">\
+</span></span></span><span class="line"><span class="cl">  -D SECURE_STORAGE_ENABLE -D <span class="nv">EDK2_ENABLE_FFA</span><span class="o">=</span>TRUE -b DEBUG
+</span></span></code></pre></div><p>That&rsquo;s it. <code>-D EDK2_ENABLE_FFA=TRUE</code> overrides the platform default, sets <code>PcdFfaEnable=1</code>, and the entry point properly initializes the stack from the embedded 8KB <code>StackBase</code>/<code>StackEnd</code> region.</p>
+<hr>
+<h2 id="chapter-6-standalonemm-comes-alive">Chapter 6: StandaloneMM Comes Alive<a hidden class="anchor" aria-hidden="true" href="#chapter-6-standalonemm-comes-alive">#</a></h2>
+<p>With <code>EDK2_ENABLE_FFA=TRUE</code>, the secure UART log transformed:</p>
+<pre tabindex="0"><code>Secure Partition (0x8001) init start
+INFO:    Mapping Software delegated exception access page
+INFO:    Software Delegated Exception buffer setup done
+Booting Secure Partition (0x8001)...
+
+StandaloneMm[0x8001] entry point
+NorFlashPlatformInitialization: enabling NOR flash write (FLASH_RWEN at 0x0C01004C)
+NorFlashInitialise: found NOR flash device at 0x1054000000 (256KB blocks, 64MB)
+FvbInitialize: Locating FVB header in NOR flash...
+ValidateFvHeader: Initializing new variable store (fresh flash)
+InitializeFvAndVariableStoreHeaders: Writing FV + variable headers
+FtwInitialize: Fault Tolerant Write initialized with spare block at offset 0x80000
+Variable driver will work with auth variable support!
+StandaloneMmCpu: FF-A communication driver loaded
+
+INFO:    Secure Partition (0x8001) initialized successfully
+</code></pre><p>All four drivers loaded:</p>
+<ol>
+<li>✅ <strong>NorFlashStandaloneMm</strong> — Initialized NOR2 at 0x1054000000</li>
+<li>✅ <strong>FaultTolerantWrite</strong> — Configured spare block for crash recovery</li>
+<li>✅ <strong>Variable</strong> — Ready to service authenticated variable operations</li>
+<li>✅ <strong>StandaloneMmCpu</strong> — FF-A message handler active</li>
+</ol>
+<p>The full system booted all the way to Linux:</p>
+<pre tabindex="0"><code>BL1 → BL2 → BL31/SPMC → StandaloneMM (initialized) → UEFI → GRUB → Linux
+</code></pre><hr>
+<h2 id="chapter-7-writing-our-first-persistent-variable">Chapter 7: Writing Our First Persistent Variable<a hidden class="anchor" aria-hidden="true" href="#chapter-7-writing-our-first-persistent-variable">#</a></h2>
+<h3 id="from-linux">From Linux<a hidden class="anchor" aria-hidden="true" href="#from-linux">#</a></h3>
+<p>The Linux kernel exposes UEFI variables through <code>efivarfs</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># Login to buildroot</span>
+</span></span><span class="line"><span class="cl">buildroot login: root
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Mount the EFI variable filesystem</span>
+</span></span><span class="line"><span class="cl">mount -t efivarfs efivarfs /sys/firmware/efi/efivars
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Write a test variable</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># Format: 4 bytes attributes + data</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 0x07 = NV (0x01) + BS (0x02) + RT (0x04) = Non-Volatile + Boot Service + Runtime</span>
+</span></span><span class="line"><span class="cl"><span class="nb">printf</span> <span class="s1">&#39;\x07\x00\x00\x00REBOOT_OK&#39;</span> &gt; <span class="se">\
+</span></span></span><span class="line"><span class="cl">  /sys/firmware/efi/efivars/BootSurvival-12345678-1234-1234-1234-123456789abc
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Verify it was written</span>
+</span></span><span class="line"><span class="cl">hexdump -C /sys/firmware/efi/efivars/BootSurvival-12345678-1234-1234-1234-123456789abc
+</span></span></code></pre></div><p>Output:</p>
+<pre tabindex="0"><code>00000000  07 00 00 00 52 45 42 4f  4f 54 5f 4f 4b           |....REBOOT_OK|
+0000000d
+</code></pre><p>The write went through! The FF-A call chain worked:</p>
+<pre tabindex="0"><code>Linux efivarfs → kernel SMC → BL31 SPMC → StandaloneMM → NOR flash write
+</code></pre><p>But the real question: <strong>does it survive a reboot?</strong></p>
+<hr>
+<h2 id="chapter-8-the-persistence-problem--fvp-flash-write-back">Chapter 8: The Persistence Problem — FVP Flash Write-Back<a hidden class="anchor" aria-hidden="true" href="#chapter-8-the-persistence-problem--fvp-flash-write-back">#</a></h2>
+<h3 id="the-discovery">The Discovery<a hidden class="anchor" aria-hidden="true" href="#the-discovery">#</a></h3>
+<p>We issued <code>poweroff</code> from Linux. The kernel shut down cleanly:</p>
+<pre tabindex="0"><code>The system is going down NOW!
+Stopping network: OK
+Stopping klogd: OK
+reboot: Power down
+</code></pre><p>But the FVP process <strong>didn&rsquo;t exit</strong>. It just stopped the simulation. And when we force-killed the FVP and rebooted — the variable was gone.</p>
+<h3 id="understanding-fvp-flash-behavior">Understanding FVP Flash Behavior<a hidden class="anchor" aria-hidden="true" href="#understanding-fvp-flash-behavior">#</a></h3>
+<p>The FVP&rsquo;s NOR flash model has two parameters:</p>
+<ul>
+<li><code>board.flashloader2.fname</code> — File to load flash contents FROM at startup</li>
+<li><code>board.flashloader2.fnameWrite</code> — File to save flash contents TO <strong>on simulation exit</strong></li>
+</ul>
+<p>The key word is <strong>&ldquo;on simulation exit.&rdquo;</strong> The FVP only writes flash contents back to disk when it performs a <strong>graceful simulation termination</strong>. Force-killing the process (<code>Kill()</code>) skips the write-back entirely.</p>
+<h3 id="what-doesnt-work">What Doesn&rsquo;t Work<a hidden class="anchor" aria-hidden="true" href="#what-doesnt-work">#</a></h3>
+<p>We tried everything:</p>
+<ul>
+<li><strong><code>CloseMainWindow()</code></strong> — Sends WM_CLOSE but FVP doesn&rsquo;t exit after guest poweroff</li>
+<li><strong><code>Kill()</code> / <code>Stop-Process</code></strong> — Force terminates, no write-back</li>
+<li><strong>Iris <code>model.release()</code></strong> — Disconnects debug client, doesn&rsquo;t end simulation</li>
+<li><strong>Guest <code>poweroff</code></strong> — Halts CPUs but FVP process stays alive</li>
+</ul>
+<h3 id="the-solution-shutdown_tag">The Solution: <code>shutdown_tag</code><a hidden class="anchor" aria-hidden="true" href="#the-solution-shutdown_tag">#</a></h3>
+<p>Buried in the FVP&rsquo;s parameter list (<code>--list-params</code>) was exactly what we needed:</p>
+<pre tabindex="0"><code>css.pl011_ns_uart_ap.shutdown_tag=    # Shutdown simulation when a string is transmitted
+</code></pre><p>When the kernel prints <code>&quot;reboot: Power down&quot;</code> during shutdown, the UART transmits those exact bytes. If we set <code>shutdown_tag</code> to match that string, the FVP will <strong>end the simulation gracefully</strong> — triggering the flash write-back!</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="s2">&#34;-C&#34;</span><span class="p">,</span> <span class="s2">&#34;css.pl011_ns_uart_ap.shutdown_tag=reboot: Power down&#34;</span><span class="p">,</span>
+</span></span></code></pre></div><h3 id="the-write-back-in-action">The Write-Back in Action<a hidden class="anchor" aria-hidden="true" href="#the-write-back-in-action">#</a></h3>
+<p>With <code>shutdown_tag</code> configured, the FVP output on poweroff:</p>
+<pre tabindex="0"><code>Info: /OSCI/SystemC: Simulation stopped by user.
+Info: RD_N2: RD_N2.board.flashloader1: FlashLoader: Saved 64MB to file &#39;nor1_flash.img&#39;
+Info: RD_N2: RD_N2.board.flashloader2: FlashLoader: Saved 64MB to file &#39;nor2_flash.img&#39;
+</code></pre><p><strong>Flash saved!</strong> And an important detail: the FVP saves flash in <strong>gzip-compressed format</strong> (file starts with <code>1F 8B 08 00</code>), but transparently decompresses it on load.</p>
+<hr>
+<h2 id="chapter-9-the-final-test--does-it-survive">Chapter 9: The Final Test — Does It Survive?<a hidden class="anchor" aria-hidden="true" href="#chapter-9-the-final-test--does-it-survive">#</a></h2>
+<h3 id="boot-1-write-the-variable">Boot 1: Write the Variable<a hidden class="anchor" aria-hidden="true" href="#boot-1-write-the-variable">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">mount -t efivarfs efivarfs /sys/firmware/efi/efivars
+</span></span><span class="line"><span class="cl"><span class="nb">printf</span> <span class="s1">&#39;\x07\x00\x00\x00REBOOT_OK&#39;</span> &gt; <span class="se">\
+</span></span></span><span class="line"><span class="cl">  /sys/firmware/efi/efivars/BootSurvival-12345678-1234-1234-1234-123456789abc
+</span></span><span class="line"><span class="cl">hexdump -C /sys/firmware/efi/efivars/BootSurvival-12345678-1234-1234-1234-123456789abc
+</span></span><span class="line"><span class="cl"><span class="c1"># 00000000  07 00 00 00 52 45 42 4f  4f 54 5f 4f 4b  |....REBOOT_OK|</span>
+</span></span><span class="line"><span class="cl">poweroff
+</span></span></code></pre></div><p>FVP exits gracefully. Flash written to disk. Hash changes from all-zeros to <code>2D24384A...</code>.</p>
+<h3 id="boot-2-read-it-back">Boot 2: Read It Back<a hidden class="anchor" aria-hidden="true" href="#boot-2-read-it-back">#</a></h3>
+<p>Fresh FVP launch with the same <code>nor2_flash.img</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">mount -t efivarfs efivarfs /sys/firmware/efi/efivars
+</span></span><span class="line"><span class="cl">ls /sys/firmware/efi/efivars/ <span class="p">|</span> grep BootSurvival
+</span></span><span class="line"><span class="cl"><span class="c1"># BootSurvival-12345678-1234-1234-1234-123456789abc</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">hexdump -C /sys/firmware/efi/efivars/BootSurvival-12345678-1234-1234-1234-123456789abc
+</span></span><span class="line"><span class="cl"><span class="c1"># 00000000  07 00 00 00 52 45 42 4f  4f 54 5f 4f 4b  |....REBOOT_OK|</span>
+</span></span></code></pre></div><p><strong>🎉 PERSISTENCE CONFIRMED.</strong></p>
+<p>The variable <code>REBOOT_OK</code> survived a complete power cycle. Written on boot 1, read back identically on boot 2. The entire chain works:</p>
+<pre tabindex="0"><code>Write: Linux → SMC → SPMC → StandaloneMM → NOR flash → disk (via shutdown_tag)
+Read:  Disk → FVP flash model → StandaloneMM → FF-A → Linux efivarfs
+</code></pre><hr>
+<h2 id="the-final-architecture">The Final Architecture<a hidden class="anchor" aria-hidden="true" href="#the-final-architecture">#</a></h2>
+<pre tabindex="0"><code>┌─────────────────────────────────────────────────────────┐
+│                    Linux (Normal World)                   │
+│  efivarfs: /sys/firmware/efi/efivars/                   │
+│  ┌─────────────────────────────────────────────────┐    │
+│  │  printf &#39;\x07\x00\x00\x00DATA&#39; &gt; VarName-GUID  │    │
+│  └──────────────────────┬──────────────────────────┘    │
+└─────────────────────────┼───────────────────────────────┘
+                          │ SMC (FF-A)
+┌─────────────────────────┼───────────────────────────────┐
+│  TF-A BL31 / SPMC (EL3) │                               │
+│  ┌──────────────────────┼──────────────────────────┐    │
+│  │  SPMD dispatches FF-A message to SP 0x8001      │    │
+│  └──────────────────────┼──────────────────────────┘    │
+└─────────────────────────┼───────────────────────────────┘
+                          │ FF-A msg_send_direct
+┌─────────────────────────┼───────────────────────────────┐
+│  StandaloneMM Secure Partition (S-EL0)                   │
+│  ┌──────────────┐ ┌──────────┐ ┌───────────────────┐   │
+│  │ Variable.efi │→│ FTW.efi  │→│ NorFlash.efi      │   │
+│  │ Auth + GC    │ │ Crash-   │ │ P30 StrataFlash   │   │
+│  │              │ │ safe     │ │ @ 0x1054000000    │   │
+│  └──────────────┘ └──────────┘ └─────────┬─────────┘   │
+└───────────────────────────────────────────┼─────────────┘
+                                            │ MMIO
+┌───────────────────────────────────────────┼─────────────┐
+│  NOR Flash (64MB, 256KB blocks)           │             │
+│  ┌────────────────────────────────────────┼────────┐    │
+│  │  FV Header │ Var Store │ FTW Spare │ ...       │    │
+│  │  (block 0) │ (block 1) │ (block 2) │          │    │
+│  └────────────────────────────────────────────────┘    │
+│  Backed by: nor2_flash.img (gzip compressed)           │
+│  Saved on: FVP graceful exit (shutdown_tag trigger)    │
+└─────────────────────────────────────────────────────────┘
+</code></pre><hr>
+<h2 id="lessons-learned">Lessons Learned<a hidden class="anchor" aria-hidden="true" href="#lessons-learned">#</a></h2>
+<h3 id="1-build-defaults-are-dangerous">1. Build Defaults Are Dangerous<a hidden class="anchor" aria-hidden="true" href="#1-build-defaults-are-dangerous">#</a></h3>
+<p>The platform DSC had <code>EDK2_ENABLE_FFA = FALSE</code> as the default. This made perfect sense for legacy (non-FF-A) boot flows where the SPMC initializes the SP&rsquo;s stack. But when using the modern FF-A SPMC at EL3, the SP must initialize its own stack. <strong>The default was wrong for our use case</strong>, and the failure was completely silent — no assert, no error log, just a crash before the first line of C code ran.</p>
+<h3 id="2-the-debugger-beats-guessing-every-time">2. The Debugger Beats Guessing Every Time<a hidden class="anchor" aria-hidden="true" href="#2-the-debugger-beats-guessing-every-time">#</a></h3>
+<p>We could have spent hours theorizing about NOR flash addresses, memory map conflicts, or driver initialization order. Instead, 30 seconds with the Iris debugger gave us:</p>
+<ul>
+<li>The exact faulting instruction (<code>ELR_EL1 = 0xFF207DA0</code>)</li>
+<li>The exception type (Data Abort, Translation Fault Level 0)</li>
+<li>The smoking gun (<code>FAR_EL1 = SP_EL0 = garbage</code>)</li>
+</ul>
+<p>The call stack told us everything: <strong>the SP never had a valid stack</strong>.</p>
+<h3 id="3-fvp-flash-requires-graceful-exit">3. FVP Flash Requires Graceful Exit<a hidden class="anchor" aria-hidden="true" href="#3-fvp-flash-requires-graceful-exit">#</a></h3>
+<p>The FVP&rsquo;s flash write-back only happens on graceful simulation termination. Force-killing the process loses all flash changes. The <code>shutdown_tag</code> parameter is the elegant solution — set it to match a kernel shutdown message, and the FVP auto-exits with flash saved:</p>
+<pre tabindex="0"><code>css.pl011_ns_uart_ap.shutdown_tag=reboot: Power down
+</code></pre><h3 id="4-latent-bugs-hide-in-success">4. Latent Bugs Hide in Success<a hidden class="anchor" aria-hidden="true" href="#4-latent-bugs-hide-in-success">#</a></h3>
+<p>The <code>EDK2_ENABLE_FFA=FALSE</code> bug was present in the CPU-only MM build too. It &ldquo;worked&rdquo; by accident because the SPMC happened to leave SP_EL0 in a mapped region. Adding NOR flash drivers changed the binary layout just enough to expose the real bug. <strong>A working system isn&rsquo;t necessarily a correct system.</strong></p>
+<hr>
+<h2 id="quick-reference">Quick Reference<a hidden class="anchor" aria-hidden="true" href="#quick-reference">#</a></h2>
+<h3 id="build-commands">Build Commands<a hidden class="anchor" aria-hidden="true" href="#build-commands">#</a></h3>
+<p><strong>StandaloneMM (with persistent storage):</strong></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nb">cd</span> /root/rdn2/uefi/edk2 <span class="o">&amp;&amp;</span> <span class="nb">source</span> edksetup.sh
+</span></span><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">GCC5_AARCH64_PREFIX</span><span class="o">=</span>aarch64-linux-gnu-
+</span></span><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">PACKAGES_PATH</span><span class="o">=</span>/root/rdn2/uefi/edk2:/root/rdn2/uefi/edk2/edk2-platforms
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">build -a AARCH64 -t GCC5 -p Platform/ARM/SgiPkg/PlatformStandaloneMm.dsc <span class="se">\
+</span></span></span><span class="line"><span class="cl">  -D SECURE_STORAGE_ENABLE -D <span class="nv">EDK2_ENABLE_FFA</span><span class="o">=</span>TRUE -b DEBUG
+</span></span></code></pre></div><p><strong>TF-A with SPMC:</strong></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">make -j<span class="k">$(</span>nproc<span class="k">)</span> <span class="nv">PLAT</span><span class="o">=</span>rdn2 <span class="nv">CROSS_COMPILE</span><span class="o">=</span>aarch64-linux-gnu- <span class="nv">DEBUG</span><span class="o">=</span><span class="m">1</span> <span class="nv">LOG_LEVEL</span><span class="o">=</span><span class="m">40</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl">  <span class="nv">TRUSTED_BOARD_BOOT</span><span class="o">=</span><span class="m">1</span> <span class="nv">GENERATE_COT</span><span class="o">=</span><span class="m">1</span> <span class="nv">CREATE_KEYS</span><span class="o">=</span><span class="m">1</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl">  <span class="nv">ROT_KEY</span><span class="o">=</span>plat/arm/board/common/rotpk/arm_rotprivk_rsa.pem <span class="se">\
+</span></span></span><span class="line"><span class="cl">  <span class="nv">ARM_ROTPK_LOCATION</span><span class="o">=</span>devel_rsa <span class="nv">MBEDTLS_DIR</span><span class="o">=</span>/root/rdn2/mbedtls <span class="se">\
+</span></span></span><span class="line"><span class="cl">  <span class="nv">CTX_INCLUDE_FPREGS</span><span class="o">=</span><span class="m">0</span> <span class="nv">ENABLE_SVE_FOR_NS</span><span class="o">=</span><span class="m">1</span> <span class="nv">ENABLE_SME_FOR_NS</span><span class="o">=</span><span class="m">0</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl">  <span class="nv">ENABLE_SVE_FOR_SWD</span><span class="o">=</span><span class="m">1</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl">  <span class="nv">ARM_BL31_IN_DRAM</span><span class="o">=</span><span class="m">1</span> <span class="nv">SPMC_AT_EL3</span><span class="o">=</span><span class="m">1</span> <span class="nv">SPD</span><span class="o">=</span>spmd <span class="nv">SPMD_SPM_AT_SEL2</span><span class="o">=</span><span class="m">0</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl">  <span class="nv">EL3_EXCEPTION_HANDLING</span><span class="o">=</span><span class="m">1</span> <span class="nv">PLAT_RO_XLAT_TABLES</span><span class="o">=</span><span class="m">1</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl">  <span class="nv">BL32</span><span class="o">=</span>/root/rdn2/uefi/edk2/Build/SgiMmStandalone/DEBUG_GCC5/FV/BL32_AP_MM.fd <span class="se">\
+</span></span></span><span class="line"><span class="cl">  <span class="nv">BL33</span><span class="o">=</span>/root/rdn2/output/rdn2/components/css-common/uefi.bin <span class="se">\
+</span></span></span><span class="line"><span class="cl">  all fip
+</span></span></code></pre></div><h3 id="fvp-parameters-for-persistence">FVP Parameters for Persistence<a hidden class="anchor" aria-hidden="true" href="#fvp-parameters-for-persistence">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="c"># In run_rdn2.ps1:</span>
+</span></span><span class="line"><span class="cl"><span class="s2">&#34;-C&#34;</span><span class="p">,</span> <span class="s2">&#34;board.flashloader2.fname=</span><span class="nv">$IMGDIR</span><span class="s2">\nor2_flash.img&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="s2">&#34;-C&#34;</span><span class="p">,</span> <span class="s2">&#34;board.flashloader2.fnameWrite=</span><span class="nv">$IMGDIR</span><span class="s2">\nor2_flash.img&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="s2">&#34;-C&#34;</span><span class="p">,</span> <span class="s2">&#34;css.pl011_ns_uart_ap.shutdown_tag=reboot: Power down&#34;</span><span class="p">,</span>
+</span></span></code></pre></div><h3 id="writing-variables-from-linux">Writing Variables from Linux<a hidden class="anchor" aria-hidden="true" href="#writing-variables-from-linux">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">mount -t efivarfs efivarfs /sys/firmware/efi/efivars
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Attributes: 0x07 = NV + BS + RT</span>
+</span></span><span class="line"><span class="cl"><span class="nb">printf</span> <span class="s1">&#39;\x07\x00\x00\x00YOUR_DATA&#39;</span> &gt; <span class="se">\
+</span></span></span><span class="line"><span class="cl">  /sys/firmware/efi/efivars/VarName-12345678-1234-1234-1234-123456789abc
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Read back</span>
+</span></span><span class="line"><span class="cl">hexdump -C /sys/firmware/efi/efivars/VarName-12345678-1234-1234-1234-123456789abc
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Delete (required before overwrite)</span>
+</span></span><span class="line"><span class="cl">chattr -i /sys/firmware/efi/efivars/VarName-*  <span class="c1"># Remove immutable flag</span>
+</span></span><span class="line"><span class="cl">rm /sys/firmware/efi/efivars/VarName-*
+</span></span></code></pre></div><h3 id="iris-debugger-quick-reference">Iris Debugger Quick Reference<a hidden class="anchor" aria-hidden="true" href="#iris-debugger-quick-reference">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">sys</span>
+</span></span><span class="line"><span class="cl"><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;C:\Program Files\ARM\FVP_RD_N2\Iris\Python&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">iris.debug.Model</span> <span class="kn">import</span> <span class="n">NetworkModel</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">model</span> <span class="o">=</span> <span class="n">NetworkModel</span><span class="p">(</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="mi">7100</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">cpu0</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_target</span><span class="p">(</span><span class="s1">&#39;component.RD_N2.css.cluster0.cpu0&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Read exception state</span>
+</span></span><span class="line"><span class="cl"><span class="n">pc</span>      <span class="o">=</span> <span class="n">cpu0</span><span class="o">.</span><span class="n">read_register</span><span class="p">(</span><span class="s1">&#39;PC&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">elr_el1</span> <span class="o">=</span> <span class="n">cpu0</span><span class="o">.</span><span class="n">read_register</span><span class="p">(</span><span class="s1">&#39;ELR_EL1&#39;</span><span class="p">)</span>  <span class="c1"># Faulting instruction</span>
+</span></span><span class="line"><span class="cl"><span class="n">esr_el1</span> <span class="o">=</span> <span class="n">cpu0</span><span class="o">.</span><span class="n">read_register</span><span class="p">(</span><span class="s1">&#39;ESR_EL1&#39;</span><span class="p">)</span>  <span class="c1"># Exception syndrome</span>
+</span></span><span class="line"><span class="cl"><span class="n">far_el1</span> <span class="o">=</span> <span class="n">cpu0</span><span class="o">.</span><span class="n">read_register</span><span class="p">(</span><span class="s1">&#39;FAR_EL1&#39;</span><span class="p">)</span>  <span class="c1"># Fault address</span>
+</span></span><span class="line"><span class="cl"><span class="n">sp_el0</span>  <span class="o">=</span> <span class="n">cpu0</span><span class="o">.</span><span class="n">read_register</span><span class="p">(</span><span class="s1">&#39;SP_EL0&#39;</span><span class="p">)</span>   <span class="c1"># Stack pointer</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># ESR decoding:</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># EC [31:26]: 0x24 = Data Abort, 0x25 = Data Abort (same EL)</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># DFSC [5:0]: 0x04 = Translation fault L0, 0x05 = L1, 0x06 = L2, 0x07 = L3</span>
+</span></span></code></pre></div><hr>
+<h2 id="whats-next">What&rsquo;s Next<a hidden class="anchor" aria-hidden="true" href="#whats-next">#</a></h2>
+<p>With persistent UEFI variables working, the RD-N2 FVP platform is now a realistic emulation of a real ARM server:</p>
+<ul>
+<li>Boot preferences persist across power cycles</li>
+<li>Secure variable storage via TrustZone + FF-A</li>
+<li>Crash-safe writes via Fault Tolerant Write protocol</li>
+<li>Graceful shutdown with automatic flash save</li>
+</ul>
+<p>The natural next steps:</p>
+<ul>
+<li><strong>Secure Boot</strong>: Use persistent variables to store PK/KEK/db for UEFI Secure Boot</li>
+<li><strong>RELEASE build</strong>: Switch from DEBUG to RELEASE for faster simulation</li>
+<li><strong>Automated testing</strong>: Script the boot-write-reboot-verify cycle</li>
+<li><strong>Variable authentication</strong>: Test authenticated variable writes (db/dbx updates)</li>
+</ul>
+<p>From &ldquo;FVP installed&rdquo; to &ldquo;persistent secure variables&rdquo; — a journey through SCP hangs, UEFI DXE stalls, SVE traps, certificate errors, a crash-before-first-instruction bug, and FVP flash semantics. Every layer of the ARM firmware stack had its own surprise. But in the end, the variable survived the reboot. And that made it all worth it.</p>
+<hr>
+<p><em>This is Part 3 in a series on ARM RD-N2 FVP firmware development:</em></p>
+<ol>
+<li><em><a href="/posts/arm-rdn2-fvp-firmware-bringup-story/">Bringing Up Firmware — A Chronicle of Silent Failures</a></em></li>
+<li><em><a href="/posts/debugging-kernel-hang-arm-fvp-sve-trap/">The Hunt for the Silent Kernel — Debugging the SVE Trap</a></em></li>
+<li><em>Making Variables Survive Reboot — Enabling StandaloneMM (this post)</em></li>
+</ol>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/arm/">ARM</a></li>
+      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/fvp/">FVP</a></li>
+      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/standalonemm/">StandaloneMM</a></li>
+      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/uefi/">UEFI</a></li>
+      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/ff-a/">FF-A</a></li>
+      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/spmc/">SPMC</a></li>
+      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/tf-a/">TF-A</a></li>
+      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/secure-partition/">Secure-Partition</a></li>
+      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/nor-flash/">NOR-Flash</a></li>
+      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/debugging/">Debugging</a></li>
+      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/iris/">Iris</a></li>
+      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/persistence/">Persistence</a></li>
+      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/efivarfs/">Efivarfs</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/neeraj-tech-lab/posts/booting-linux-on-arm-rdn2-fvp/">
+    <span class="title">« Prev</span>
+    <span>Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Making Variables Survive Reboot — Enabling StandaloneMM on ARM RD-N2 FVP on x"
+            href="https://x.com/intent/tweet/?text=Making%20Variables%20Survive%20Reboot%20%e2%80%94%20Enabling%20StandaloneMM%20on%20ARM%20RD-N2%20FVP&amp;url=http%3a%2f%2flocalhost%3a1313%2fneeraj-tech-lab%2fposts%2fenabling-persistent-uefi-variables-arm-fvp-standalonemm%2f&amp;hashtags=ARM%2cFVP%2cStandaloneMM%2cUEFI%2cFF-A%2cSPMC%2cTF-A%2csecure-partition%2cNOR-flash%2cdebugging%2cIris%2cpersistence%2cefivarfs">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Making Variables Survive Reboot — Enabling StandaloneMM on ARM RD-N2 FVP on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fneeraj-tech-lab%2fposts%2fenabling-persistent-uefi-variables-arm-fvp-standalonemm%2f&amp;title=Making%20Variables%20Survive%20Reboot%20%e2%80%94%20Enabling%20StandaloneMM%20on%20ARM%20RD-N2%20FVP&amp;summary=Making%20Variables%20Survive%20Reboot%20%e2%80%94%20Enabling%20StandaloneMM%20on%20ARM%20RD-N2%20FVP&amp;source=http%3a%2f%2flocalhost%3a1313%2fneeraj-tech-lab%2fposts%2fenabling-persistent-uefi-variables-arm-fvp-standalonemm%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Making Variables Survive Reboot — Enabling StandaloneMM on ARM RD-N2 FVP on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fneeraj-tech-lab%2fposts%2fenabling-persistent-uefi-variables-arm-fvp-standalonemm%2f&title=Making%20Variables%20Survive%20Reboot%20%e2%80%94%20Enabling%20StandaloneMM%20on%20ARM%20RD-N2%20FVP">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Making Variables Survive Reboot — Enabling StandaloneMM on ARM RD-N2 FVP on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fneeraj-tech-lab%2fposts%2fenabling-persistent-uefi-variables-arm-fvp-standalonemm%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Making Variables Survive Reboot — Enabling StandaloneMM on ARM RD-N2 FVP on whatsapp"
+            href="https://api.whatsapp.com/send?text=Making%20Variables%20Survive%20Reboot%20%e2%80%94%20Enabling%20StandaloneMM%20on%20ARM%20RD-N2%20FVP%20-%20http%3a%2f%2flocalhost%3a1313%2fneeraj-tech-lab%2fposts%2fenabling-persistent-uefi-variables-arm-fvp-standalonemm%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Making Variables Survive Reboot — Enabling StandaloneMM on ARM RD-N2 FVP on telegram"
+            href="https://telegram.me/share/url?text=Making%20Variables%20Survive%20Reboot%20%e2%80%94%20Enabling%20StandaloneMM%20on%20ARM%20RD-N2%20FVP&amp;url=http%3a%2f%2flocalhost%3a1313%2fneeraj-tech-lab%2fposts%2fenabling-persistent-uefi-variables-arm-fvp-standalonemm%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Making Variables Survive Reboot — Enabling StandaloneMM on ARM RD-N2 FVP on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Making%20Variables%20Survive%20Reboot%20%e2%80%94%20Enabling%20StandaloneMM%20on%20ARM%20RD-N2%20FVP&u=http%3a%2f%2flocalhost%3a1313%2fneeraj-tech-lab%2fposts%2fenabling-persistent-uefi-variables-arm-fvp-standalonemm%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/neeraj-tech-lab/">Neeraj&#39;s Tech Lab</a></span> · 
+
+    
+    
+    <span>
+        Powered by
+        <a href="https://gohugo.io/?utm_source=papermod" rel="noopener" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" id="top-link" class="top-link hidden" aria-label="go to top" title="Go to Top (Alt + G)" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevrons-up">
+        <polyline points="17 11 12 6 7 11"></polyline>
+        <polyline points="17 18 12 13 7 18"></polyline>
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var toplink = document.getElementById("top-link");
+    window.onscroll = function () {
+        const scrollThreshold = window.innerHeight;
+        if (document.body.scrollTop > scrollThreshold || document.documentElement.scrollTop > scrollThreshold) {
+            toplink.classList.remove("hidden");
+        } else {
+            toplink.classList.add("hidden");
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>
