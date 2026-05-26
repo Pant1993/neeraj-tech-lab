@@ -294,7 +294,7 @@ Then... silence. The log stopped growing. UEFI was stuck.
 
 ### Six days of running
 
-We initially thought the FVP was just slow (it runs at ~1/100th real-time). We left it running for **six days**. The log never grew past 8484 bytes. Same 13 DXE drivers loaded, nothing more.
+We initially thought the FVP was just slow (it runs at ~1/100th real-time). We left it running for **a few hours**. The log never grew past 8484 bytes. Same 13 DXE drivers loaded, nothing more.
 
 This was a genuine hang, not slowness.
 
@@ -479,7 +479,7 @@ The Linux kernel was running. The EFI stub executed successfully, used the ACPI 
 
 And then... nothing.
 
-*(But that's a [different debugging story](/posts/debugging-kernel-hang-arm-fvp-sve-trap/).)*
+*(But that's a [different debugging story]({{< relref "debugging-kernel-hang-arm-fvp-sve-trap" >}}).)*
 
 ---
 
@@ -841,7 +841,7 @@ Everything depends on the SCP. If it doesn't boot, nothing boots. If it doesn't 
 
 ## What Comes Next
 
-With the firmware chain fully working, the next challenge was the kernel itself — it reached "Exiting boot services" but produced zero console output. That turned out to be an SVE register trap at EL3, which is [its own debugging story](/posts/debugging-kernel-hang-arm-fvp-sve-trap/).
+With the firmware chain fully working, the next challenge was the kernel itself — it reached "Exiting boot services" but produced zero console output. That turned out to be an SVE register trap at EL3, which is [its own debugging story]({{< relref "debugging-kernel-hang-arm-fvp-sve-trap" >}}).
 
 ---
 

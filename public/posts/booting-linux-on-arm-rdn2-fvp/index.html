@@ -1,764 +1,92 @@
-<!DOCTYPE html>
-<html lang="en" dir="auto" data-theme="auto">
-
-<head><script src="/neeraj-tech-lab/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=neeraj-tech-lab/livereload" data-no-instant defer></script><meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="robots" content="index, follow">
-<title>Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide | Neeraj&#39;s Tech Lab</title>
-<meta name="keywords" content="ARM, FVP, Linux, boot, firmware, SCP, TF-A, UEFI, tutorial">
-<meta name="description" content="A friendly step-by-step guide to booting Linux on the ARM Neoverse RD-N2 Fixed Virtual Platform — from installation through firmware build to successful boot.">
-<meta name="author" content="Neeraj Pant">
-<link rel="canonical" href="http://localhost:1313/neeraj-tech-lab/posts/booting-linux-on-arm-rdn2-fvp/">
-<link crossorigin="anonymous" href="/neeraj-tech-lab/assets/css/stylesheet.cd9298b33628769aa1bc1acebbbfd7aa11ce81dfe03484d479e1907760249a1d.css" integrity="sha256-zZKYszYodpqhvBrOu7/XqhHOgd/gNITUeeGQd2Akmh0=" rel="preload stylesheet" as="style">
-<link rel="icon" href="http://localhost:1313/neeraj-tech-lab/%F0%9F%94%AC">
-<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/neeraj-tech-lab/favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/neeraj-tech-lab/favicon-32x32.png">
-<link rel="apple-touch-icon" href="http://localhost:1313/neeraj-tech-lab/apple-touch-icon.png">
-<link rel="mask-icon" href="http://localhost:1313/neeraj-tech-lab/safari-pinned-tab.svg">
-<meta name="theme-color" content="#2e2e33">
-<meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" hreflang="en" href="http://localhost:1313/neeraj-tech-lab/posts/booting-linux-on-arm-rdn2-fvp/">
-<noscript>
-    <style>
-        #theme-toggle,
-        .top-link {
-            display: none;
-        }
-
-    </style>
-    <style>
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --theme: rgb(29, 30, 32);
-                --entry: rgb(46, 46, 51);
-                --primary: rgb(218, 218, 219);
-                --secondary: rgb(155, 156, 157);
-                --tertiary: rgb(65, 66, 68);
-                --content: rgb(196, 196, 197);
-                --code-block-bg: rgb(46, 46, 51);
-                --code-bg: rgb(55, 56, 62);
-                --border: rgb(51, 51, 51);
-                color-scheme: dark;
-            }
-
-            .list {
-                background: var(--theme);
-            }
-
-            .toc {
-                background: var(--entry);
-            }
-        }
-
-    </style>
-</noscript>
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.querySelector("html").dataset.theme = 'dark';
-    } else if (localStorage.getItem("pref-theme") === "light") {
-       document.querySelector("html").dataset.theme = 'light';
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.querySelector("html").dataset.theme = 'dark';
-    } else {
-        document.querySelector("html").dataset.theme = 'light';
-    }
-
-</script><meta property="og:url" content="http://localhost:1313/neeraj-tech-lab/posts/booting-linux-on-arm-rdn2-fvp/">
-  <meta property="og:site_name" content="Neeraj&#39;s Tech Lab">
-  <meta property="og:title" content="Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide">
-  <meta property="og:description" content="A friendly step-by-step guide to booting Linux on the ARM Neoverse RD-N2 Fixed Virtual Platform — from installation through firmware build to successful boot.">
-  <meta property="og:locale" content="en_us">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-05-22T14:00:00+05:30">
-    <meta property="article:modified_time" content="2026-05-22T14:00:00+05:30">
-    <meta property="article:tag" content="ARM">
-    <meta property="article:tag" content="FVP">
-    <meta property="article:tag" content="Linux">
-    <meta property="article:tag" content="Boot">
-    <meta property="article:tag" content="Firmware">
-    <meta property="article:tag" content="SCP">
-
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide">
-  <meta name="twitter:description" content="A friendly step-by-step guide to booting Linux on the ARM Neoverse RD-N2 Fixed Virtual Platform — from installation through firmware build to successful boot.">
-
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position":  1 ,
-      "name": "Posts",
-      "item": "http://localhost:1313/neeraj-tech-lab/posts/"
-    }, 
-    {
-      "@type": "ListItem",
-      "position":  2 ,
-      "name": "Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide",
-      "item": "http://localhost:1313/neeraj-tech-lab/posts/booting-linux-on-arm-rdn2-fvp/"
-    }
-  ]
-}
-</script>
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "BlogPosting",
-  "headline": "Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide",
-  "name": "Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide",
-  "description": "A friendly step-by-step guide to booting Linux on the ARM Neoverse RD-N2 Fixed Virtual Platform — from installation through firmware build to successful boot.",
-  "keywords": [
-    "ARM", "FVP", "Linux", "boot", "firmware", "SCP", "TF-A", "UEFI", "tutorial"
-  ],
-  "articleBody": " Arm RD-N2 FVP • Linux bring-up • Friendly walkthrough\nIf you’ve ever stared at a virtual platform, a pile of firmware binaries, and a terminal full of warnings and thought, “okay… where do I even start?” — you are absolutely in the right place. In this guide, we’ll go from a Windows machine to a booting Linux system on the Arm RD-N2 FVP together, one calm, practical step at a time.\n16 — Neoverse N2 cores in the model 4 — Major stages in the boot chain 5002 — Telnet port for the Linux console 💡 Tip: how to install the FVP on Windows, set up a WSL2 Ubuntu build environment, fetch the exact source manifest, build the firmware + OS stack, prepare boot images, launch the RD-N2 model, and connect to the UART consoles without losing your mind.\n1 Introduction Let’s start with the obvious question: what is an FVP? FVP stands for Fixed Virtual Platform. Think of it as a detailed software model of a hardware platform. You get something that behaves like a real SoC platform — enough to boot firmware, UEFI, Linux, and user space — without needing the physical board on your desk.\nFor RD-N2, this is especially nice because you can explore the full server-style boot flow: SCP firmware, Trusted Firmware-A, UEFI, GRUB, Linux, and a root filesystem. That means you can debug platform bring-up, firmware interactions, and boot scripts long before real silicon (or before your hardware setup cooperates).\nBy the end of this guide, you’ll have a repeatable setup for booting Linux on the Arm RD-N2 FVP. And yes — we’ll also talk about the sharp edges, because there are a few, and pretending otherwise would be rude.\n🎉 Milestone: if your goal is “I want a virtual RD-N2 platform that boots Linux and gives me a working console,” that is exactly the road we’re walking here.\n2 Prerequisites Here’s the setup we’re assuming. Nothing exotic — but getting these basics right saves a lot of frustration later.\nWindows host Use Windows to install and run the FVP model itself. In this guide the model lives under C:\\Program Files\\ARM\\FVP_RD_N2\\.\nWSL2 + Ubuntu 22.04 We’ll do the source sync and builds inside WSL2, because that’s the path of least resistance for the Linux toolchain.\nArm FVP installed Specifically the Neoverse N2 Reference Design FVP from developer.arm.com.\nA Windows machine with enough disk space for the source tree and build outputs. WSL2 configured and running Ubuntu 22.04. Basic comfort with PowerShell and the Ubuntu shell. Internet access for downloading the model and syncing sources. 💡 Tip: keep your generated binaries in one predictable Windows folder. In this walkthrough we use C:\\Users\\neerajpant\\rdn2-images. That makes the final FVP launch command much easier to read and maintain.\n3 Installing the FVP Head to developer.arm.com and download the Neoverse N2 Reference Design FVP. Install it on Windows at:\nC:\\Program Files\\ARM\\FVP_RD_N2\\ That gives you the model executable we’ll eventually launch from PowerShell. On a typical install, the RD-N2 model binary is here:\nC:\\Program Files\\ARM\\FVP_RD_N2\\models\\Win64_VC2019\\FVP_RD_N2.exe The reason we install the FVP on Windows instead of inside WSL is simple: the Windows package is the native path for running the model, while WSL is better suited for building the Linux-side software stack.\n⚠️ Warning: make sure the install path has no surprises. If you move the model elsewhere, update every launch script accordingly. Boot issues caused by a stale path are the kind that make you question your life choices for 20 minutes.\n4 What’s inside the FVP The RD-N2 FVP models a server-class platform. It is not trying to be a phone, tablet, or graphics-heavy board. In fact, one of the easiest things to misunderstand is this:\n💡 Tip: RD-N2 is a server platform. That’s why the interesting parts are compute, coherency, interrupts, memory security, and platform control firmware — not graphics output.\nMain IP blocks 16× Neoverse N2 cores CMN-700 coherent mesh interconnect GIC-700 interrupt controller SMMUv3 for I/O address translation TZC-400 trust zone controller PCIe for I/O MHU mailbox/message units SCP based on Cortex-M7 Why this matters When Linux finally boots, it didn’t get there by magic. The SCP initialized platform pieces, TF-A set up the secure world handoff, UEFI did platform bring-up, and then GRUB loaded the kernel and root filesystem. The model reflects that full chain.\nRD-N2 FVP Architecture Overview Compute Complex 16× Neoverse N2 cores Clustered server-class CPU subsystem CMN-700 Coherent mesh fabric System coherency + memory routing Platform I/O + Security GIC-700, SMMUv3, TZC-400, PCIe Interrupts, isolation, DMA translation Control Subsystem SCP + MCP (Cortex-M7) Power, clocks, topology, system coordination Boot Storage + Comms NOR flash, virtio block, MHU mailboxes Firmware images, boot media, AP↔SCP signaling 5 Setting up the build environment Now we switch to WSL2 Ubuntu 22.04. This is where we’ll install dependencies and build the software stack. The package list is a little long, but it’s the honest version of events — and I’d rather give you the full list than let you discover missing tools one by one during a 40-minute build.\nsudo apt update sudo apt install -y \\ build-essential git python3 cmake libfdt-dev unzip autoconf automake \\ autopoint libtool mtools rsync cpio bc wget file device-tree-compiler \\ acpica-tools uuid-dev python3-pyelftools You’ll also want Google’s repo tool, because the RD-N2 software stack is pulled through a manifest rather than a single Git repository.\nmkdir -p ~/bin curl https://storage.googleapis.com/git-repo-downloads/repo -o ~/bin/repo chmod a+x ~/bin/repo export PATH=\"$HOME/bin:$PATH\" If you want that path to persist, add the export line to your ~/.bashrc. Future-you will appreciate it.\n6 Getting the source code We’re going to use repo with the manifest tag RD-INFRA-2022.12.22 and the manifest file pinned-rdn2.xml. That combination gives you a known-good baseline of repositories that work together.\nmkdir -p ~/rdn2 cd ~/rdn2 repo init -u https://git.gitlab.arm.com/arm-reference-solutions/manifest.git \\ -b RD-INFRA-2022.12.22 \\ -m pinned-rdn2.xml repo sync -j$(nproc) So what actually comes down? Not just one project. You’re syncing a whole platform stack, typically including:\nSCP firmware Trusted Firmware-A UEFI / EDK2 Linux kernel GRUB buildroot This is one of those moments where the architecture starts to click: we’re not “just building Linux.” We’re building the entire boot story that gets Linux onto the platform.\n🎉 Milestone: once repo sync completes, you have the raw ingredients. The kitchen is messy, but the ingredients are there. That counts.\n7 Building the stack The exact top-level build command can vary with the reference solution layout you synced, but the important thing is understanding what gets produced. Here’s the stack we care about and the files we expect to end up with.\nComponent What it does Output files SCP firmware Boots first on the Cortex-M7 control processor, initializes platform resources, powers up application cores. scp_romfw.bin, scp_ramfw.bin, mcp_romfw.bin, mcp_ramfw.bin Trusted Firmware-A Secure boot chain and early EL3 runtime for the application processors. tf-bl1.bin FIP image Combined firmware package that carries BL2, BL31, and UEFI for the AP boot path. fip-uefi.bin Linux + buildroot Kernel plus a practical root filesystem to get to a shell quickly. Kernel, DTB, buildroot filesystem artifacts GRUB + disk image Bootable disk image that hands control to Linux. grub-buildroot.img SCP firmware Bring-up + power-on TF-A BL1 → BL2 → BL31 UEFI DXE + boot manager GRUB Loads kernel + args Linux Kernel + Buildroot userspace Firmware images used by the FVP: scp_romfw.bin / scp_ramfw.bin mcp_romfw.bin / mcp_ramfw.bin tf-bl1.bin • fip-uefi.bin • grub-buildroot.img A very practical habit here: once the build completes, copy the final artifacts into your Windows image directory so the model launch path stays clean and deterministic.\n8 Common build issues \u0026 fixes This is the “let’s save each other some time” section. A clean build is wonderful when it happens. But if it doesn’t, these are the issues most likely to get in your way.\n8.1 kvmtool libfdt issue One annoying failure shows up around kvmtool and libfdt. The workaround is to patch the Makefile so the build stops assuming the host-side layout and instead uses the correct cross-compiled paths.\nPatch the Makefile around line 345 so that:\nifneq (y,y) Then update lines 348–351 to point at the cross-compiled libfdt include/library paths used by your build. The exact paths depend on where your build tree places them, but the intention is always the same: stop the build from resolving the wrong libfdt.\n8.2 Missing package errors If the build stops with “command not found” or missing header/library errors, go back to the package list in the build environment section and install the missing dependency explicitly. The most common misses are:\ndevice-tree-compiler acpica-tools uuid-dev python3-pyelftools libfdt-dev ⚠️ Warning: the build can get surprisingly far before a missing package finally breaks something. So if a late step fails, it does not automatically mean your earlier steps were wrong.\n8.3 SCP bus fault with old firmware vs new FVP This one is sneaky. If you use older SCP firmware with a newer FVP build, you can hit an SCP bus fault early in the boot process. The fix is usually to rebuild the SCP firmware from the latest master and drop in the fresh binary.\nUse these commands exactly:\ncd /root/scp-new git clone https://github.com/ARM-software/SCP-firmware.git . git submodule update --init contrib/cmsis/git cmake -B build-scp/scp_ramfw -DSCP_FIRMWARE_SOURCE_DIR:PATH=/root/scp-new/product/neoverse-rd/rdn2/scp_ramfw -DSCP_PLATFORM_VARIANT=0 -DCMAKE_BUILD_TYPE=Release cmake --build build-scp/scp_ramfw -j$(nproc) After that, replace the SCP RAM firmware in your FVP image directory with the newly built one. If your failure was caused by the firmware/model mismatch, this is often the moment where the whole thing suddenly behaves better and you get to enjoy a tiny, well-earned victory.\n🎉 Milestone: getting past firmware mismatch issues is real bring-up work. It may not feel glamorous, but it’s exactly the kind of problem-solving that makes the platform finally come alive.\n9 Preparing boot images Before launching the model, create two NOR flash images — each 64 MB. If they don’t already exist, PowerShell can create them as zero-filled files:\n$IMGDIR = \"C:\\Users\\neerajpant\\rdn2-images\" if (!(Test-Path \"$IMGDIR\\nor1_flash.img\")) { $bytes = New-Object byte[] (64*1024*1024) [System.IO.File]::WriteAllBytes(\"$IMGDIR\\nor1_flash.img\", $bytes) } if (!(Test-Path \"$IMGDIR\\nor2_flash.img\")) { $bytes = New-Object byte[] (64*1024*1024) [System.IO.File]::WriteAllBytes(\"$IMGDIR\\nor2_flash.img\", $bytes) } Then copy your key binaries from WSL2/build outputs into your Windows image folder:\nscp_romfw.bin scp_ramfw.bin mcp_romfw.bin mcp_ramfw.bin tf-bl1.bin fip-uefi.bin grub-buildroot.img The idea is simple: by the time you launch the FVP, every image it needs is already sitting in one place. No last-minute path archaeology.\n10 Launching the FVP Alright — the fun part. Here is the full PowerShell launch command pattern. This is the moment where all the build artifacts finally get threaded into the model.\n$MODEL = \"C:\\Program Files\\ARM\\FVP_RD_N2\\models\\Win64_VC2019\\FVP_RD_N2.exe\" $IMGDIR = \"C:\\Users\\neerajpant\\rdn2-images\" \u0026 $MODEL \\ --data \"css.scp.armcortexm7ct=$IMGDIR\\scp_ramfw.bin@0x0BD80000\" \\ --data \"css.mcp.armcortexm7ct=$IMGDIR\\mcp_ramfw.bin@0x0BF80000\" \\ -C \"css.scp.ROMloader.fname=$IMGDIR\\scp_romfw.bin\" \\ -C \"css.mcp.ROMloader.fname=$IMGDIR\\mcp_romfw.bin\" \\ -C \"css.trustedBootROMloader.fname=$IMGDIR\\tf-bl1.bin\" \\ -C \"board.flashloader0.fname=$IMGDIR\\fip-uefi.bin\" \\ -C \"board.flashloader1.fname=$IMGDIR\\nor1_flash.img\" \\ -C \"board.flashloader1.fnameWrite=$IMGDIR\\nor1_flash.img\" \\ -C \"board.flashloader2.fname=$IMGDIR\\nor2_flash.img\" \\ -C \"board.flashloader2.fnameWrite=$IMGDIR\\nor2_flash.img\" \\ -C \"board.virtioblockdevice.image_path=$IMGDIR\\grub-buildroot.img\" \\ -C \"css.gic_distributor.ITS-device-bits=20\" \\ -C \"css.tzc0.tzc400.rst_gate_keeper=0x0f\" \\ -C \"css.tzc0.tzc400.rst_region_attributes_0=0xc000000f\" \\ -C \"css.tzc0.tzc400.rst_region_id_access_0=0xffffffff\" \\ -C \"css.tzc1.tzc400.rst_gate_keeper=0x0f\" \\ -C \"css.tzc1.tzc400.rst_region_attributes_0=0xc000000f\" \\ -C \"css.tzc1.tzc400.rst_region_id_access_0=0xffffffff\" \\ -C \"css.tzc2.tzc400.rst_gate_keeper=0x0f\" \\ -C \"css.tzc2.tzc400.rst_region_attributes_0=0xc000000f\" \\ -C \"css.tzc2.tzc400.rst_region_id_access_0=0xffffffff\" \\ -C \"css.tzc3.tzc400.rst_gate_keeper=0x0f\" \\ -C \"css.tzc3.tzc400.rst_region_attributes_0=0xc000000f\" \\ -C \"css.tzc3.tzc400.rst_region_id_access_0=0xffffffff\" \\ -C \"css.tzc4.tzc400.rst_gate_keeper=0x0f\" \\ -C \"css.tzc4.tzc400.rst_region_attributes_0=0xc000000f\" \\ -C \"css.tzc4.tzc400.rst_region_id_access_0=0xffffffff\" \\ -C \"css.tzc5.tzc400.rst_gate_keeper=0x0f\" \\ -C \"css.tzc5.tzc400.rst_region_attributes_0=0xc000000f\" \\ -C \"css.tzc5.tzc400.rst_region_id_access_0=0xffffffff\" \\ -C \"css.tzc6.tzc400.rst_gate_keeper=0x0f\" \\ -C \"css.tzc6.tzc400.rst_region_attributes_0=0xc000000f\" \\ -C \"css.tzc6.tzc400.rst_region_id_access_0=0xffffffff\" \\ -C \"css.tzc7.tzc400.rst_gate_keeper=0x0f\" \\ -C \"css.tzc7.tzc400.rst_region_attributes_0=0xc000000f\" \\ -C \"css.tzc7.tzc400.rst_region_id_access_0=0xffffffff\" \\ -C \"disable_visualisation=true\" \\ -R A few important notes about that command:\n--data css.scp.armcortexm7ct=...@0x0BD80000 places the SCP RAM firmware at the address the model expects. -C css.trustedBootROMloader.fname=tf-bl1.bin points BL1 at the Trusted Firmware-A entry point. -C board.flashloader0.fname=fip-uefi.bin loads the FIP image containing BL2 + BL31 + UEFI. -C board.virtioblockdevice.image_path=grub-buildroot.img gives the platform a bootable disk image for GRUB and the root filesystem. The TZC settings bypass restrictive default protection so the software stack can boot cleanly in this setup. -R means run from reset. -C disable_visualisation=true keeps the model headless, which is exactly what we want for a server-style workflow. 💡 Tip: UARTs are typically exposed on telnet ports 5000 (SCP), 5001 (MCP), 5002 (non-secure / Linux), and 5003 (secure world output).\n11 Connecting via telnet Once the FVP is running, the UARTs are your window into what the platform is doing. If Telnet Client is not enabled on Windows yet, turn it on first:\ndism /online /Enable-Feature /FeatureName:TelnetClient Then open separate terminals and connect to the interesting UARTs:\ntelnet localhost 5000 # SCP console telnet localhost 5002 # Linux / non-secure AP console If you’re curious, you can also watch the MCP and secure UARTs:\ntelnet localhost 5001 # MCP console telnet localhost 5003 # Secure console The SCP console is wonderful when you’re debugging early bring-up. The Linux console is where the reward shows up — kernel boot logs, init, and hopefully a shell prompt.\n12 What you’ll see during boot This is the part where the abstract architecture becomes a visible sequence of messages. Here’s the rough flow you should expect:\nSCP firmware starts first on the Cortex-M7 and initializes platform services. It configures pieces like CMN-700 and powers up the application processor cores. TF-A takes over on the AP side: BL1 → BL2 → BL31. StandaloneMM / UEFI comes up and begins its DXE phase. GRUB loads the Linux kernel and root filesystem from the virtio block image. Linux boots, starts init, and lands you in buildroot userspace. ⚠️ Warning: the FVP is very slow compared to real hardware — think on the order of ~100× slower. If you are used to a board booting in seconds, the model can feel like it’s moving through syrup. That does not necessarily mean it’s stuck.\nSo if the platform seems to pause, give it a little grace before assuming disaster. Many bring-up sessions have been derailed by impatience more than by actual bugs.\n13 Troubleshooting Here’s a quick practical checklist for the most common “it doesn’t boot and I’m tired” situations.\nSymptom Likely cause What to try No output on any UART Wrong model path, failed launch, or console ports not exposed Re-run the PowerShell command, verify FVP_RD_N2.exe exists, and confirm telnet connections to localhost:5000-5003. SCP dies early with a bus fault Old SCP firmware with a newer FVP build Rebuild SCP from the latest master and replace scp_ramfw.bin. Build fails on missing commands or headers Dependency gap in Ubuntu Install the missing packages from the prerequisites section and retry the failed step. UEFI appears, but Linux never boots Broken disk image, GRUB issue, or missing kernel/rootfs content Rebuild or replace grub-buildroot.img and verify the virtio block path in the FVP command. Weird permission/flash-related failures NOR images missing or not writable Make sure both 64 MB NOR images exist and that fnameWrite points to the same files. Platform appears frozen It may just be slow Wait longer than feels reasonable. Seriously. FVP performance can make a healthy boot look suspiciously dramatic. 💡 Tip: watch both the SCP console and the Linux console. If Linux never wakes up, the SCP side usually tells you why the AP world never got a clean start.\n14 Conclusion If you’ve made it this far, you’ve done something genuinely substantial: you set up a mixed Windows + WSL2 workflow, installed the RD-N2 FVP, synced a pinned platform manifest, built a multi-stage firmware and OS stack, prepared the flash and disk images, launched the model, and connected to the boot consoles.\nThat’s not “just booting Linux.” That’s understanding a modern Arm platform boot flow end to end.\n🎉 Milestone: you now have a repeatable RD-N2 virtual bring-up path. That means you can move on to kernel changes, firmware experiments, boot parameter tweaks, device-tree work, UEFI investigations, or plain old platform exploration with a lot more confidence.\nGood next steps from here:\nCustomize the kernel command line and GRUB config. Swap in your own kernel build or root filesystem. Experiment with TF-A or UEFI changes. Trace power-up and mailbox interactions through the SCP logs. Document a one-click launch script once your flow stabilizes. And honestly? Take a second to enjoy the moment when the Linux console finally comes alive. Booting a platform stack like this is part engineering, part archaeology, and part stubbornness. If you got it working, you earned that smile.\n",
-  "wordCount" : "2670",
-  "inLanguage": "en",
-  "datePublished": "2026-05-22T14:00:00+05:30",
-  "dateModified": "2026-05-22T14:00:00+05:30",
-  "author":{
-    "@type": "Person",
-    "name": "Neeraj Pant"
-  },
-  "mainEntityOfPage": {
-    "@type": "WebPage",
-    "@id": "http://localhost:1313/neeraj-tech-lab/posts/booting-linux-on-arm-rdn2-fvp/"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "Neeraj's Tech Lab",
-    "logo": {
-      "@type": "ImageObject",
-      "url": "http://localhost:1313/neeraj-tech-lab/%F0%9F%94%AC"
-    }
-  }
-}
-</script>
-</head>
-<body id="top">
-    <header class="header">
-    <nav class="header-nav">
-        <div class="logo">
-            <a href="http://localhost:1313/neeraj-tech-lab/" accesskey="h" title="Neeraj&#39;s Tech Lab (Alt + H)">Neeraj&#39;s Tech Lab</a>
-            <div class="logo-switches">
-                <button id="theme-toggle" class="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
-                    <svg class="moon" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                    <svg class="sun" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <ul id="menu" class="menu">
-            <li>
-                <a href="http://localhost:1313/neeraj-tech-lab/posts/" title="Posts">
-                    <span>Posts</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/neeraj-tech-lab/tags/" title="Tags">
-                    <span>Tags</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/neeraj-tech-lab/about/" title="About">
-                    <span>About</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-</header>
-<main class="main">
-
-<article class="post-single">
-  <header class="post-header">
-    <nav class="breadcrumbs" role="navigation" aria-label="Breadcrumb">
-            <a href="/neeraj-tech-lab/">Home</a>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
-                <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-            <a href="/neeraj-tech-lab/posts/">Posts</a>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
-        <polyline points="9 18 15 12 9 6"></polyline>
-    </svg>
-</nav>
-    <h1 class="post-title entry-hint-parent">
-      Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide
-    </h1>
-    <div class="post-description">
-      A friendly step-by-step guide to booting Linux on the ARM Neoverse RD-N2 Fixed Virtual Platform — from installation through firmware build to successful boot.
-    </div>
-    <div class="post-meta">
-
-<span title='2026-05-22 14:00:00 +0530 IST'>May 22, 2026</span>&nbsp;·&nbsp;<span>13 min</span>&nbsp;·&nbsp;<span>Neeraj Pant</span>
-
-</div>
-  </header> <details class="toc"  open>
-    <summary accesskey="c" title="(Alt + C)">
-        <span class="title">Table of Contents</span>
-    </summary>
-
-    <div class="inner"><ul>
-            <li>
-                <a href="#1-introduction" aria-label="1 Introduction">1 Introduction</a></li>
-            <li>
-                <a href="#2-prerequisites" aria-label="2 Prerequisites">2 Prerequisites</a><ul>
-                    
-            <li>
-                <a href="#windows-host" aria-label="Windows host">Windows host</a></li>
-            <li>
-                <a href="#wsl2--ubuntu-2204" aria-label="WSL2 &#43; Ubuntu 22.04">WSL2 + Ubuntu 22.04</a></li>
-            <li>
-                <a href="#arm-fvp-installed" aria-label="Arm FVP installed">Arm FVP installed</a></li></ul>
-            </li>
-            <li>
-                <a href="#3-installing-the-fvp" aria-label="3 Installing the FVP">3 Installing the FVP</a></li>
-            <li>
-                <a href="#4-whats-inside-the-fvp" aria-label="4 What’s inside the FVP">4 What’s inside the FVP</a><ul>
-                    
-            <li>
-                <a href="#main-ip-blocks" aria-label="Main IP blocks">Main IP blocks</a></li>
-            <li>
-                <a href="#why-this-matters" aria-label="Why this matters">Why this matters</a></li></ul>
-            </li>
-            <li>
-                <a href="#5-setting-up-the-build-environment" aria-label="5 Setting up the build environment">5 Setting up the build environment</a></li>
-            <li>
-                <a href="#6-getting-the-source-code" aria-label="6 Getting the source code">6 Getting the source code</a></li>
-            <li>
-                <a href="#7-building-the-stack" aria-label="7 Building the stack">7 Building the stack</a></li>
-            <li>
-                <a href="#8-common-build-issues--fixes" aria-label="8 Common build issues &amp; fixes">8 Common build issues &amp; fixes</a><ul>
-                    
-            <li>
-                <a href="#81-kvmtool-libfdt-issue" aria-label="8.1 kvmtool libfdt issue">8.1 kvmtool libfdt issue</a></li>
-            <li>
-                <a href="#82-missing-package-errors" aria-label="8.2 Missing package errors">8.2 Missing package errors</a></li>
-            <li>
-                <a href="#83-scp-bus-fault-with-old-firmware-vs-new-fvp" aria-label="8.3 SCP bus fault with old firmware vs new FVP">8.3 SCP bus fault with old firmware vs new FVP</a></li></ul>
-            </li>
-            <li>
-                <a href="#9-preparing-boot-images" aria-label="9 Preparing boot images">9 Preparing boot images</a></li>
-            <li>
-                <a href="#10-launching-the-fvp" aria-label="10 Launching the FVP">10 Launching the FVP</a></li>
-            <li>
-                <a href="#11-connecting-via-telnet" aria-label="11 Connecting via telnet">11 Connecting via telnet</a></li>
-            <li>
-                <a href="#12-what-youll-see-during-boot" aria-label="12 What you’ll see during boot">12 What you’ll see during boot</a></li>
-            <li>
-                <a href="#13-troubleshooting" aria-label="13 Troubleshooting">13 Troubleshooting</a></li>
-            <li>
-                <a href="#14-conclusion" aria-label="14 Conclusion">14 Conclusion</a>
-            </li>
-        </ul>
-    </div>
-</details>
-
-  <div class="post-content md-content"><style>
-:root {
-  --svg-grid: #cbd5e1;
-  --svg-text: #1e293b;
-}
-.dark {
-  --svg-grid: #475569;
-  --svg-text: #e2e8f0;
-}
-.svg-diagram {
-  margin: 1.5em 0;
-  padding: 1em;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  overflow-x: auto;
-}
-.dark .svg-diagram {
-  background: #1e293b;
-  border-color: #334155;
-}
-.svg-diagram svg {
-  width: 100%;
-  height: auto;
-  min-width: 600px;
-}
-</style>
-<blockquote>
-<p>Arm RD-N2 FVP • Linux bring-up • Friendly walkthrough</p>
-</blockquote>
-<p>If you’ve ever stared at a virtual platform, a pile of firmware binaries, and a terminal full of warnings and thought, <em>“okay… where do I even start?”</em> — you are absolutely in the right place. In this guide, we’ll go from a Windows machine to a booting Linux system on the Arm RD-N2 FVP together, one calm, practical step at a time.</p>
-<ul>
-<li><strong>16</strong> — Neoverse N2 cores in the model</li>
-<li><strong>4</strong> — Major stages in the boot chain</li>
-<li><strong>5002</strong> — Telnet port for the Linux console</li>
-</ul>
-<blockquote>
-<p>💡 <strong>Tip:</strong> how to install the FVP on Windows, set up a WSL2 Ubuntu build environment, fetch the exact source manifest, build the firmware + OS stack, prepare boot images, launch the RD-N2 model, and connect to the UART consoles without losing your mind.</p>
-</blockquote>
-<h2 id="1-introduction">1 Introduction<a hidden class="anchor" aria-hidden="true" href="#1-introduction">#</a></h2>
-<p>Let’s start with the obvious question: <strong>what is an FVP?</strong> FVP stands for <strong>Fixed Virtual Platform</strong>. Think of it as a detailed software model of a hardware platform. You get something that behaves like a real SoC platform — enough to boot firmware, UEFI, Linux, and user space — without needing the physical board on your desk.</p>
-<p>For RD-N2, this is especially nice because you can explore the full server-style boot flow: SCP firmware, Trusted Firmware-A, UEFI, GRUB, Linux, and a root filesystem. That means you can debug platform bring-up, firmware interactions, and boot scripts long before real silicon (or before your hardware setup cooperates).</p>
-<p>By the end of this guide, you’ll have a repeatable setup for booting Linux on the <strong>Arm RD-N2 FVP</strong>. And yes — we’ll also talk about the sharp edges, because there are a few, and pretending otherwise would be rude.</p>
-<blockquote>
-<p>🎉 <strong>Milestone:</strong> if your goal is “I want a virtual RD-N2 platform that boots Linux and gives me a working console,” that is exactly the road we’re walking here.</p>
-</blockquote>
-<h2 id="2-prerequisites">2 Prerequisites<a hidden class="anchor" aria-hidden="true" href="#2-prerequisites">#</a></h2>
-<p>Here’s the setup we’re assuming. Nothing exotic — but getting these basics right saves a lot of frustration later.</p>
-<h3 id="windows-host">Windows host<a hidden class="anchor" aria-hidden="true" href="#windows-host">#</a></h3>
-<p>Use Windows to install and run the FVP model itself. In this guide the model lives under <code>C:\Program Files\ARM\FVP_RD_N2\</code>.</p>
-<h3 id="wsl2--ubuntu-2204">WSL2 + Ubuntu 22.04<a hidden class="anchor" aria-hidden="true" href="#wsl2--ubuntu-2204">#</a></h3>
-<p>We’ll do the source sync and builds inside WSL2, because that’s the path of least resistance for the Linux toolchain.</p>
-<h3 id="arm-fvp-installed">Arm FVP installed<a hidden class="anchor" aria-hidden="true" href="#arm-fvp-installed">#</a></h3>
-<p>Specifically the Neoverse N2 Reference Design FVP from <code>developer.arm.com</code>.</p>
-<ul>
-<li>A Windows machine with enough disk space for the source tree and build outputs.</li>
-<li>WSL2 configured and running <strong>Ubuntu 22.04</strong>.</li>
-<li>Basic comfort with PowerShell and the Ubuntu shell.</li>
-<li>Internet access for downloading the model and syncing sources.</li>
-</ul>
-<blockquote>
-<p>💡 <strong>Tip:</strong> keep your generated binaries in one predictable Windows folder. In this walkthrough we use <code>C:\Users\neerajpant\rdn2-images</code>. That makes the final FVP launch command much easier to read and maintain.</p>
-</blockquote>
-<h2 id="3-installing-the-fvp">3 Installing the FVP<a hidden class="anchor" aria-hidden="true" href="#3-installing-the-fvp">#</a></h2>
-<p>Head to <strong>developer.arm.com</strong> and download the <strong>Neoverse N2 Reference Design FVP</strong>. Install it on Windows at:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">C:\Program Files\ARM\FVP_RD_N2\
-</span></span></code></pre></div><p>That gives you the model executable we’ll eventually launch from PowerShell. On a typical install, the RD-N2 model binary is here:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">C:\Program Files\ARM\FVP_RD_N2\models\Win64_VC2019\FVP_RD_N2.exe
-</span></span></code></pre></div><p>The reason we install the FVP on Windows instead of inside WSL is simple: the Windows package is the native path for running the model, while WSL is better suited for building the Linux-side software stack.</p>
-<blockquote>
-<p>⚠️ <strong>Warning:</strong> make sure the install path has no surprises. If you move the model elsewhere, update every launch script accordingly. Boot issues caused by a stale path are the kind that make you question your life choices for 20 minutes.</p>
-</blockquote>
-<h2 id="4-whats-inside-the-fvp">4 What’s inside the FVP<a hidden class="anchor" aria-hidden="true" href="#4-whats-inside-the-fvp">#</a></h2>
-<p>The RD-N2 FVP models a server-class platform. It is not trying to be a phone, tablet, or graphics-heavy board. In fact, one of the easiest things to misunderstand is this:</p>
-<blockquote>
-<p>💡 <strong>Tip:</strong> RD-N2 is a server platform. That’s why the interesting parts are compute, coherency, interrupts, memory security, and platform control firmware — not graphics output.</p>
-</blockquote>
-<h3 id="main-ip-blocks">Main IP blocks<a hidden class="anchor" aria-hidden="true" href="#main-ip-blocks">#</a></h3>
-<ul>
-<li><strong>16× Neoverse N2 cores</strong></li>
-<li><strong>CMN-700</strong> coherent mesh interconnect</li>
-<li><strong>GIC-700</strong> interrupt controller</li>
-<li><strong>SMMUv3</strong> for I/O address translation</li>
-<li><strong>TZC-400</strong> trust zone controller</li>
-<li><strong>PCIe</strong> for I/O</li>
-<li><strong>MHU</strong> mailbox/message units</li>
-<li><strong>SCP</strong> based on Cortex-M7</li>
-</ul>
-<h3 id="why-this-matters">Why this matters<a hidden class="anchor" aria-hidden="true" href="#why-this-matters">#</a></h3>
-<p>When Linux finally boots, it didn’t get there by magic. The SCP initialized platform pieces, TF-A set up the secure world handoff, UEFI did platform bring-up, and then GRUB loaded the kernel and root filesystem. The model reflects that full chain.</p>
-<div class="svg-diagram">
-<svg width="100%" viewBox="0 0 1000 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="RD-N2 FVP architecture overview">
-<defs>
-<linearGradient id="g1" x1="0" x2="1">
-<stop offset="0%" stop-color="#2952ff"/>
-<stop offset="100%" stop-color="#6e7dff"/>
-</linearGradient>
-</defs>
-<rect x="10" y="10" width="980" height="420" rx="22" fill="#ffffff" stroke="#dbe3f1"/>
-<text x="40" y="48" font-size="22" font-family="Segoe UI, Arial" fill="#1c2434" font-weight="700">RD-N2 FVP Architecture Overview</text>
-<rect x="30" y="75" width="280" height="110" rx="16" fill="#edf2ff" stroke="#cfd9ff"/>
-<text x="170" y="108" text-anchor="middle" font-size="20" fill="#2952ff" font-weight="700">Compute Complex</text>
-<text x="170" y="135" text-anchor="middle" font-size="16" fill="#334155">16× Neoverse N2 cores</text>
-<text x="170" y="160" text-anchor="middle" font-size="13" fill="#64748b">Clustered server-class CPU subsystem</text>
-<rect x="340" y="75" width="240" height="110" rx="16" fill="#eefcf7" stroke="#c8efe2"/>
-<text x="460" y="108" text-anchor="middle" font-size="20" fill="#0f9d7a" font-weight="700">CMN-700</text>
-<text x="460" y="135" text-anchor="middle" font-size="16" fill="#334155">Coherent mesh fabric</text>
-<text x="460" y="160" text-anchor="middle" font-size="13" fill="#64748b">System coherency + memory routing</text>
-<rect x="610" y="75" width="360" height="110" rx="16" fill="#fff7ed" stroke="#fed7aa"/>
-<text x="790" y="108" text-anchor="middle" font-size="20" fill="#d97706" font-weight="700">Platform I/O + Security</text>
-<text x="790" y="135" text-anchor="middle" font-size="15" fill="#334155">GIC-700, SMMUv3, TZC-400, PCIe</text>
-<text x="790" y="160" text-anchor="middle" font-size="13" fill="#64748b">Interrupts, isolation, DMA translation</text>
-<rect x="30" y="240" width="340" height="110" rx="16" fill="#f8fafc" stroke="#dbe3f1"/>
-<text x="200" y="273" text-anchor="middle" font-size="20" fill="#1c2434" font-weight="700">Control Subsystem</text>
-<text x="200" y="300" text-anchor="middle" font-size="16" fill="#334155">SCP + MCP (Cortex-M7)</text>
-<text x="200" y="325" text-anchor="middle" font-size="13" fill="#64748b">Power, clocks, topology, system coordination</text>
-<rect x="420" y="240" width="440" height="110" rx="16" fill="#f5f3ff" stroke="#ddd6fe"/>
-<text x="640" y="273" text-anchor="middle" font-size="20" fill="#6d28d9" font-weight="700">Boot Storage + Comms</text>
-<text x="640" y="300" text-anchor="middle" font-size="15" fill="#334155">NOR flash, virtio block, MHU mailboxes</text>
-<text x="640" y="325" text-anchor="middle" font-size="13" fill="#64748b">Firmware images, boot media, AP↔SCP signaling</text>
-<path d="M310 130 H340" stroke="url(#g1)" stroke-width="5" stroke-linecap="round"/>
-<path d="M580 130 H610" stroke="url(#g1)" stroke-width="5" stroke-linecap="round"/>
-<path d="M420 295 H370" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
-<path d="M580 185 V215 H640" stroke="#94a3b8" stroke-width="5" fill="none" stroke-linecap="round"/>
-<path d="M170 185 V240" stroke="#94a3b8" stroke-width="5" fill="none" stroke-linecap="round"/>
-</svg>
-</div>
-<h2 id="5-setting-up-the-build-environment">5 Setting up the build environment<a hidden class="anchor" aria-hidden="true" href="#5-setting-up-the-build-environment">#</a></h2>
-<p>Now we switch to <strong>WSL2 Ubuntu 22.04</strong>. This is where we’ll install dependencies and build the software stack. The package list is a little long, but it’s the honest version of events — and I’d rather give you the full list than let you discover missing tools one by one during a 40-minute build.</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">sudo apt update
-</span></span><span class="line"><span class="cl">sudo apt install -y <span class="se">\
-</span></span></span><span class="line"><span class="cl">  build-essential git python3 cmake libfdt-dev unzip autoconf automake <span class="se">\
-</span></span></span><span class="line"><span class="cl">  autopoint libtool mtools rsync cpio bc wget file device-tree-compiler <span class="se">\
-</span></span></span><span class="line"><span class="cl">  acpica-tools uuid-dev python3-pyelftools
-</span></span></code></pre></div><p>You’ll also want Google’s <code>repo</code> tool, because the RD-N2 software stack is pulled through a manifest rather than a single Git repository.</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">mkdir -p ~/bin
-</span></span><span class="line"><span class="cl">curl https://storage.googleapis.com/git-repo-downloads/repo -o ~/bin/repo
-</span></span><span class="line"><span class="cl">chmod a+x ~/bin/repo
-</span></span><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="s2">&#34;</span><span class="nv">$HOME</span><span class="s2">/bin:</span><span class="nv">$PATH</span><span class="s2">&#34;</span>
-</span></span></code></pre></div><p>If you want that path to persist, add the export line to your <code>~/.bashrc</code>. Future-you will appreciate it.</p>
-<h2 id="6-getting-the-source-code">6 Getting the source code<a hidden class="anchor" aria-hidden="true" href="#6-getting-the-source-code">#</a></h2>
-<p>We’re going to use <code>repo</code> with the manifest tag <strong>RD-INFRA-2022.12.22</strong> and the manifest file <strong>pinned-rdn2.xml</strong>. That combination gives you a known-good baseline of repositories that work together.</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">mkdir -p ~/rdn2
-</span></span><span class="line"><span class="cl"><span class="nb">cd</span> ~/rdn2
-</span></span><span class="line"><span class="cl">repo init -u https://git.gitlab.arm.com/arm-reference-solutions/manifest.git <span class="se">\
-</span></span></span><span class="line"><span class="cl">  -b RD-INFRA-2022.12.22 <span class="se">\
-</span></span></span><span class="line"><span class="cl">  -m pinned-rdn2.xml
-</span></span><span class="line"><span class="cl">repo sync -j<span class="k">$(</span>nproc<span class="k">)</span>
-</span></span></code></pre></div><p>So what actually comes down? Not just one project. You’re syncing a whole platform stack, typically including:</p>
-<ul>
-<li><code>SCP firmware</code></li>
-<li><code>Trusted Firmware-A</code></li>
-<li><code>UEFI / EDK2</code></li>
-<li><code>Linux kernel</code></li>
-<li><code>GRUB</code></li>
-<li><code>buildroot</code></li>
-</ul>
-<p>This is one of those moments where the architecture starts to click: we’re not “just building Linux.” We’re building the <em>entire boot story</em> that gets Linux onto the platform.</p>
-<blockquote>
-<p>🎉 <strong>Milestone:</strong> once <code>repo sync</code> completes, you have the raw ingredients. The kitchen is messy, but the ingredients are there. That counts.</p>
-</blockquote>
-<h2 id="7-building-the-stack">7 Building the stack<a hidden class="anchor" aria-hidden="true" href="#7-building-the-stack">#</a></h2>
-<p>The exact top-level build command can vary with the reference solution layout you synced, but the important thing is understanding <strong>what gets produced</strong>. Here’s the stack we care about and the files we expect to end up with.</p>
-<table>
-  <thead>
-      <tr>
-          <th>Component</th>
-          <th>What it does</th>
-          <th>Output files</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>SCP firmware</td>
-          <td>Boots first on the Cortex-M7 control processor, initializes platform resources, powers up application cores.</td>
-          <td><code>scp_romfw.bin</code>, <code>scp_ramfw.bin</code>, <code>mcp_romfw.bin</code>, <code>mcp_ramfw.bin</code></td>
-      </tr>
-      <tr>
-          <td>Trusted Firmware-A</td>
-          <td>Secure boot chain and early EL3 runtime for the application processors.</td>
-          <td><code>tf-bl1.bin</code></td>
-      </tr>
-      <tr>
-          <td>FIP image</td>
-          <td>Combined firmware package that carries BL2, BL31, and UEFI for the AP boot path.</td>
-          <td><code>fip-uefi.bin</code></td>
-      </tr>
-      <tr>
-          <td>Linux + buildroot</td>
-          <td>Kernel plus a practical root filesystem to get to a shell quickly.</td>
-          <td>Kernel, DTB, buildroot filesystem artifacts</td>
-      </tr>
-      <tr>
-          <td>GRUB + disk image</td>
-          <td>Bootable disk image that hands control to Linux.</td>
-          <td><code>grub-buildroot.img</code></td>
-      </tr>
-  </tbody>
-</table>
-<div class="svg-diagram">
-<svg width="100%" viewBox="0 0 1000 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Boot flow diagram">
-<rect x="15" y="30" width="155" height="85" rx="16" fill="#eef2ff" stroke="#c7d2fe"/>
-<text x="92" y="62" text-anchor="middle" font-size="18" fill="#2952ff" font-weight="700">SCP firmware</text>
-<text x="92" y="88" text-anchor="middle" font-size="14" fill="#475569">Bring-up + power-on</text>
-<rect x="200" y="30" width="155" height="85" rx="16" fill="#f8fafc" stroke="#dbe3f1"/>
-<text x="277" y="62" text-anchor="middle" font-size="18" fill="#0f172a" font-weight="700">TF-A</text>
-<text x="277" y="88" text-anchor="middle" font-size="14" fill="#475569">BL1 → BL2 → BL31</text>
-<rect x="385" y="30" width="155" height="85" rx="16" fill="#eefcf7" stroke="#bbf7d0"/>
-<text x="462" y="62" text-anchor="middle" font-size="18" fill="#0f9d7a" font-weight="700">UEFI</text>
-<text x="462" y="88" text-anchor="middle" font-size="14" fill="#475569">DXE + boot manager</text>
-<rect x="570" y="30" width="145" height="85" rx="16" fill="#fff7ed" stroke="#fed7aa"/>
-<text x="642" y="62" text-anchor="middle" font-size="18" fill="#d97706" font-weight="700">GRUB</text>
-<text x="642" y="88" text-anchor="middle" font-size="14" fill="#475569">Loads kernel + args</text>
-<rect x="745" y="30" width="195" height="85" rx="16" fill="#f5f3ff" stroke="#ddd6fe"/>
-<text x="842" y="62" text-anchor="middle" font-size="18" fill="#6d28d9" font-weight="700">Linux</text>
-<text x="842" y="88" text-anchor="middle" font-size="13" fill="#475569">Kernel + Buildroot userspace</text>
-<path d="M170 72 H200" stroke="#6e7dff" stroke-width="5" stroke-linecap="round"/>
-<path d="M355 72 H385" stroke="#6e7dff" stroke-width="5" stroke-linecap="round"/>
-<path d="M540 72 H570" stroke="#6e7dff" stroke-width="5" stroke-linecap="round"/>
-<path d="M715 72 H745" stroke="#6e7dff" stroke-width="5" stroke-linecap="round"/>
-<text x="15" y="155" font-size="16" fill="#334155" font-weight="600">Firmware images used by the FVP:</text>
-<text x="15" y="185" font-size="13" fill="#64748b">scp_romfw.bin / scp_ramfw.bin</text>
-<text x="15" y="205" font-size="13" fill="#64748b">mcp_romfw.bin / mcp_ramfw.bin</text>
-<text x="15" y="225" font-size="13" fill="#64748b">tf-bl1.bin • fip-uefi.bin • grub-buildroot.img</text>
-</svg>
-</div>
-<p>A very practical habit here: once the build completes, copy the final artifacts into your Windows image directory so the model launch path stays clean and deterministic.</p>
-<h2 id="8-common-build-issues--fixes">8 Common build issues &amp; fixes<a hidden class="anchor" aria-hidden="true" href="#8-common-build-issues--fixes">#</a></h2>
-<p>This is the “let’s save each other some time” section. A clean build is wonderful when it happens. But if it doesn’t, these are the issues most likely to get in your way.</p>
-<h3 id="81-kvmtool-libfdt-issue">8.1 kvmtool libfdt issue<a hidden class="anchor" aria-hidden="true" href="#81-kvmtool-libfdt-issue">#</a></h3>
-<p>One annoying failure shows up around <code>kvmtool</code> and <code>libfdt</code>. The workaround is to patch the Makefile so the build stops assuming the host-side layout and instead uses the correct cross-compiled paths.</p>
-<p>Patch the Makefile around line 345 so that:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-makefile" data-lang="makefile"><span class="line"><span class="cl"><span class="err">ifneq</span> <span class="err">(y,y)</span>
-</span></span></code></pre></div><p>Then update lines 348–351 to point at the cross-compiled <code>libfdt</code> include/library paths used by your build. The exact paths depend on where your build tree places them, but the intention is always the same: stop the build from resolving the wrong <code>libfdt</code>.</p>
-<h3 id="82-missing-package-errors">8.2 Missing package errors<a hidden class="anchor" aria-hidden="true" href="#82-missing-package-errors">#</a></h3>
-<p>If the build stops with “command not found” or missing header/library errors, go back to the package list in the build environment section and install the missing dependency explicitly. The most common misses are:</p>
-<ul>
-<li><code>device-tree-compiler</code></li>
-<li><code>acpica-tools</code></li>
-<li><code>uuid-dev</code></li>
-<li><code>python3-pyelftools</code></li>
-<li><code>libfdt-dev</code></li>
-</ul>
-<blockquote>
-<p>⚠️ <strong>Warning:</strong> the build can get surprisingly far before a missing package finally breaks something. So if a late step fails, it does not automatically mean your earlier steps were wrong.</p>
-</blockquote>
-<h3 id="83-scp-bus-fault-with-old-firmware-vs-new-fvp">8.3 SCP bus fault with old firmware vs new FVP<a hidden class="anchor" aria-hidden="true" href="#83-scp-bus-fault-with-old-firmware-vs-new-fvp">#</a></h3>
-<p>This one is sneaky. If you use older SCP firmware with a newer FVP build, you can hit an SCP bus fault early in the boot process. The fix is usually to rebuild the SCP firmware from the latest master and drop in the fresh binary.</p>
-<p>Use these commands exactly:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nb">cd</span> /root/scp-new
-</span></span><span class="line"><span class="cl">git clone https://github.com/ARM-software/SCP-firmware.git .
-</span></span><span class="line"><span class="cl">git submodule update --init contrib/cmsis/git
-</span></span><span class="line"><span class="cl">cmake -B build-scp/scp_ramfw -DSCP_FIRMWARE_SOURCE_DIR:PATH<span class="o">=</span>/root/scp-new/product/neoverse-rd/rdn2/scp_ramfw -DSCP_PLATFORM_VARIANT<span class="o">=</span><span class="m">0</span> -DCMAKE_BUILD_TYPE<span class="o">=</span>Release
-</span></span><span class="line"><span class="cl">cmake --build build-scp/scp_ramfw -j<span class="k">$(</span>nproc<span class="k">)</span>
-</span></span></code></pre></div><p>After that, replace the SCP RAM firmware in your FVP image directory with the newly built one. If your failure was caused by the firmware/model mismatch, this is often the moment where the whole thing suddenly behaves better and you get to enjoy a tiny, well-earned victory.</p>
-<blockquote>
-<p>🎉 <strong>Milestone:</strong> getting past firmware mismatch issues is real bring-up work. It may not feel glamorous, but it’s exactly the kind of problem-solving that makes the platform finally come alive.</p>
-</blockquote>
-<h2 id="9-preparing-boot-images">9 Preparing boot images<a hidden class="anchor" aria-hidden="true" href="#9-preparing-boot-images">#</a></h2>
-<p>Before launching the model, create two NOR flash images — each <strong>64 MB</strong>. If they don’t already exist, PowerShell can create them as zero-filled files:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="nv">$IMGDIR</span> <span class="p">=</span> <span class="s2">&#34;C:\Users\neerajpant\rdn2-images&#34;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(!(</span><span class="nb">Test-Path</span> <span class="s2">&#34;</span><span class="nv">$IMGDIR</span><span class="s2">\nor1_flash.img&#34;</span><span class="p">))</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nv">$bytes</span> <span class="p">=</span> <span class="nb">New-Object</span> <span class="n">byte</span><span class="p">[]</span> <span class="p">(</span><span class="mf">64</span><span class="p">*</span><span class="mf">1024</span><span class="p">*</span><span class="mf">1024</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="p">[</span><span class="no">System.IO.File</span><span class="p">]::</span><span class="n">WriteAllBytes</span><span class="p">(</span><span class="s2">&#34;</span><span class="nv">$IMGDIR</span><span class="s2">\nor1_flash.img&#34;</span><span class="p">,</span> <span class="nv">$bytes</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(!(</span><span class="nb">Test-Path</span> <span class="s2">&#34;</span><span class="nv">$IMGDIR</span><span class="s2">\nor2_flash.img&#34;</span><span class="p">))</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nv">$bytes</span> <span class="p">=</span> <span class="nb">New-Object</span> <span class="n">byte</span><span class="p">[]</span> <span class="p">(</span><span class="mf">64</span><span class="p">*</span><span class="mf">1024</span><span class="p">*</span><span class="mf">1024</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="p">[</span><span class="no">System.IO.File</span><span class="p">]::</span><span class="n">WriteAllBytes</span><span class="p">(</span><span class="s2">&#34;</span><span class="nv">$IMGDIR</span><span class="s2">\nor2_flash.img&#34;</span><span class="p">,</span> <span class="nv">$bytes</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></div><p>Then copy your key binaries from WSL2/build outputs into your Windows image folder:</p>
-<ul>
-<li><code>scp_romfw.bin</code></li>
-<li><code>scp_ramfw.bin</code></li>
-<li><code>mcp_romfw.bin</code></li>
-<li><code>mcp_ramfw.bin</code></li>
-<li><code>tf-bl1.bin</code></li>
-<li><code>fip-uefi.bin</code></li>
-<li><code>grub-buildroot.img</code></li>
-</ul>
-<p>The idea is simple: by the time you launch the FVP, every image it needs is already sitting in one place. No last-minute path archaeology.</p>
-<h2 id="10-launching-the-fvp">10 Launching the FVP<a hidden class="anchor" aria-hidden="true" href="#10-launching-the-fvp">#</a></h2>
-<p>Alright — the fun part. Here is the full PowerShell launch command pattern. This is the moment where all the build artifacts finally get threaded into the model.</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="nv">$MODEL</span> <span class="p">=</span> <span class="s2">&#34;C:\Program Files\ARM\FVP_RD_N2\models\Win64_VC2019\FVP_RD_N2.exe&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="nv">$IMGDIR</span> <span class="p">=</span> <span class="s2">&#34;C:\Users\neerajpant\rdn2-images&#34;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="p">&amp;</span> <span class="nv">$MODEL</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="p">-</span><span class="n">-data</span> <span class="s2">&#34;css.scp.armcortexm7ct=</span><span class="nv">$IMGDIR</span><span class="s2">\scp_ramfw.bin@0x0BD80000&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="p">-</span><span class="n">-data</span> <span class="s2">&#34;css.mcp.armcortexm7ct=</span><span class="nv">$IMGDIR</span><span class="s2">\mcp_ramfw.bin@0x0BF80000&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.scp.ROMloader.fname=</span><span class="nv">$IMGDIR</span><span class="s2">\scp_romfw.bin&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.mcp.ROMloader.fname=</span><span class="nv">$IMGDIR</span><span class="s2">\mcp_romfw.bin&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.trustedBootROMloader.fname=</span><span class="nv">$IMGDIR</span><span class="s2">\tf-bl1.bin&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;board.flashloader0.fname=</span><span class="nv">$IMGDIR</span><span class="s2">\fip-uefi.bin&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;board.flashloader1.fname=</span><span class="nv">$IMGDIR</span><span class="s2">\nor1_flash.img&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;board.flashloader1.fnameWrite=</span><span class="nv">$IMGDIR</span><span class="s2">\nor1_flash.img&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;board.flashloader2.fname=</span><span class="nv">$IMGDIR</span><span class="s2">\nor2_flash.img&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;board.flashloader2.fnameWrite=</span><span class="nv">$IMGDIR</span><span class="s2">\nor2_flash.img&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;board.virtioblockdevice.image_path=</span><span class="nv">$IMGDIR</span><span class="s2">\grub-buildroot.img&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.gic_distributor.ITS-device-bits=20&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc0.tzc400.rst_gate_keeper=0x0f&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc0.tzc400.rst_region_attributes_0=0xc000000f&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc0.tzc400.rst_region_id_access_0=0xffffffff&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc1.tzc400.rst_gate_keeper=0x0f&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc1.tzc400.rst_region_attributes_0=0xc000000f&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc1.tzc400.rst_region_id_access_0=0xffffffff&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc2.tzc400.rst_gate_keeper=0x0f&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc2.tzc400.rst_region_attributes_0=0xc000000f&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc2.tzc400.rst_region_id_access_0=0xffffffff&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc3.tzc400.rst_gate_keeper=0x0f&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc3.tzc400.rst_region_attributes_0=0xc000000f&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc3.tzc400.rst_region_id_access_0=0xffffffff&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc4.tzc400.rst_gate_keeper=0x0f&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc4.tzc400.rst_region_attributes_0=0xc000000f&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc4.tzc400.rst_region_id_access_0=0xffffffff&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc5.tzc400.rst_gate_keeper=0x0f&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc5.tzc400.rst_region_attributes_0=0xc000000f&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc5.tzc400.rst_region_id_access_0=0xffffffff&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc6.tzc400.rst_gate_keeper=0x0f&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc6.tzc400.rst_region_attributes_0=0xc000000f&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc6.tzc400.rst_region_id_access_0=0xffffffff&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc7.tzc400.rst_gate_keeper=0x0f&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc7.tzc400.rst_region_attributes_0=0xc000000f&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;css.tzc7.tzc400.rst_region_id_access_0=0xffffffff&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-C</span> <span class="s2">&#34;disable_visualisation=true&#34;</span> <span class="p">\</span>
-</span></span><span class="line"><span class="cl">  <span class="n">-R</span>
-</span></span></code></pre></div><p>A few important notes about that command:</p>
-<ul>
-<li><code>--data css.scp.armcortexm7ct=...@0x0BD80000</code> places the SCP RAM firmware at the address the model expects.</li>
-<li><code>-C css.trustedBootROMloader.fname=tf-bl1.bin</code> points BL1 at the Trusted Firmware-A entry point.</li>
-<li><code>-C board.flashloader0.fname=fip-uefi.bin</code> loads the FIP image containing <strong>BL2 + BL31 + UEFI</strong>.</li>
-<li><code>-C board.virtioblockdevice.image_path=grub-buildroot.img</code> gives the platform a bootable disk image for GRUB and the root filesystem.</li>
-<li>The TZC settings bypass restrictive default protection so the software stack can boot cleanly in this setup.</li>
-<li><code>-R</code> means <strong>run from reset</strong>.</li>
-<li><code>-C disable_visualisation=true</code> keeps the model headless, which is exactly what we want for a server-style workflow.</li>
-</ul>
-<blockquote>
-<p>💡 <strong>Tip:</strong> UARTs are typically exposed on telnet ports <strong>5000</strong> (SCP), <strong>5001</strong> (MCP), <strong>5002</strong> (non-secure / Linux), and <strong>5003</strong> (secure world output).</p>
-</blockquote>
-<h2 id="11-connecting-via-telnet">11 Connecting via telnet<a hidden class="anchor" aria-hidden="true" href="#11-connecting-via-telnet">#</a></h2>
-<p>Once the FVP is running, the UARTs are your window into what the platform is doing. If Telnet Client is not enabled on Windows yet, turn it on first:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">dism</span> <span class="p">/</span><span class="n">online</span> <span class="p">/</span><span class="nb">Enable-Feature</span> <span class="p">/</span><span class="n">FeatureName</span><span class="err">:</span><span class="n">TelnetClient</span>
-</span></span></code></pre></div><p>Then open separate terminals and connect to the interesting UARTs:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">telnet localhost <span class="m">5000</span>   <span class="c1"># SCP console</span>
-</span></span><span class="line"><span class="cl">telnet localhost <span class="m">5002</span>   <span class="c1"># Linux / non-secure AP console</span>
-</span></span></code></pre></div><p>If you’re curious, you can also watch the MCP and secure UARTs:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">telnet localhost <span class="m">5001</span>   <span class="c1"># MCP console</span>
-</span></span><span class="line"><span class="cl">telnet localhost <span class="m">5003</span>   <span class="c1"># Secure console</span>
-</span></span></code></pre></div><p>The SCP console is wonderful when you’re debugging early bring-up. The Linux console is where the reward shows up — kernel boot logs, init, and hopefully a shell prompt.</p>
-<h2 id="12-what-youll-see-during-boot">12 What you’ll see during boot<a hidden class="anchor" aria-hidden="true" href="#12-what-youll-see-during-boot">#</a></h2>
-<p>This is the part where the abstract architecture becomes a visible sequence of messages. Here’s the rough flow you should expect:</p>
-<ol>
-<li><strong>SCP firmware starts first</strong> on the Cortex-M7 and initializes platform services.</li>
-<li>It configures pieces like <strong>CMN-700</strong> and powers up the application processor cores.</li>
-<li><strong>TF-A</strong> takes over on the AP side: <strong>BL1 → BL2 → BL31</strong>.</li>
-<li><strong>StandaloneMM / UEFI</strong> comes up and begins its DXE phase.</li>
-<li><strong>GRUB</strong> loads the Linux kernel and root filesystem from the virtio block image.</li>
-<li><strong>Linux boots</strong>, starts init, and lands you in buildroot userspace.</li>
-</ol>
-<blockquote>
-<p>⚠️ <strong>Warning:</strong> the FVP is <strong>very slow</strong> compared to real hardware — think on the order of <strong>~100× slower</strong>. If you are used to a board booting in seconds, the model can feel like it’s moving through syrup. That does not necessarily mean it’s stuck.</p>
-</blockquote>
-<p>So if the platform seems to pause, give it a little grace before assuming disaster. Many bring-up sessions have been derailed by impatience more than by actual bugs.</p>
-<h2 id="13-troubleshooting">13 Troubleshooting<a hidden class="anchor" aria-hidden="true" href="#13-troubleshooting">#</a></h2>
-<p>Here’s a quick practical checklist for the most common “it doesn’t boot and I’m tired” situations.</p>
-<table>
-  <thead>
-      <tr>
-          <th>Symptom</th>
-          <th>Likely cause</th>
-          <th>What to try</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>No output on any UART</td>
-          <td>Wrong model path, failed launch, or console ports not exposed</td>
-          <td>Re-run the PowerShell command, verify <code>FVP_RD_N2.exe</code> exists, and confirm telnet connections to <code>localhost:5000-5003</code>.</td>
-      </tr>
-      <tr>
-          <td>SCP dies early with a bus fault</td>
-          <td>Old SCP firmware with a newer FVP build</td>
-          <td>Rebuild SCP from the latest master and replace <code>scp_ramfw.bin</code>.</td>
-      </tr>
-      <tr>
-          <td>Build fails on missing commands or headers</td>
-          <td>Dependency gap in Ubuntu</td>
-          <td>Install the missing packages from the prerequisites section and retry the failed step.</td>
-      </tr>
-      <tr>
-          <td>UEFI appears, but Linux never boots</td>
-          <td>Broken disk image, GRUB issue, or missing kernel/rootfs content</td>
-          <td>Rebuild or replace <code>grub-buildroot.img</code> and verify the virtio block path in the FVP command.</td>
-      </tr>
-      <tr>
-          <td>Weird permission/flash-related failures</td>
-          <td>NOR images missing or not writable</td>
-          <td>Make sure both 64 MB NOR images exist and that <code>fnameWrite</code> points to the same files.</td>
-      </tr>
-      <tr>
-          <td>Platform appears frozen</td>
-          <td>It may just be slow</td>
-          <td>Wait longer than feels reasonable. Seriously. FVP performance can make a healthy boot look suspiciously dramatic.</td>
-      </tr>
-  </tbody>
-</table>
-<blockquote>
-<p>💡 <strong>Tip:</strong> watch both the SCP console and the Linux console. If Linux never wakes up, the SCP side usually tells you why the AP world never got a clean start.</p>
-</blockquote>
-<h2 id="14-conclusion">14 Conclusion<a hidden class="anchor" aria-hidden="true" href="#14-conclusion">#</a></h2>
-<p>If you’ve made it this far, you’ve done something genuinely substantial: you set up a mixed Windows + WSL2 workflow, installed the RD-N2 FVP, synced a pinned platform manifest, built a multi-stage firmware and OS stack, prepared the flash and disk images, launched the model, and connected to the boot consoles.</p>
-<p>That’s not “just booting Linux.” That’s understanding a modern Arm platform boot flow end to end.</p>
-<blockquote>
-<p>🎉 <strong>Milestone:</strong> you now have a repeatable RD-N2 virtual bring-up path. That means you can move on to kernel changes, firmware experiments, boot parameter tweaks, device-tree work, UEFI investigations, or plain old platform exploration with a lot more confidence.</p>
-</blockquote>
-<p>Good next steps from here:</p>
-<ul>
-<li>Customize the kernel command line and GRUB config.</li>
-<li>Swap in your own kernel build or root filesystem.</li>
-<li>Experiment with TF-A or UEFI changes.</li>
-<li>Trace power-up and mailbox interactions through the SCP logs.</li>
-<li>Document a one-click launch script once your flow stabilizes.</li>
-</ul>
-<p>And honestly? Take a second to enjoy the moment when the Linux console finally comes alive. Booting a platform stack like this is part engineering, part archaeology, and part stubbornness. If you got it working, you earned that smile.</p>
-
-
-  </div>
-
-  <footer class="post-footer">
-    <ul class="post-tags">
-      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/arm/">ARM</a></li>
-      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/fvp/">FVP</a></li>
-      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/linux/">Linux</a></li>
-      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/boot/">Boot</a></li>
-      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/firmware/">Firmware</a></li>
-      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/scp/">SCP</a></li>
-      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/tf-a/">TF-A</a></li>
-      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/uefi/">UEFI</a></li>
-      <li><a href="http://localhost:1313/neeraj-tech-lab/tags/tutorial/">Tutorial</a></li>
-    </ul>
-<nav class="paginav">
-  <a class="prev" href="http://localhost:1313/neeraj-tech-lab/posts/arm-rdn2-soc-architecture-deep-dive/">
-    <span class="title">« Prev</span>
-    <span>ARM RD-N2 SoC Architecture — A Friendly Deep Dive</span>
-  </a>
-</nav>
-
-
-<ul class="share-buttons">
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide on x"
-            href="https://x.com/intent/tweet/?text=Booting%20Linux%20on%20the%20ARM%20RD-N2%20FVP%20%e2%80%94%20A%20Step-by-Step%20Guide&amp;url=http%3a%2f%2flocalhost%3a1313%2fneeraj-tech-lab%2fposts%2fbooting-linux-on-arm-rdn2-fvp%2f&amp;hashtags=ARM%2cFVP%2cLinux%2cboot%2cfirmware%2cSCP%2cTF-A%2cUEFI%2ctutorial">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide on linkedin"
-            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fneeraj-tech-lab%2fposts%2fbooting-linux-on-arm-rdn2-fvp%2f&amp;title=Booting%20Linux%20on%20the%20ARM%20RD-N2%20FVP%20%e2%80%94%20A%20Step-by-Step%20Guide&amp;summary=Booting%20Linux%20on%20the%20ARM%20RD-N2%20FVP%20%e2%80%94%20A%20Step-by-Step%20Guide&amp;source=http%3a%2f%2flocalhost%3a1313%2fneeraj-tech-lab%2fposts%2fbooting-linux-on-arm-rdn2-fvp%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide on reddit"
-            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fneeraj-tech-lab%2fposts%2fbooting-linux-on-arm-rdn2-fvp%2f&title=Booting%20Linux%20on%20the%20ARM%20RD-N2%20FVP%20%e2%80%94%20A%20Step-by-Step%20Guide">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide on facebook"
-            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fneeraj-tech-lab%2fposts%2fbooting-linux-on-arm-rdn2-fvp%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide on whatsapp"
-            href
+<!doctype html><html lang=en dir=auto data-theme=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide | Neeraj's Tech Lab</title><meta name=keywords content="ARM,FVP,Linux,boot,firmware,SCP,TF-A,UEFI,tutorial"><meta name=description content="A friendly step-by-step guide to booting Linux on the ARM Neoverse RD-N2 Fixed Virtual Platform — from installation through firmware build to successful boot."><meta name=author content="Neeraj Pant"><link rel=canonical href=https://pant1993.github.io/neeraj-tech-lab/posts/booting-linux-on-arm-rdn2-fvp/><link crossorigin=anonymous href=/neeraj-tech-lab/assets/css/stylesheet.cd9298b33628769aa1bc1acebbbfd7aa11ce81dfe03484d479e1907760249a1d.css integrity="sha256-zZKYszYodpqhvBrOu7/XqhHOgd/gNITUeeGQd2Akmh0=" rel="preload stylesheet" as=style><link rel=icon href=https://pant1993.github.io/neeraj-tech-lab/%F0%9F%94%AC><link rel=icon type=image/png sizes=16x16 href=https://pant1993.github.io/neeraj-tech-lab/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://pant1993.github.io/neeraj-tech-lab/favicon-32x32.png><link rel=apple-touch-icon href=https://pant1993.github.io/neeraj-tech-lab/apple-touch-icon.png><link rel=mask-icon href=https://pant1993.github.io/neeraj-tech-lab/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://pant1993.github.io/neeraj-tech-lab/posts/booting-linux-on-arm-rdn2-fvp/><noscript><style>#theme-toggle,.top-link{display:none}</style><style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--code-block-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51);color-scheme:dark}.list{background:var(--theme)}.toc{background:var(--entry)}}</style></noscript><script>localStorage.getItem("pref-theme")==="dark"?document.querySelector("html").dataset.theme="dark":localStorage.getItem("pref-theme")==="light"?document.querySelector("html").dataset.theme="light":window.matchMedia("(prefers-color-scheme: dark)").matches?document.querySelector("html").dataset.theme="dark":document.querySelector("html").dataset.theme="light"</script><meta property="og:url" content="https://pant1993.github.io/neeraj-tech-lab/posts/booting-linux-on-arm-rdn2-fvp/"><meta property="og:site_name" content="Neeraj's Tech Lab"><meta property="og:title" content="Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide"><meta property="og:description" content="A friendly step-by-step guide to booting Linux on the ARM Neoverse RD-N2 Fixed Virtual Platform — from installation through firmware build to successful boot."><meta property="og:locale" content="en_us"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2026-05-22T14:00:00+05:30"><meta property="article:modified_time" content="2026-05-22T14:00:00+05:30"><meta property="article:tag" content="ARM"><meta property="article:tag" content="FVP"><meta property="article:tag" content="Linux"><meta property="article:tag" content="Boot"><meta property="article:tag" content="Firmware"><meta property="article:tag" content="SCP"><meta name=twitter:card content="summary"><meta name=twitter:title content="Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide"><meta name=twitter:description content="A friendly step-by-step guide to booting Linux on the ARM Neoverse RD-N2 Fixed Virtual Platform — from installation through firmware build to successful boot."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Posts","item":"https://pant1993.github.io/neeraj-tech-lab/posts/"},{"@type":"ListItem","position":2,"name":"Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide","item":"https://pant1993.github.io/neeraj-tech-lab/posts/booting-linux-on-arm-rdn2-fvp/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide","name":"Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide","description":"A friendly step-by-step guide to booting Linux on the ARM Neoverse RD-N2 Fixed Virtual Platform — from installation through firmware build to successful boot.","keywords":["ARM","FVP","Linux","boot","firmware","SCP","TF-A","UEFI","tutorial"],"articleBody":" Arm RD-N2 FVP • Linux bring-up • Friendly walkthrough\nIf you’ve ever stared at a virtual platform, a pile of firmware binaries, and a terminal full of warnings and thought, “okay… where do I even start?” — you are absolutely in the right place. In this guide, we’ll go from a Windows machine to a booting Linux system on the Arm RD-N2 FVP together, one calm, practical step at a time.\n16 — Neoverse N2 cores in the model 4 — Major stages in the boot chain 5002 — Telnet port for the Linux console 💡 Tip: how to install the FVP on Windows, set up a WSL2 Ubuntu build environment, fetch the exact source manifest, build the firmware + OS stack, prepare boot images, launch the RD-N2 model, and connect to the UART consoles without losing your mind.\n1 Introduction Let’s start with the obvious question: what is an FVP? FVP stands for Fixed Virtual Platform. Think of it as a detailed software model of a hardware platform. You get something that behaves like a real SoC platform — enough to boot firmware, UEFI, Linux, and user space — without needing the physical board on your desk.\nFor RD-N2, this is especially nice because you can explore the full server-style boot flow: SCP firmware, Trusted Firmware-A, UEFI, GRUB, Linux, and a root filesystem. That means you can debug platform bring-up, firmware interactions, and boot scripts long before real silicon (or before your hardware setup cooperates).\nBy the end of this guide, you’ll have a repeatable setup for booting Linux on the Arm RD-N2 FVP. And yes — we’ll also talk about the sharp edges, because there are a few, and pretending otherwise would be rude.\n🎉 Milestone: if your goal is “I want a virtual RD-N2 platform that boots Linux and gives me a working console,” that is exactly the road we’re walking here.\n2 Prerequisites Here’s the setup we’re assuming. Nothing exotic — but getting these basics right saves a lot of frustration later.\nWindows host Use Windows to install and run the FVP model itself. In this guide the model lives under C:\\Program Files\\ARM\\FVP_RD_N2\\.\nWSL2 + Ubuntu 22.04 We’ll do the source sync and builds inside WSL2, because that’s the path of least resistance for the Linux toolchain.\nArm FVP installed Specifically the Neoverse N2 Reference Design FVP from developer.arm.com.\nA Windows machine with enough disk space for the source tree and build outputs. WSL2 configured and running Ubuntu 22.04. Basic comfort with PowerShell and the Ubuntu shell. Internet access for downloading the model and syncing sources. 💡 Tip: keep your generated binaries in one predictable Windows folder. In this walkthrough we use C:\\Users\\neerajpant\\rdn2-images. That makes the final FVP launch command much easier to read and maintain.\n3 Installing the FVP Head to developer.arm.com and download the Neoverse N2 Reference Design FVP. Install it on Windows at:\nC:\\Program Files\\ARM\\FVP_RD_N2\\ That gives you the model executable we’ll eventually launch from PowerShell. On a typical install, the RD-N2 model binary is here:\nC:\\Program Files\\ARM\\FVP_RD_N2\\models\\Win64_VC2019\\FVP_RD_N2.exe The reason we install the FVP on Windows instead of inside WSL is simple: the Windows package is the native path for running the model, while WSL is better suited for building the Linux-side software stack.\n⚠️ Warning: make sure the install path has no surprises. If you move the model elsewhere, update every launch script accordingly. Boot issues caused by a stale path are the kind that make you question your life choices for 20 minutes.\n4 What’s inside the FVP The RD-N2 FVP models a server-class platform. It is not trying to be a phone, tablet, or graphics-heavy board. In fact, one of the easiest things to misunderstand is this:\n💡 Tip: RD-N2 is a server platform. That’s why the interesting parts are compute, coherency, interrupts, memory security, and platform control firmware — not graphics output.\nMain IP blocks 16× Neoverse N2 cores CMN-700 coherent mesh interconnect GIC-700 interrupt controller SMMUv3 for I/O address translation TZC-400 trust zone controller PCIe for I/O MHU mailbox/message units SCP based on Cortex-M7 Why this matters When Linux finally boots, it didn’t get there by magic. The SCP initialized platform pieces, TF-A set up the secure world handoff, UEFI did platform bring-up, and then GRUB loaded the kernel and root filesystem. The model reflects that full chain.\nRD-N2 FVP Architecture Overview Compute Complex 16× Neoverse N2 cores Clustered server-class CPU subsystem CMN-700 Coherent mesh fabric System coherency + memory routing Platform I/O + Security GIC-700, SMMUv3, TZC-400, PCIe Interrupts, isolation, DMA translation Control Subsystem SCP + MCP (Cortex-M7) Power, clocks, topology, system coordination Boot Storage + Comms NOR flash, virtio block, MHU mailboxes Firmware images, boot media, AP↔SCP signaling 5 Setting up the build environment Now we switch to WSL2 Ubuntu 22.04. This is where we’ll install dependencies and build the software stack. The package list is a little long, but it’s the honest version of events — and I’d rather give you the full list than let you discover missing tools one by one during a 40-minute build.\nsudo apt update sudo apt install -y \\ build-essential git python3 cmake libfdt-dev unzip autoconf automake \\ autopoint libtool mtools rsync cpio bc wget file device-tree-compiler \\ acpica-tools uuid-dev python3-pyelftools You’ll also want Google’s repo tool, because the RD-N2 software stack is pulled through a manifest rather than a single Git repository.\nmkdir -p ~/bin curl https://storage.googleapis.com/git-repo-downloads/repo -o ~/bin/repo chmod a+x ~/bin/repo export PATH=\"$HOME/bin:$PATH\" If you want that path to persist, add the export line to your ~/.bashrc. Future-you will appreciate it.\n6 Getting the source code We’re going to use repo with the manifest tag RD-INFRA-2022.12.22 and the manifest file pinned-rdn2.xml. That combination gives you a known-good baseline of repositories that work together.\nmkdir -p ~/rdn2 cd ~/rdn2 repo init -u https://git.gitlab.arm.com/arm-reference-solutions/manifest.git \\ -b RD-INFRA-2022.12.22 \\ -m pinned-rdn2.xml repo sync -j$(nproc) So what actually comes down? Not just one project. You’re syncing a whole platform stack, typically including:\nSCP firmware Trusted Firmware-A UEFI / EDK2 Linux kernel GRUB buildroot This is one of those moments where the architecture starts to click: we’re not “just building Linux.” We’re building the entire boot story that gets Linux onto the platform.\n🎉 Milestone: once repo sync completes, you have the raw ingredients. The kitchen is messy, but the ingredients are there. That counts.\n7 Building the stack The exact top-level build command can vary with the reference solution layout you synced, but the important thing is understanding what gets produced. Here’s the stack we care about and the files we expect to end up with.\nComponent What it does Output files SCP firmware Boots first on the Cortex-M7 control processor, initializes platform resources, powers up application cores. scp_romfw.bin, scp_ramfw.bin, mcp_romfw.bin, mcp_ramfw.bin Trusted Firmware-A Secure boot chain and early EL3 runtime for the application processors. tf-bl1.bin FIP image Combined firmware package that carries BL2, BL31, and UEFI for the AP boot path. fip-uefi.bin Linux + buildroot Kernel plus a practical root filesystem to get to a shell quickly. Kernel, DTB, buildroot filesystem artifacts GRUB + disk image Bootable disk image that hands control to Linux. grub-buildroot.img SCP firmware Bring-up + power-on TF-A BL1 → BL2 → BL31 UEFI DXE + boot manager GRUB Loads kernel + args Linux Kernel + Buildroot userspace Firmware images used by the FVP: scp_romfw.bin / scp_ramfw.bin mcp_romfw.bin / mcp_ramfw.bin tf-bl1.bin • fip-uefi.bin • grub-buildroot.img A very practical habit here: once the build completes, copy the final artifacts into your Windows image directory so the model launch path stays clean and deterministic.\n8 Common build issues \u0026 fixes This is the “let’s save each other some time” section. A clean build is wonderful when it happens. But if it doesn’t, these are the issues most likely to get in your way.\n8.1 kvmtool libfdt issue One annoying failure shows up around kvmtool and libfdt. The workaround is to patch the Makefile so the build stops assuming the host-side layout and instead uses the correct cross-compiled paths.\nPatch the Makefile around line 345 so that:\nifneq (y,y) Then update lines 348–351 to point at the cross-compiled libfdt include/library paths used by your build. The exact paths depend on where your build tree places them, but the intention is always the same: stop the build from resolving the wrong libfdt.\n8.2 Missing package errors If the build stops with “command not found” or missing header/library errors, go back to the package list in the build environment section and install the missing dependency explicitly. The most common misses are:\ndevice-tree-compiler acpica-tools uuid-dev python3-pyelftools libfdt-dev ⚠️ Warning: the build can get surprisingly far before a missing package finally breaks something. So if a late step fails, it does not automatically mean your earlier steps were wrong.\n8.3 SCP bus fault with old firmware vs new FVP This one is sneaky. If you use older SCP firmware with a newer FVP build, you can hit an SCP bus fault early in the boot process. The fix is usually to rebuild the SCP firmware from the latest master and drop in the fresh binary.\nUse these commands exactly:\ncd /root/scp-new git clone https://github.com/ARM-software/SCP-firmware.git . git submodule update --init contrib/cmsis/git cmake -B build-scp/scp_ramfw -DSCP_FIRMWARE_SOURCE_DIR:PATH=/root/scp-new/product/neoverse-rd/rdn2/scp_ramfw -DSCP_PLATFORM_VARIANT=0 -DCMAKE_BUILD_TYPE=Release cmake --build build-scp/scp_ramfw -j$(nproc) After that, replace the SCP RAM firmware in your FVP image directory with the newly built one. If your failure was caused by the firmware/model mismatch, this is often the moment where the whole thing suddenly behaves better and you get to enjoy a tiny, well-earned victory.\n🎉 Milestone: getting past firmware mismatch issues is real bring-up work. It may not feel glamorous, but it’s exactly the kind of problem-solving that makes the platform finally come alive.\n9 Preparing boot images Before launching the model, create two NOR flash images — each 64 MB. If they don’t already exist, PowerShell can create them as zero-filled files:\n$IMGDIR = \"C:\\Users\\neerajpant\\rdn2-images\" if (!(Test-Path \"$IMGDIR\\nor1_flash.img\")) { $bytes = New-Object byte[] (64*1024*1024) [System.IO.File]::WriteAllBytes(\"$IMGDIR\\nor1_flash.img\", $bytes) } if (!(Test-Path \"$IMGDIR\\nor2_flash.img\")) { $bytes = New-Object byte[] (64*1024*1024) [System.IO.File]::WriteAllBytes(\"$IMGDIR\\nor2_flash.img\", $bytes) } Then copy your key binaries from WSL2/build outputs into your Windows image folder:\nscp_romfw.bin scp_ramfw.bin mcp_romfw.bin mcp_ramfw.bin tf-bl1.bin fip-uefi.bin grub-buildroot.img The idea is simple: by the time you launch the FVP, every image it needs is already sitting in one place. No last-minute path archaeology.\n10 Launching the FVP Alright — the fun part. Here is the full PowerShell launch command pattern. This is the moment where all the build artifacts finally get threaded into the model.\n$MODEL = \"C:\\Program Files\\ARM\\FVP_RD_N2\\models\\Win64_VC2019\\FVP_RD_N2.exe\" $IMGDIR = \"C:\\Users\\neerajpant\\rdn2-images\" \u0026 $MODEL \\ --data \"css.scp.armcortexm7ct=$IMGDIR\\scp_ramfw.bin@0x0BD80000\" \\ --data \"css.mcp.armcortexm7ct=$IMGDIR\\mcp_ramfw.bin@0x0BF80000\" \\ -C \"css.scp.ROMloader.fname=$IMGDIR\\scp_romfw.bin\" \\ -C \"css.mcp.ROMloader.fname=$IMGDIR\\mcp_romfw.bin\" \\ -C \"css.trustedBootROMloader.fname=$IMGDIR\\tf-bl1.bin\" \\ -C \"board.flashloader0.fname=$IMGDIR\\fip-uefi.bin\" \\ -C \"board.flashloader1.fname=$IMGDIR\\nor1_flash.img\" \\ -C \"board.flashloader1.fnameWrite=$IMGDIR\\nor1_flash.img\" \\ -C \"board.flashloader2.fname=$IMGDIR\\nor2_flash.img\" \\ -C \"board.flashloader2.fnameWrite=$IMGDIR\\nor2_flash.img\" \\ -C \"board.virtioblockdevice.image_path=$IMGDIR\\grub-buildroot.img\" \\ -C \"css.gic_distributor.ITS-device-bits=20\" \\ -C \"css.tzc0.tzc400.rst_gate_keeper=0x0f\" \\ -C \"css.tzc0.tzc400.rst_region_attributes_0=0xc000000f\" \\ -C \"css.tzc0.tzc400.rst_region_id_access_0=0xffffffff\" \\ -C \"css.tzc1.tzc400.rst_gate_keeper=0x0f\" \\ -C \"css.tzc1.tzc400.rst_region_attributes_0=0xc000000f\" \\ -C \"css.tzc1.tzc400.rst_region_id_access_0=0xffffffff\" \\ -C \"css.tzc2.tzc400.rst_gate_keeper=0x0f\" \\ -C \"css.tzc2.tzc400.rst_region_attributes_0=0xc000000f\" \\ -C \"css.tzc2.tzc400.rst_region_id_access_0=0xffffffff\" \\ -C \"css.tzc3.tzc400.rst_gate_keeper=0x0f\" \\ -C \"css.tzc3.tzc400.rst_region_attributes_0=0xc000000f\" \\ -C \"css.tzc3.tzc400.rst_region_id_access_0=0xffffffff\" \\ -C \"css.tzc4.tzc400.rst_gate_keeper=0x0f\" \\ -C \"css.tzc4.tzc400.rst_region_attributes_0=0xc000000f\" \\ -C \"css.tzc4.tzc400.rst_region_id_access_0=0xffffffff\" \\ -C \"css.tzc5.tzc400.rst_gate_keeper=0x0f\" \\ -C \"css.tzc5.tzc400.rst_region_attributes_0=0xc000000f\" \\ -C \"css.tzc5.tzc400.rst_region_id_access_0=0xffffffff\" \\ -C \"css.tzc6.tzc400.rst_gate_keeper=0x0f\" \\ -C \"css.tzc6.tzc400.rst_region_attributes_0=0xc000000f\" \\ -C \"css.tzc6.tzc400.rst_region_id_access_0=0xffffffff\" \\ -C \"css.tzc7.tzc400.rst_gate_keeper=0x0f\" \\ -C \"css.tzc7.tzc400.rst_region_attributes_0=0xc000000f\" \\ -C \"css.tzc7.tzc400.rst_region_id_access_0=0xffffffff\" \\ -C \"disable_visualisation=true\" \\ -R A few important notes about that command:\n--data css.scp.armcortexm7ct=...@0x0BD80000 places the SCP RAM firmware at the address the model expects. -C css.trustedBootROMloader.fname=tf-bl1.bin points BL1 at the Trusted Firmware-A entry point. -C board.flashloader0.fname=fip-uefi.bin loads the FIP image containing BL2 + BL31 + UEFI. -C board.virtioblockdevice.image_path=grub-buildroot.img gives the platform a bootable disk image for GRUB and the root filesystem. The TZC settings bypass restrictive default protection so the software stack can boot cleanly in this setup. -R means run from reset. -C disable_visualisation=true keeps the model headless, which is exactly what we want for a server-style workflow. 💡 Tip: UARTs are typically exposed on telnet ports 5000 (SCP), 5001 (MCP), 5002 (non-secure / Linux), and 5003 (secure world output).\n11 Connecting via telnet Once the FVP is running, the UARTs are your window into what the platform is doing. If Telnet Client is not enabled on Windows yet, turn it on first:\ndism /online /Enable-Feature /FeatureName:TelnetClient Then open separate terminals and connect to the interesting UARTs:\ntelnet localhost 5000 # SCP console telnet localhost 5002 # Linux / non-secure AP console If you’re curious, you can also watch the MCP and secure UARTs:\ntelnet localhost 5001 # MCP console telnet localhost 5003 # Secure console The SCP console is wonderful when you’re debugging early bring-up. The Linux console is where the reward shows up — kernel boot logs, init, and hopefully a shell prompt.\n12 What you’ll see during boot This is the part where the abstract architecture becomes a visible sequence of messages. Here’s the rough flow you should expect:\nSCP firmware starts first on the Cortex-M7 and initializes platform services. It configures pieces like CMN-700 and powers up the application processor cores. TF-A takes over on the AP side: BL1 → BL2 → BL31. StandaloneMM / UEFI comes up and begins its DXE phase. GRUB loads the Linux kernel and root filesystem from the virtio block image. Linux boots, starts init, and lands you in buildroot userspace. ⚠️ Warning: the FVP is very slow compared to real hardware — think on the order of ~100× slower. If you are used to a board booting in seconds, the model can feel like it’s moving through syrup. That does not necessarily mean it’s stuck.\nSo if the platform seems to pause, give it a little grace before assuming disaster. Many bring-up sessions have been derailed by impatience more than by actual bugs.\n13 Troubleshooting Here’s a quick practical checklist for the most common “it doesn’t boot and I’m tired” situations.\nSymptom Likely cause What to try No output on any UART Wrong model path, failed launch, or console ports not exposed Re-run the PowerShell command, verify FVP_RD_N2.exe exists, and confirm telnet connections to localhost:5000-5003. SCP dies early with a bus fault Old SCP firmware with a newer FVP build Rebuild SCP from the latest master and replace scp_ramfw.bin. Build fails on missing commands or headers Dependency gap in Ubuntu Install the missing packages from the prerequisites section and retry the failed step. UEFI appears, but Linux never boots Broken disk image, GRUB issue, or missing kernel/rootfs content Rebuild or replace grub-buildroot.img and verify the virtio block path in the FVP command. Weird permission/flash-related failures NOR images missing or not writable Make sure both 64 MB NOR images exist and that fnameWrite points to the same files. Platform appears frozen It may just be slow Wait longer than feels reasonable. Seriously. FVP performance can make a healthy boot look suspiciously dramatic. 💡 Tip: watch both the SCP console and the Linux console. If Linux never wakes up, the SCP side usually tells you why the AP world never got a clean start.\n14 Conclusion If you’ve made it this far, you’ve done something genuinely substantial: you set up a mixed Windows + WSL2 workflow, installed the RD-N2 FVP, synced a pinned platform manifest, built a multi-stage firmware and OS stack, prepared the flash and disk images, launched the model, and connected to the boot consoles.\nThat’s not “just booting Linux.” That’s understanding a modern Arm platform boot flow end to end.\n🎉 Milestone: you now have a repeatable RD-N2 virtual bring-up path. That means you can move on to kernel changes, firmware experiments, boot parameter tweaks, device-tree work, UEFI investigations, or plain old platform exploration with a lot more confidence.\nGood next steps from here:\nCustomize the kernel command line and GRUB config. Swap in your own kernel build or root filesystem. Experiment with TF-A or UEFI changes. Trace power-up and mailbox interactions through the SCP logs. Document a one-click launch script once your flow stabilizes. And honestly? Take a second to enjoy the moment when the Linux console finally comes alive. Booting a platform stack like this is part engineering, part archaeology, and part stubbornness. If you got it working, you earned that smile.\n","wordCount":"2670","inLanguage":"en","datePublished":"2026-05-22T14:00:00+05:30","dateModified":"2026-05-22T14:00:00+05:30","author":{"@type":"Person","name":"Neeraj Pant"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://pant1993.github.io/neeraj-tech-lab/posts/booting-linux-on-arm-rdn2-fvp/"},"publisher":{"@type":"Organization","name":"Neeraj's Tech Lab","logo":{"@type":"ImageObject","url":"https://pant1993.github.io/neeraj-tech-lab/%F0%9F%94%AC"}}}</script></head><body id=top><header class=header><nav class=header-nav><div class=logo><a href=https://pant1993.github.io/neeraj-tech-lab/ accesskey=h title="Neeraj's Tech Lab (Alt + H)">Neeraj's Tech Lab</a><div class=logo-switches><button id=theme-toggle class=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme">
+<svg class="moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+<svg class="sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu class=menu><li><a href=https://pant1993.github.io/neeraj-tech-lab/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://pant1993.github.io/neeraj-tech-lab/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://pant1993.github.io/neeraj-tech-lab/about/ title=About><span>About</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><nav class=breadcrumbs role=navigation aria-label=Breadcrumb><a href=/neeraj-tech-lab/>Home</a>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
+<a href=/neeraj-tech-lab/posts/>Posts</a>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"/></svg></nav><h1 class="post-title entry-hint-parent">Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide</h1><div class=post-description>A friendly step-by-step guide to booting Linux on the ARM Neoverse RD-N2 Fixed Virtual Platform — from installation through firmware build to successful boot.</div><div class=post-meta><span title='2026-05-22 14:00:00 +0530 IST'>May 22, 2026</span>&nbsp;·&nbsp;<span>13 min</span>&nbsp;·&nbsp;<span>Neeraj Pant</span></div></header><details class=toc open><summary accesskey=c title="(Alt + C)"><span class=title>Table of Contents</span></summary><div class=inner><ul><li><a href=#1-introduction aria-label="1 Introduction">1 Introduction</a></li><li><a href=#2-prerequisites aria-label="2 Prerequisites">2 Prerequisites</a><ul><li><a href=#windows-host aria-label="Windows host">Windows host</a></li><li><a href=#wsl2--ubuntu-2204 aria-label="WSL2 + Ubuntu 22.04">WSL2 + Ubuntu 22.04</a></li><li><a href=#arm-fvp-installed aria-label="Arm FVP installed">Arm FVP installed</a></li></ul></li><li><a href=#3-installing-the-fvp aria-label="3 Installing the FVP">3 Installing the FVP</a></li><li><a href=#4-whats-inside-the-fvp aria-label="4 What’s inside the FVP">4 What’s inside the FVP</a><ul><li><a href=#main-ip-blocks aria-label="Main IP blocks">Main IP blocks</a></li><li><a href=#why-this-matters aria-label="Why this matters">Why this matters</a></li></ul></li><li><a href=#5-setting-up-the-build-environment aria-label="5 Setting up the build environment">5 Setting up the build environment</a></li><li><a href=#6-getting-the-source-code aria-label="6 Getting the source code">6 Getting the source code</a></li><li><a href=#7-building-the-stack aria-label="7 Building the stack">7 Building the stack</a></li><li><a href=#8-common-build-issues--fixes aria-label="8 Common build issues & fixes">8 Common build issues & fixes</a><ul><li><a href=#81-kvmtool-libfdt-issue aria-label="8.1 kvmtool libfdt issue">8.1 kvmtool libfdt issue</a></li><li><a href=#82-missing-package-errors aria-label="8.2 Missing package errors">8.2 Missing package errors</a></li><li><a href=#83-scp-bus-fault-with-old-firmware-vs-new-fvp aria-label="8.3 SCP bus fault with old firmware vs new FVP">8.3 SCP bus fault with old firmware vs new FVP</a></li></ul></li><li><a href=#9-preparing-boot-images aria-label="9 Preparing boot images">9 Preparing boot images</a></li><li><a href=#10-launching-the-fvp aria-label="10 Launching the FVP">10 Launching the FVP</a></li><li><a href=#11-connecting-via-telnet aria-label="11 Connecting via telnet">11 Connecting via telnet</a></li><li><a href=#12-what-youll-see-during-boot aria-label="12 What you’ll see during boot">12 What you’ll see during boot</a></li><li><a href=#13-troubleshooting aria-label="13 Troubleshooting">13 Troubleshooting</a></li><li><a href=#14-conclusion aria-label="14 Conclusion">14 Conclusion</a></li></ul></div></details><div class="post-content md-content"><style>:root{--svg-grid:#cbd5e1;--svg-text:#1e293b}.dark{--svg-grid:#475569;--svg-text:#e2e8f0}.svg-diagram{margin:1.5em 0;padding:1em;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;overflow-x:auto}.dark .svg-diagram{background:#1e293b;border-color:#334155}.svg-diagram svg{width:100%;height:auto;min-width:600px}</style><blockquote><p>Arm RD-N2 FVP • Linux bring-up • Friendly walkthrough</p></blockquote><p>If you’ve ever stared at a virtual platform, a pile of firmware binaries, and a terminal full of warnings and thought, <em>“okay… where do I even start?”</em> — you are absolutely in the right place. In this guide, we’ll go from a Windows machine to a booting Linux system on the Arm RD-N2 FVP together, one calm, practical step at a time.</p><ul><li><strong>16</strong> — Neoverse N2 cores in the model</li><li><strong>4</strong> — Major stages in the boot chain</li><li><strong>5002</strong> — Telnet port for the Linux console</li></ul><blockquote><p>💡 <strong>Tip:</strong> how to install the FVP on Windows, set up a WSL2 Ubuntu build environment, fetch the exact source manifest, build the firmware + OS stack, prepare boot images, launch the RD-N2 model, and connect to the UART consoles without losing your mind.</p></blockquote><h2 id=1-introduction>1 Introduction<a hidden class=anchor aria-hidden=true href=#1-introduction>#</a></h2><p>Let’s start with the obvious question: <strong>what is an FVP?</strong> FVP stands for <strong>Fixed Virtual Platform</strong>. Think of it as a detailed software model of a hardware platform. You get something that behaves like a real SoC platform — enough to boot firmware, UEFI, Linux, and user space — without needing the physical board on your desk.</p><p>For RD-N2, this is especially nice because you can explore the full server-style boot flow: SCP firmware, Trusted Firmware-A, UEFI, GRUB, Linux, and a root filesystem. That means you can debug platform bring-up, firmware interactions, and boot scripts long before real silicon (or before your hardware setup cooperates).</p><p>By the end of this guide, you’ll have a repeatable setup for booting Linux on the <strong>Arm RD-N2 FVP</strong>. And yes — we’ll also talk about the sharp edges, because there are a few, and pretending otherwise would be rude.</p><blockquote><p>🎉 <strong>Milestone:</strong> if your goal is “I want a virtual RD-N2 platform that boots Linux and gives me a working console,” that is exactly the road we’re walking here.</p></blockquote><h2 id=2-prerequisites>2 Prerequisites<a hidden class=anchor aria-hidden=true href=#2-prerequisites>#</a></h2><p>Here’s the setup we’re assuming. Nothing exotic — but getting these basics right saves a lot of frustration later.</p><h3 id=windows-host>Windows host<a hidden class=anchor aria-hidden=true href=#windows-host>#</a></h3><p>Use Windows to install and run the FVP model itself. In this guide the model lives under <code>C:\Program Files\ARM\FVP_RD_N2\</code>.</p><h3 id=wsl2--ubuntu-2204>WSL2 + Ubuntu 22.04<a hidden class=anchor aria-hidden=true href=#wsl2--ubuntu-2204>#</a></h3><p>We’ll do the source sync and builds inside WSL2, because that’s the path of least resistance for the Linux toolchain.</p><h3 id=arm-fvp-installed>Arm FVP installed<a hidden class=anchor aria-hidden=true href=#arm-fvp-installed>#</a></h3><p>Specifically the Neoverse N2 Reference Design FVP from <code>developer.arm.com</code>.</p><ul><li>A Windows machine with enough disk space for the source tree and build outputs.</li><li>WSL2 configured and running <strong>Ubuntu 22.04</strong>.</li><li>Basic comfort with PowerShell and the Ubuntu shell.</li><li>Internet access for downloading the model and syncing sources.</li></ul><blockquote><p>💡 <strong>Tip:</strong> keep your generated binaries in one predictable Windows folder. In this walkthrough we use <code>C:\Users\neerajpant\rdn2-images</code>. That makes the final FVP launch command much easier to read and maintain.</p></blockquote><h2 id=3-installing-the-fvp>3 Installing the FVP<a hidden class=anchor aria-hidden=true href=#3-installing-the-fvp>#</a></h2><p>Head to <strong>developer.arm.com</strong> and download the <strong>Neoverse N2 Reference Design FVP</strong>. Install it on Windows at:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>C:\Program Files\ARM\FVP_RD_N2\
+</span></span></code></pre></div><p>That gives you the model executable we’ll eventually launch from PowerShell. On a typical install, the RD-N2 model binary is here:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>C:\Program Files\ARM\FVP_RD_N2\models\Win64_VC2019\FVP_RD_N2.exe
+</span></span></code></pre></div><p>The reason we install the FVP on Windows instead of inside WSL is simple: the Windows package is the native path for running the model, while WSL is better suited for building the Linux-side software stack.</p><blockquote><p>⚠️ <strong>Warning:</strong> make sure the install path has no surprises. If you move the model elsewhere, update every launch script accordingly. Boot issues caused by a stale path are the kind that make you question your life choices for 20 minutes.</p></blockquote><h2 id=4-whats-inside-the-fvp>4 What’s inside the FVP<a hidden class=anchor aria-hidden=true href=#4-whats-inside-the-fvp>#</a></h2><p>The RD-N2 FVP models a server-class platform. It is not trying to be a phone, tablet, or graphics-heavy board. In fact, one of the easiest things to misunderstand is this:</p><blockquote><p>💡 <strong>Tip:</strong> RD-N2 is a server platform. That’s why the interesting parts are compute, coherency, interrupts, memory security, and platform control firmware — not graphics output.</p></blockquote><h3 id=main-ip-blocks>Main IP blocks<a hidden class=anchor aria-hidden=true href=#main-ip-blocks>#</a></h3><ul><li><strong>16× Neoverse N2 cores</strong></li><li><strong>CMN-700</strong> coherent mesh interconnect</li><li><strong>GIC-700</strong> interrupt controller</li><li><strong>SMMUv3</strong> for I/O address translation</li><li><strong>TZC-400</strong> trust zone controller</li><li><strong>PCIe</strong> for I/O</li><li><strong>MHU</strong> mailbox/message units</li><li><strong>SCP</strong> based on Cortex-M7</li></ul><h3 id=why-this-matters>Why this matters<a hidden class=anchor aria-hidden=true href=#why-this-matters>#</a></h3><p>When Linux finally boots, it didn’t get there by magic. The SCP initialized platform pieces, TF-A set up the secure world handoff, UEFI did platform bring-up, and then GRUB loaded the kernel and root filesystem. The model reflects that full chain.</p><div class=svg-diagram><svg width="100%" viewBox="0 0 1e3 440" role="img" aria-label="RD-N2 FVP architecture overview"><defs><linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#2952ff"/><stop offset="100%" stop-color="#6e7dff"/></linearGradient></defs><rect x="10" y="10" width="980" height="420" rx="22" fill="#fff" stroke="#dbe3f1"/><text x="40" y="48" font-size="22" font-family="Segoe UI, Arial" fill="#1c2434" font-weight="700">RD-N2 FVP Architecture Overview</text><rect x="30" y="75" width="280" height="110" rx="16" fill="#edf2ff" stroke="#cfd9ff"/><text x="170" y="108" text-anchor="middle" font-size="20" fill="#2952ff" font-weight="700">Compute Complex</text><text x="170" y="135" text-anchor="middle" font-size="16" fill="#334155">16× Neoverse N2 cores</text><text x="170" y="160" text-anchor="middle" font-size="13" fill="#64748b">Clustered server-class CPU subsystem</text><rect x="340" y="75" width="240" height="110" rx="16" fill="#eefcf7" stroke="#c8efe2"/><text x="460" y="108" text-anchor="middle" font-size="20" fill="#0f9d7a" font-weight="700">CMN-700</text><text x="460" y="135" text-anchor="middle" font-size="16" fill="#334155">Coherent mesh fabric</text><text x="460" y="160" text-anchor="middle" font-size="13" fill="#64748b">System coherency + memory routing</text><rect x="610" y="75" width="360" height="110" rx="16" fill="#fff7ed" stroke="#fed7aa"/><text x="790" y="108" text-anchor="middle" font-size="20" fill="#d97706" font-weight="700">Platform I/O + Security</text><text x="790" y="135" text-anchor="middle" font-size="15" fill="#334155">GIC-700, SMMUv3, TZC-400, PCIe</text><text x="790" y="160" text-anchor="middle" font-size="13" fill="#64748b">Interrupts, isolation, DMA translation</text><rect x="30" y="240" width="340" height="110" rx="16" fill="#f8fafc" stroke="#dbe3f1"/><text x="200" y="273" text-anchor="middle" font-size="20" fill="#1c2434" font-weight="700">Control Subsystem</text><text x="200" y="300" text-anchor="middle" font-size="16" fill="#334155">SCP + MCP (Cortex-M7)</text><text x="200" y="325" text-anchor="middle" font-size="13" fill="#64748b">Power, clocks, topology, system coordination</text><rect x="420" y="240" width="440" height="110" rx="16" fill="#f5f3ff" stroke="#ddd6fe"/><text x="640" y="273" text-anchor="middle" font-size="20" fill="#6d28d9" font-weight="700">Boot Storage + Comms</text><text x="640" y="300" text-anchor="middle" font-size="15" fill="#334155">NOR flash, virtio block, MHU mailboxes</text><text x="640" y="325" text-anchor="middle" font-size="13" fill="#64748b">Firmware images, boot media, AP↔SCP signaling</text><path d="M310 130h30" stroke="url(#g1)" stroke-width="5" stroke-linecap="round"/><path d="M580 130h30" stroke="url(#g1)" stroke-width="5" stroke-linecap="round"/><path d="M420 295H370" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/><path d="M580 185v30h60" stroke="#94a3b8" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M170 185v55" stroke="#94a3b8" stroke-width="5" fill="none" stroke-linecap="round"/></svg></div><h2 id=5-setting-up-the-build-environment>5 Setting up the build environment<a hidden class=anchor aria-hidden=true href=#5-setting-up-the-build-environment>#</a></h2><p>Now we switch to <strong>WSL2 Ubuntu 22.04</strong>. This is where we’ll install dependencies and build the software stack. The package list is a little long, but it’s the honest version of events — and I’d rather give you the full list than let you discover missing tools one by one during a 40-minute build.</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>sudo apt update
+</span></span><span class=line><span class=cl>sudo apt install -y <span class=se>\
+</span></span></span><span class=line><span class=cl>  build-essential git python3 cmake libfdt-dev unzip autoconf automake <span class=se>\
+</span></span></span><span class=line><span class=cl>  autopoint libtool mtools rsync cpio bc wget file device-tree-compiler <span class=se>\
+</span></span></span><span class=line><span class=cl>  acpica-tools uuid-dev python3-pyelftools
+</span></span></code></pre></div><p>You’ll also want Google’s <code>repo</code> tool, because the RD-N2 software stack is pulled through a manifest rather than a single Git repository.</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>mkdir -p ~/bin
+</span></span><span class=line><span class=cl>curl https://storage.googleapis.com/git-repo-downloads/repo -o ~/bin/repo
+</span></span><span class=line><span class=cl>chmod a+x ~/bin/repo
+</span></span><span class=line><span class=cl><span class=nb>export</span> <span class=nv>PATH</span><span class=o>=</span><span class=s2>&#34;</span><span class=nv>$HOME</span><span class=s2>/bin:</span><span class=nv>$PATH</span><span class=s2>&#34;</span>
+</span></span></code></pre></div><p>If you want that path to persist, add the export line to your <code>~/.bashrc</code>. Future-you will appreciate it.</p><h2 id=6-getting-the-source-code>6 Getting the source code<a hidden class=anchor aria-hidden=true href=#6-getting-the-source-code>#</a></h2><p>We’re going to use <code>repo</code> with the manifest tag <strong>RD-INFRA-2022.12.22</strong> and the manifest file <strong>pinned-rdn2.xml</strong>. That combination gives you a known-good baseline of repositories that work together.</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>mkdir -p ~/rdn2
+</span></span><span class=line><span class=cl><span class=nb>cd</span> ~/rdn2
+</span></span><span class=line><span class=cl>repo init -u https://git.gitlab.arm.com/arm-reference-solutions/manifest.git <span class=se>\
+</span></span></span><span class=line><span class=cl>  -b RD-INFRA-2022.12.22 <span class=se>\
+</span></span></span><span class=line><span class=cl>  -m pinned-rdn2.xml
+</span></span><span class=line><span class=cl>repo sync -j<span class=k>$(</span>nproc<span class=k>)</span>
+</span></span></code></pre></div><p>So what actually comes down? Not just one project. You’re syncing a whole platform stack, typically including:</p><ul><li><code>SCP firmware</code></li><li><code>Trusted Firmware-A</code></li><li><code>UEFI / EDK2</code></li><li><code>Linux kernel</code></li><li><code>GRUB</code></li><li><code>buildroot</code></li></ul><p>This is one of those moments where the architecture starts to click: we’re not “just building Linux.” We’re building the <em>entire boot story</em> that gets Linux onto the platform.</p><blockquote><p>🎉 <strong>Milestone:</strong> once <code>repo sync</code> completes, you have the raw ingredients. The kitchen is messy, but the ingredients are there. That counts.</p></blockquote><h2 id=7-building-the-stack>7 Building the stack<a hidden class=anchor aria-hidden=true href=#7-building-the-stack>#</a></h2><p>The exact top-level build command can vary with the reference solution layout you synced, but the important thing is understanding <strong>what gets produced</strong>. Here’s the stack we care about and the files we expect to end up with.</p><table><thead><tr><th>Component</th><th>What it does</th><th>Output files</th></tr></thead><tbody><tr><td>SCP firmware</td><td>Boots first on the Cortex-M7 control processor, initializes platform resources, powers up application cores.</td><td><code>scp_romfw.bin</code>, <code>scp_ramfw.bin</code>, <code>mcp_romfw.bin</code>, <code>mcp_ramfw.bin</code></td></tr><tr><td>Trusted Firmware-A</td><td>Secure boot chain and early EL3 runtime for the application processors.</td><td><code>tf-bl1.bin</code></td></tr><tr><td>FIP image</td><td>Combined firmware package that carries BL2, BL31, and UEFI for the AP boot path.</td><td><code>fip-uefi.bin</code></td></tr><tr><td>Linux + buildroot</td><td>Kernel plus a practical root filesystem to get to a shell quickly.</td><td>Kernel, DTB, buildroot filesystem artifacts</td></tr><tr><td>GRUB + disk image</td><td>Bootable disk image that hands control to Linux.</td><td><code>grub-buildroot.img</code></td></tr></tbody></table><div class=svg-diagram><svg width="100%" viewBox="0 0 1e3 260" role="img" aria-label="Boot flow diagram"><rect x="15" y="30" width="155" height="85" rx="16" fill="#eef2ff" stroke="#c7d2fe"/><text x="92" y="62" text-anchor="middle" font-size="18" fill="#2952ff" font-weight="700">SCP firmware</text><text x="92" y="88" text-anchor="middle" font-size="14" fill="#475569">Bring-up + power-on</text><rect x="200" y="30" width="155" height="85" rx="16" fill="#f8fafc" stroke="#dbe3f1"/><text x="277" y="62" text-anchor="middle" font-size="18" fill="#0f172a" font-weight="700">TF-A</text><text x="277" y="88" text-anchor="middle" font-size="14" fill="#475569">BL1 → BL2 → BL31</text><rect x="385" y="30" width="155" height="85" rx="16" fill="#eefcf7" stroke="#bbf7d0"/><text x="462" y="62" text-anchor="middle" font-size="18" fill="#0f9d7a" font-weight="700">UEFI</text><text x="462" y="88" text-anchor="middle" font-size="14" fill="#475569">DXE + boot manager</text><rect x="570" y="30" width="145" height="85" rx="16" fill="#fff7ed" stroke="#fed7aa"/><text x="642" y="62" text-anchor="middle" font-size="18" fill="#d97706" font-weight="700">GRUB</text><text x="642" y="88" text-anchor="middle" font-size="14" fill="#475569">Loads kernel + args</text><rect x="745" y="30" width="195" height="85" rx="16" fill="#f5f3ff" stroke="#ddd6fe"/><text x="842" y="62" text-anchor="middle" font-size="18" fill="#6d28d9" font-weight="700">Linux</text><text x="842" y="88" text-anchor="middle" font-size="13" fill="#475569">Kernel + Buildroot userspace</text><path d="M170 72h30" stroke="#6e7dff" stroke-width="5" stroke-linecap="round"/><path d="M355 72h30" stroke="#6e7dff" stroke-width="5" stroke-linecap="round"/><path d="M540 72h30" stroke="#6e7dff" stroke-width="5" stroke-linecap="round"/><path d="M715 72h30" stroke="#6e7dff" stroke-width="5" stroke-linecap="round"/><text x="15" y="155" font-size="16" fill="#334155" font-weight="600">Firmware images used by the FVP:</text><text x="15" y="185" font-size="13" fill="#64748b">scp_romfw.bin / scp_ramfw.bin</text><text x="15" y="205" font-size="13" fill="#64748b">mcp_romfw.bin / mcp_ramfw.bin</text><text x="15" y="225" font-size="13" fill="#64748b">tf-bl1.bin • fip-uefi.bin • grub-buildroot.img</text></svg></div><p>A very practical habit here: once the build completes, copy the final artifacts into your Windows image directory so the model launch path stays clean and deterministic.</p><h2 id=8-common-build-issues--fixes>8 Common build issues & fixes<a hidden class=anchor aria-hidden=true href=#8-common-build-issues--fixes>#</a></h2><p>This is the “let’s save each other some time” section. A clean build is wonderful when it happens. But if it doesn’t, these are the issues most likely to get in your way.</p><h3 id=81-kvmtool-libfdt-issue>8.1 kvmtool libfdt issue<a hidden class=anchor aria-hidden=true href=#81-kvmtool-libfdt-issue>#</a></h3><p>One annoying failure shows up around <code>kvmtool</code> and <code>libfdt</code>. The workaround is to patch the Makefile so the build stops assuming the host-side layout and instead uses the correct cross-compiled paths.</p><p>Patch the Makefile around line 345 so that:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-makefile data-lang=makefile><span class=line><span class=cl><span class=err>ifneq</span> <span class=err>(y,y)</span>
+</span></span></code></pre></div><p>Then update lines 348–351 to point at the cross-compiled <code>libfdt</code> include/library paths used by your build. The exact paths depend on where your build tree places them, but the intention is always the same: stop the build from resolving the wrong <code>libfdt</code>.</p><h3 id=82-missing-package-errors>8.2 Missing package errors<a hidden class=anchor aria-hidden=true href=#82-missing-package-errors>#</a></h3><p>If the build stops with “command not found” or missing header/library errors, go back to the package list in the build environment section and install the missing dependency explicitly. The most common misses are:</p><ul><li><code>device-tree-compiler</code></li><li><code>acpica-tools</code></li><li><code>uuid-dev</code></li><li><code>python3-pyelftools</code></li><li><code>libfdt-dev</code></li></ul><blockquote><p>⚠️ <strong>Warning:</strong> the build can get surprisingly far before a missing package finally breaks something. So if a late step fails, it does not automatically mean your earlier steps were wrong.</p></blockquote><h3 id=83-scp-bus-fault-with-old-firmware-vs-new-fvp>8.3 SCP bus fault with old firmware vs new FVP<a hidden class=anchor aria-hidden=true href=#83-scp-bus-fault-with-old-firmware-vs-new-fvp>#</a></h3><p>This one is sneaky. If you use older SCP firmware with a newer FVP build, you can hit an SCP bus fault early in the boot process. The fix is usually to rebuild the SCP firmware from the latest master and drop in the fresh binary.</p><p>Use these commands exactly:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=nb>cd</span> /root/scp-new
+</span></span><span class=line><span class=cl>git clone https://github.com/ARM-software/SCP-firmware.git .
+</span></span><span class=line><span class=cl>git submodule update --init contrib/cmsis/git
+</span></span><span class=line><span class=cl>cmake -B build-scp/scp_ramfw -DSCP_FIRMWARE_SOURCE_DIR:PATH<span class=o>=</span>/root/scp-new/product/neoverse-rd/rdn2/scp_ramfw -DSCP_PLATFORM_VARIANT<span class=o>=</span><span class=m>0</span> -DCMAKE_BUILD_TYPE<span class=o>=</span>Release
+</span></span><span class=line><span class=cl>cmake --build build-scp/scp_ramfw -j<span class=k>$(</span>nproc<span class=k>)</span>
+</span></span></code></pre></div><p>After that, replace the SCP RAM firmware in your FVP image directory with the newly built one. If your failure was caused by the firmware/model mismatch, this is often the moment where the whole thing suddenly behaves better and you get to enjoy a tiny, well-earned victory.</p><blockquote><p>🎉 <strong>Milestone:</strong> getting past firmware mismatch issues is real bring-up work. It may not feel glamorous, but it’s exactly the kind of problem-solving that makes the platform finally come alive.</p></blockquote><h2 id=9-preparing-boot-images>9 Preparing boot images<a hidden class=anchor aria-hidden=true href=#9-preparing-boot-images>#</a></h2><p>Before launching the model, create two NOR flash images — each <strong>64 MB</strong>. If they don’t already exist, PowerShell can create them as zero-filled files:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-powershell data-lang=powershell><span class=line><span class=cl><span class=nv>$IMGDIR</span> <span class=p>=</span> <span class=s2>&#34;C:\Users\neerajpant\rdn2-images&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>if</span> <span class=p>(!(</span><span class=nb>Test-Path</span> <span class=s2>&#34;</span><span class=nv>$IMGDIR</span><span class=s2>\nor1_flash.img&#34;</span><span class=p>))</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nv>$bytes</span> <span class=p>=</span> <span class=nb>New-Object</span> <span class=n>byte</span><span class=p>[]</span> <span class=p>(</span><span class=mf>64</span><span class=p>*</span><span class=mf>1024</span><span class=p>*</span><span class=mf>1024</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=p>[</span><span class=no>System.IO.File</span><span class=p>]::</span><span class=n>WriteAllBytes</span><span class=p>(</span><span class=s2>&#34;</span><span class=nv>$IMGDIR</span><span class=s2>\nor1_flash.img&#34;</span><span class=p>,</span> <span class=nv>$bytes</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>if</span> <span class=p>(!(</span><span class=nb>Test-Path</span> <span class=s2>&#34;</span><span class=nv>$IMGDIR</span><span class=s2>\nor2_flash.img&#34;</span><span class=p>))</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nv>$bytes</span> <span class=p>=</span> <span class=nb>New-Object</span> <span class=n>byte</span><span class=p>[]</span> <span class=p>(</span><span class=mf>64</span><span class=p>*</span><span class=mf>1024</span><span class=p>*</span><span class=mf>1024</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=p>[</span><span class=no>System.IO.File</span><span class=p>]::</span><span class=n>WriteAllBytes</span><span class=p>(</span><span class=s2>&#34;</span><span class=nv>$IMGDIR</span><span class=s2>\nor2_flash.img&#34;</span><span class=p>,</span> <span class=nv>$bytes</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></div><p>Then copy your key binaries from WSL2/build outputs into your Windows image folder:</p><ul><li><code>scp_romfw.bin</code></li><li><code>scp_ramfw.bin</code></li><li><code>mcp_romfw.bin</code></li><li><code>mcp_ramfw.bin</code></li><li><code>tf-bl1.bin</code></li><li><code>fip-uefi.bin</code></li><li><code>grub-buildroot.img</code></li></ul><p>The idea is simple: by the time you launch the FVP, every image it needs is already sitting in one place. No last-minute path archaeology.</p><h2 id=10-launching-the-fvp>10 Launching the FVP<a hidden class=anchor aria-hidden=true href=#10-launching-the-fvp>#</a></h2><p>Alright — the fun part. Here is the full PowerShell launch command pattern. This is the moment where all the build artifacts finally get threaded into the model.</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-powershell data-lang=powershell><span class=line><span class=cl><span class=nv>$MODEL</span> <span class=p>=</span> <span class=s2>&#34;C:\Program Files\ARM\FVP_RD_N2\models\Win64_VC2019\FVP_RD_N2.exe&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>$IMGDIR</span> <span class=p>=</span> <span class=s2>&#34;C:\Users\neerajpant\rdn2-images&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=p>&amp;</span> <span class=nv>$MODEL</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=p>-</span><span class=n>-data</span> <span class=s2>&#34;css.scp.armcortexm7ct=</span><span class=nv>$IMGDIR</span><span class=s2>\scp_ramfw.bin@0x0BD80000&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=p>-</span><span class=n>-data</span> <span class=s2>&#34;css.mcp.armcortexm7ct=</span><span class=nv>$IMGDIR</span><span class=s2>\mcp_ramfw.bin@0x0BF80000&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.scp.ROMloader.fname=</span><span class=nv>$IMGDIR</span><span class=s2>\scp_romfw.bin&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.mcp.ROMloader.fname=</span><span class=nv>$IMGDIR</span><span class=s2>\mcp_romfw.bin&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.trustedBootROMloader.fname=</span><span class=nv>$IMGDIR</span><span class=s2>\tf-bl1.bin&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;board.flashloader0.fname=</span><span class=nv>$IMGDIR</span><span class=s2>\fip-uefi.bin&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;board.flashloader1.fname=</span><span class=nv>$IMGDIR</span><span class=s2>\nor1_flash.img&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;board.flashloader1.fnameWrite=</span><span class=nv>$IMGDIR</span><span class=s2>\nor1_flash.img&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;board.flashloader2.fname=</span><span class=nv>$IMGDIR</span><span class=s2>\nor2_flash.img&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;board.flashloader2.fnameWrite=</span><span class=nv>$IMGDIR</span><span class=s2>\nor2_flash.img&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;board.virtioblockdevice.image_path=</span><span class=nv>$IMGDIR</span><span class=s2>\grub-buildroot.img&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.gic_distributor.ITS-device-bits=20&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc0.tzc400.rst_gate_keeper=0x0f&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc0.tzc400.rst_region_attributes_0=0xc000000f&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc0.tzc400.rst_region_id_access_0=0xffffffff&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc1.tzc400.rst_gate_keeper=0x0f&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc1.tzc400.rst_region_attributes_0=0xc000000f&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc1.tzc400.rst_region_id_access_0=0xffffffff&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc2.tzc400.rst_gate_keeper=0x0f&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc2.tzc400.rst_region_attributes_0=0xc000000f&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc2.tzc400.rst_region_id_access_0=0xffffffff&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc3.tzc400.rst_gate_keeper=0x0f&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc3.tzc400.rst_region_attributes_0=0xc000000f&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc3.tzc400.rst_region_id_access_0=0xffffffff&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc4.tzc400.rst_gate_keeper=0x0f&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc4.tzc400.rst_region_attributes_0=0xc000000f&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc4.tzc400.rst_region_id_access_0=0xffffffff&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc5.tzc400.rst_gate_keeper=0x0f&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc5.tzc400.rst_region_attributes_0=0xc000000f&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc5.tzc400.rst_region_id_access_0=0xffffffff&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc6.tzc400.rst_gate_keeper=0x0f&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc6.tzc400.rst_region_attributes_0=0xc000000f&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc6.tzc400.rst_region_id_access_0=0xffffffff&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc7.tzc400.rst_gate_keeper=0x0f&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc7.tzc400.rst_region_attributes_0=0xc000000f&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;css.tzc7.tzc400.rst_region_id_access_0=0xffffffff&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-C</span> <span class=s2>&#34;disable_visualisation=true&#34;</span> <span class=p>\</span>
+</span></span><span class=line><span class=cl>  <span class=n>-R</span>
+</span></span></code></pre></div><p>A few important notes about that command:</p><ul><li><code>--data css.scp.armcortexm7ct=...@0x0BD80000</code> places the SCP RAM firmware at the address the model expects.</li><li><code>-C css.trustedBootROMloader.fname=tf-bl1.bin</code> points BL1 at the Trusted Firmware-A entry point.</li><li><code>-C board.flashloader0.fname=fip-uefi.bin</code> loads the FIP image containing <strong>BL2 + BL31 + UEFI</strong>.</li><li><code>-C board.virtioblockdevice.image_path=grub-buildroot.img</code> gives the platform a bootable disk image for GRUB and the root filesystem.</li><li>The TZC settings bypass restrictive default protection so the software stack can boot cleanly in this setup.</li><li><code>-R</code> means <strong>run from reset</strong>.</li><li><code>-C disable_visualisation=true</code> keeps the model headless, which is exactly what we want for a server-style workflow.</li></ul><blockquote><p>💡 <strong>Tip:</strong> UARTs are typically exposed on telnet ports <strong>5000</strong> (SCP), <strong>5001</strong> (MCP), <strong>5002</strong> (non-secure / Linux), and <strong>5003</strong> (secure world output).</p></blockquote><h2 id=11-connecting-via-telnet>11 Connecting via telnet<a hidden class=anchor aria-hidden=true href=#11-connecting-via-telnet>#</a></h2><p>Once the FVP is running, the UARTs are your window into what the platform is doing. If Telnet Client is not enabled on Windows yet, turn it on first:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-powershell data-lang=powershell><span class=line><span class=cl><span class=n>dism</span> <span class=p>/</span><span class=n>online</span> <span class=p>/</span><span class=nb>Enable-Feature</span> <span class=p>/</span><span class=n>FeatureName</span><span class=err>:</span><span class=n>TelnetClient</span>
+</span></span></code></pre></div><p>Then open separate terminals and connect to the interesting UARTs:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>telnet localhost <span class=m>5000</span>   <span class=c1># SCP console</span>
+</span></span><span class=line><span class=cl>telnet localhost <span class=m>5002</span>   <span class=c1># Linux / non-secure AP console</span>
+</span></span></code></pre></div><p>If you’re curious, you can also watch the MCP and secure UARTs:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>telnet localhost <span class=m>5001</span>   <span class=c1># MCP console</span>
+</span></span><span class=line><span class=cl>telnet localhost <span class=m>5003</span>   <span class=c1># Secure console</span>
+</span></span></code></pre></div><p>The SCP console is wonderful when you’re debugging early bring-up. The Linux console is where the reward shows up — kernel boot logs, init, and hopefully a shell prompt.</p><h2 id=12-what-youll-see-during-boot>12 What you’ll see during boot<a hidden class=anchor aria-hidden=true href=#12-what-youll-see-during-boot>#</a></h2><p>This is the part where the abstract architecture becomes a visible sequence of messages. Here’s the rough flow you should expect:</p><ol><li><strong>SCP firmware starts first</strong> on the Cortex-M7 and initializes platform services.</li><li>It configures pieces like <strong>CMN-700</strong> and powers up the application processor cores.</li><li><strong>TF-A</strong> takes over on the AP side: <strong>BL1 → BL2 → BL31</strong>.</li><li><strong>StandaloneMM / UEFI</strong> comes up and begins its DXE phase.</li><li><strong>GRUB</strong> loads the Linux kernel and root filesystem from the virtio block image.</li><li><strong>Linux boots</strong>, starts init, and lands you in buildroot userspace.</li></ol><blockquote><p>⚠️ <strong>Warning:</strong> the FVP is <strong>very slow</strong> compared to real hardware — think on the order of <strong>~100× slower</strong>. If you are used to a board booting in seconds, the model can feel like it’s moving through syrup. That does not necessarily mean it’s stuck.</p></blockquote><p>So if the platform seems to pause, give it a little grace before assuming disaster. Many bring-up sessions have been derailed by impatience more than by actual bugs.</p><h2 id=13-troubleshooting>13 Troubleshooting<a hidden class=anchor aria-hidden=true href=#13-troubleshooting>#</a></h2><p>Here’s a quick practical checklist for the most common “it doesn’t boot and I’m tired” situations.</p><table><thead><tr><th>Symptom</th><th>Likely cause</th><th>What to try</th></tr></thead><tbody><tr><td>No output on any UART</td><td>Wrong model path, failed launch, or console ports not exposed</td><td>Re-run the PowerShell command, verify <code>FVP_RD_N2.exe</code> exists, and confirm telnet connections to <code>localhost:5000-5003</code>.</td></tr><tr><td>SCP dies early with a bus fault</td><td>Old SCP firmware with a newer FVP build</td><td>Rebuild SCP from the latest master and replace <code>scp_ramfw.bin</code>.</td></tr><tr><td>Build fails on missing commands or headers</td><td>Dependency gap in Ubuntu</td><td>Install the missing packages from the prerequisites section and retry the failed step.</td></tr><tr><td>UEFI appears, but Linux never boots</td><td>Broken disk image, GRUB issue, or missing kernel/rootfs content</td><td>Rebuild or replace <code>grub-buildroot.img</code> and verify the virtio block path in the FVP command.</td></tr><tr><td>Weird permission/flash-related failures</td><td>NOR images missing or not writable</td><td>Make sure both 64 MB NOR images exist and that <code>fnameWrite</code> points to the same files.</td></tr><tr><td>Platform appears frozen</td><td>It may just be slow</td><td>Wait longer than feels reasonable. Seriously. FVP performance can make a healthy boot look suspiciously dramatic.</td></tr></tbody></table><blockquote><p>💡 <strong>Tip:</strong> watch both the SCP console and the Linux console. If Linux never wakes up, the SCP side usually tells you why the AP world never got a clean start.</p></blockquote><h2 id=14-conclusion>14 Conclusion<a hidden class=anchor aria-hidden=true href=#14-conclusion>#</a></h2><p>If you’ve made it this far, you’ve done something genuinely substantial: you set up a mixed Windows + WSL2 workflow, installed the RD-N2 FVP, synced a pinned platform manifest, built a multi-stage firmware and OS stack, prepared the flash and disk images, launched the model, and connected to the boot consoles.</p><p>That’s not “just booting Linux.” That’s understanding a modern Arm platform boot flow end to end.</p><blockquote><p>🎉 <strong>Milestone:</strong> you now have a repeatable RD-N2 virtual bring-up path. That means you can move on to kernel changes, firmware experiments, boot parameter tweaks, device-tree work, UEFI investigations, or plain old platform exploration with a lot more confidence.</p></blockquote><p>Good next steps from here:</p><ul><li>Customize the kernel command line and GRUB config.</li><li>Swap in your own kernel build or root filesystem.</li><li>Experiment with TF-A or UEFI changes.</li><li>Trace power-up and mailbox interactions through the SCP logs.</li><li>Document a one-click launch script once your flow stabilizes.</li></ul><p>And honestly? Take a second to enjoy the moment when the Linux console finally comes alive. Booting a platform stack like this is part engineering, part archaeology, and part stubbornness. If you got it working, you earned that smile.</p></div><footer class=post-footer><ul class=post-tags><li><a href=https://pant1993.github.io/neeraj-tech-lab/tags/arm/>ARM</a></li><li><a href=https://pant1993.github.io/neeraj-tech-lab/tags/fvp/>FVP</a></li><li><a href=https://pant1993.github.io/neeraj-tech-lab/tags/linux/>Linux</a></li><li><a href=https://pant1993.github.io/neeraj-tech-lab/tags/boot/>Boot</a></li><li><a href=https://pant1993.github.io/neeraj-tech-lab/tags/firmware/>Firmware</a></li><li><a href=https://pant1993.github.io/neeraj-tech-lab/tags/scp/>SCP</a></li><li><a href=https://pant1993.github.io/neeraj-tech-lab/tags/tf-a/>TF-A</a></li><li><a href=https://pant1993.github.io/neeraj-tech-lab/tags/uefi/>UEFI</a></li><li><a href=https://pant1993.github.io/neeraj-tech-lab/tags/tutorial/>Tutorial</a></li></ul><nav class=paginav><a class=prev href=https://pant1993.github.io/neeraj-tech-lab/posts/arm-rdn2-fvp-firmware-bringup-story/><span class=title>« Prev</span>
+<span>Bringing Up Firmware on the ARM RD-N2 FVP — A Chronicle of Silent Failures</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide on x" href="https://x.com/intent/tweet/?text=Booting%20Linux%20on%20the%20ARM%20RD-N2%20FVP%20%e2%80%94%20A%20Step-by-Step%20Guide&amp;url=https%3a%2f%2fpant1993.github.io%2fneeraj-tech-lab%2fposts%2fbooting-linux-on-arm-rdn2-fvp%2f&amp;hashtags=ARM%2cFVP%2cLinux%2cboot%2cfirmware%2cSCP%2cTF-A%2cUEFI%2ctutorial"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentColor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fpant1993.github.io%2fneeraj-tech-lab%2fposts%2fbooting-linux-on-arm-rdn2-fvp%2f&amp;title=Booting%20Linux%20on%20the%20ARM%20RD-N2%20FVP%20%e2%80%94%20A%20Step-by-Step%20Guide&amp;summary=Booting%20Linux%20on%20the%20ARM%20RD-N2%20FVP%20%e2%80%94%20A%20Step-by-Step%20Guide&amp;source=https%3a%2f%2fpant1993.github.io%2fneeraj-tech-lab%2fposts%2fbooting-linux-on-arm-rdn2-fvp%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentColor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fpant1993.github.io%2fneeraj-tech-lab%2fposts%2fbooting-linux-on-arm-rdn2-fvp%2f&title=Booting%20Linux%20on%20the%20ARM%20RD-N2%20FVP%20%e2%80%94%20A%20Step-by-Step%20Guide"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentColor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fpant1993.github.io%2fneeraj-tech-lab%2fposts%2fbooting-linux-on-arm-rdn2-fvp%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentColor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide on whatsapp" href="https://api.whatsapp.com/send?text=Booting%20Linux%20on%20the%20ARM%20RD-N2%20FVP%20%e2%80%94%20A%20Step-by-Step%20Guide%20-%20https%3a%2f%2fpant1993.github.io%2fneeraj-tech-lab%2fposts%2fbooting-linux-on-arm-rdn2-fvp%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentColor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide on telegram" href="https://telegram.me/share/url?text=Booting%20Linux%20on%20the%20ARM%20RD-N2%20FVP%20%e2%80%94%20A%20Step-by-Step%20Guide&amp;url=https%3a%2f%2fpant1993.github.io%2fneeraj-tech-lab%2fposts%2fbooting-linux-on-arm-rdn2-fvp%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentColor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Booting Linux on the ARM RD-N2 FVP — A Step-by-Step Guide on ycombinator" href="https://news.ycombinator.com/submitlink?t=Booting%20Linux%20on%20the%20ARM%20RD-N2%20FVP%20%e2%80%94%20A%20Step-by-Step%20Guide&u=https%3a%2f%2fpant1993.github.io%2fneeraj-tech-lab%2fposts%2fbooting-linux-on-arm-rdn2-fvp%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentColor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer></article></main><footer class=footer><span>&copy; 2026 <a href=https://pant1993.github.io/neeraj-tech-lab/>Neeraj's Tech Lab</a></span> ·
+<span>Powered by
+<a href="https://gohugo.io/?utm_source=papermod" rel=noopener target=_blank>Hugo</a> &
+<a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top id=top-link class="top-link hidden" aria-label="go to top" title="Go to Top (Alt + G)" accesskey=g><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevrons-up"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg>
+</a><script>let menu=document.getElementById("menu");if(menu){const e=localStorage.getItem("menu-scroll-position");e&&(menu.scrollLeft=parseInt(e,10)),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}}document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var toplink=document.getElementById("top-link");window.onscroll=function(){const e=window.innerHeight;document.body.scrollTop>e||document.documentElement.scrollTop>e?toplink.classList.remove("hidden"):toplink.classList.add("hidden")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{const e=document.querySelector("html");e.dataset.theme==="dark"?(e.dataset.theme="light",localStorage.setItem("pref-theme","light")):(e.dataset.theme="dark",localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
