@@ -6,7 +6,7 @@
     <description>Recent content in Posts on Neeraj&#39;s Tech Lab</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 26 May 2026 18:00:00 +0530</lastBuildDate>
+    <lastBuildDate>Tue, 26 May 2026 18:50:00 +0530</lastBuildDate>
     <atom:link href="http://localhost:1313/neeraj-tech-lab/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>The Hunt for the Silent Kernel — Debugging a Linux Boot Hang on ARM RD-N2 FVP</title>
@@ -35,6 +35,13 @@
       <pubDate>Fri, 22 May 2026 14:00:00 +0530</pubDate>
       <guid>http://localhost:1313/neeraj-tech-lab/posts/booting-linux-on-arm-rdn2-fvp/</guid>
       <description>A friendly step-by-step guide to booting Linux on the ARM Neoverse RD-N2 Fixed Virtual Platform — from installation through firmware build to successful boot.</description>
+    </item>
+    <item>
+      <title>The ARM64 Debugger&#39;s Handbook — Iris, GDB, and Live Debugging on the RD-N2 FVP</title>
+      <link>http://localhost:1313/neeraj-tech-lab/posts/arm64-debugging-handbook-iris-gdb-fvp/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/posts/arm64-debugging-handbook-iris-gdb-fvp/</guid>
+      <description>A comprehensive guide to live debugging on the ARM RD-N2 FVP — from connecting Iris and GDB to loading symbols for every firmware layer, decoding exception syndromes, tracing through exception levels, and approaching real debugging scenarios with concrete examples from our bring-up journey.</description>
     </item>
     <item>
       <title>Making Variables Survive Reboot — Enabling StandaloneMM on ARM RD-N2 FVP</title>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>GDB on Neeraj&#39;s Tech Lab</title>
+    <link>http://localhost:1313/neeraj-tech-lab/tags/gdb/</link>
+    <description>Recent content in GDB on Neeraj&#39;s Tech Lab</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 26 May 2026 18:50:00 +0530</lastBuildDate>
+    <atom:link href="http://localhost:1313/neeraj-tech-lab/tags/gdb/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>The ARM64 Debugger&#39;s Handbook — Iris, GDB, and Live Debugging on the RD-N2 FVP</title>
+      <link>http://localhost:1313/neeraj-tech-lab/posts/arm64-debugging-handbook-iris-gdb-fvp/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/posts/arm64-debugging-handbook-iris-gdb-fvp/</guid>
+      <description>A comprehensive guide to live debugging on the ARM RD-N2 FVP — from connecting Iris and GDB to loading symbols for every firmware layer, decoding exception syndromes, tracing through exception levels, and approaching real debugging scenarios with concrete examples from our bring-up journey.</description>
+    </item>
+  </channel>
+</rss>
