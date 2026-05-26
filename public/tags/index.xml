@@ -1,1 +1,292 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Tags on Neeraj's Tech Lab</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/</link><description>Recent content in Tags on Neeraj's Tech Lab</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Tue, 26 May 2026 12:25:00 +0530</lastBuildDate><atom:link href="https://pant1993.github.io/neeraj-tech-lab/tags/index.xml" rel="self" type="application/rss+xml"/><item><title>ARM</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/arm/</link><pubDate>Tue, 26 May 2026 12:25:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/arm/</guid><description/></item><item><title>Bring-Up</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/bring-up/</link><pubDate>Tue, 26 May 2026 12:25:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/bring-up/</guid><description/></item><item><title>CMN-700</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/cmn-700/</link><pubDate>Tue, 26 May 2026 12:25:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/cmn-700/</guid><description/></item><item><title>Debugging</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/debugging/</link><pubDate>Tue, 26 May 2026 12:25:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/debugging/</guid><description/></item><item><title>Firmware</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/firmware/</link><pubDate>Tue, 26 May 2026 12:25:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/firmware/</guid><description/></item><item><title>FVP</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/fvp/</link><pubDate>Tue, 26 May 2026 12:25:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/fvp/</guid><description/></item><item><title>GRUB</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/grub/</link><pubDate>Tue, 26 May 2026 12:25:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/grub/</guid><description/></item><item><title>SCP</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/scp/</link><pubDate>Tue, 26 May 2026 12:25:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/scp/</guid><description/></item><item><title>TBBR</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/tbbr/</link><pubDate>Tue, 26 May 2026 12:25:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/tbbr/</guid><description/></item><item><title>TF-A</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/tf-a/</link><pubDate>Tue, 26 May 2026 12:25:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/tf-a/</guid><description/></item><item><title>UEFI</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/uefi/</link><pubDate>Tue, 26 May 2026 12:25:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/uefi/</guid><description/></item><item><title>EL3</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/el3/</link><pubDate>Tue, 26 May 2026 12:10:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/el3/</guid><description/></item><item><title>Exception-Levels</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/exception-levels/</link><pubDate>Tue, 26 May 2026 12:10:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/exception-levels/</guid><description/></item><item><title>Iris</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/iris/</link><pubDate>Tue, 26 May 2026 12:10:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/iris/</guid><description/></item><item><title>Kernel</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/kernel/</link><pubDate>Tue, 26 May 2026 12:10:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/kernel/</guid><description/></item><item><title>Linux</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/linux/</link><pubDate>Tue, 26 May 2026 12:10:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/linux/</guid><description/></item><item><title>SVE</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/sve/</link><pubDate>Tue, 26 May 2026 12:10:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/sve/</guid><description/></item><item><title>DVFS</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/dvfs/</link><pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/dvfs/</guid><description/></item><item><title>Neoverse</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/neoverse/</link><pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/neoverse/</guid><description/></item><item><title>PLL</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/pll/</link><pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/pll/</guid><description/></item><item><title>Power-Management</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/power-management/</link><pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/power-management/</guid><description/></item><item><title>SoC</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/soc/</link><pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/soc/</guid><description/></item><item><title>Boot</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/boot/</link><pubDate>Fri, 22 May 2026 14:00:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/boot/</guid><description/></item><item><title>Tutorial</title><link>https://pant1993.github.io/neeraj-tech-lab/tags/tutorial/</link><pubDate>Fri, 22 May 2026 14:00:00 +0530</pubDate><guid>https://pant1993.github.io/neeraj-tech-lab/tags/tutorial/</guid><description/></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Tags on Neeraj&#39;s Tech Lab</title>
+    <link>http://localhost:1313/neeraj-tech-lab/tags/</link>
+    <description>Recent content in Tags on Neeraj&#39;s Tech Lab</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 26 May 2026 18:50:00 +0530</lastBuildDate>
+    <atom:link href="http://localhost:1313/neeraj-tech-lab/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>AArch64</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/aarch64/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/aarch64/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>ARM</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/arm/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/arm/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>ARM64</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/arm64/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/arm64/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Call-Stack</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/call-stack/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/call-stack/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Debugging</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/debugging/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/debugging/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Exception-Levels</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/exception-levels/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/exception-levels/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>FF-A</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/ff-a/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/ff-a/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>FVP</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/fvp/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/fvp/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>GDB</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/gdb/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/gdb/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>HVC</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/hvc/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/hvc/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Iris</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/iris/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/iris/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Registers</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/registers/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/registers/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>SCP</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/scp/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/scp/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>SMC</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/smc/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/smc/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>StandaloneMM</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/standalonemm/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/standalonemm/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>SVC</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/svc/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/svc/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Symbols</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/symbols/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/symbols/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>TF-A</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/tf-a/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/tf-a/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>UEFI</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/uefi/</link>
+      <pubDate>Tue, 26 May 2026 18:50:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/uefi/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Efivarfs</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/efivarfs/</link>
+      <pubDate>Tue, 26 May 2026 18:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/efivarfs/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>NOR-Flash</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/nor-flash/</link>
+      <pubDate>Tue, 26 May 2026 18:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/nor-flash/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Persistence</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/persistence/</link>
+      <pubDate>Tue, 26 May 2026 18:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/persistence/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Secure-Partition</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/secure-partition/</link>
+      <pubDate>Tue, 26 May 2026 18:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/secure-partition/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>SPMC</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/spmc/</link>
+      <pubDate>Tue, 26 May 2026 18:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/spmc/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Bring-Up</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/bring-up/</link>
+      <pubDate>Tue, 26 May 2026 12:25:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/bring-up/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>CMN-700</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/cmn-700/</link>
+      <pubDate>Tue, 26 May 2026 12:25:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/cmn-700/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Firmware</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/firmware/</link>
+      <pubDate>Tue, 26 May 2026 12:25:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/firmware/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>GRUB</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/grub/</link>
+      <pubDate>Tue, 26 May 2026 12:25:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/grub/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>TBBR</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/tbbr/</link>
+      <pubDate>Tue, 26 May 2026 12:25:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/tbbr/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>EL3</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/el3/</link>
+      <pubDate>Tue, 26 May 2026 12:10:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/el3/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Kernel</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/kernel/</link>
+      <pubDate>Tue, 26 May 2026 12:10:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/kernel/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Linux</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/linux/</link>
+      <pubDate>Tue, 26 May 2026 12:10:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/linux/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>SVE</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/sve/</link>
+      <pubDate>Tue, 26 May 2026 12:10:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/sve/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>DVFS</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/dvfs/</link>
+      <pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/dvfs/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Neoverse</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/neoverse/</link>
+      <pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/neoverse/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>PLL</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/pll/</link>
+      <pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/pll/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Power-Management</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/power-management/</link>
+      <pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/power-management/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>SoC</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/soc/</link>
+      <pubDate>Fri, 22 May 2026 15:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/soc/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Boot</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/boot/</link>
+      <pubDate>Fri, 22 May 2026 14:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/boot/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Tutorial</title>
+      <link>http://localhost:1313/neeraj-tech-lab/tags/tutorial/</link>
+      <pubDate>Fri, 22 May 2026 14:00:00 +0530</pubDate>
+      <guid>http://localhost:1313/neeraj-tech-lab/tags/tutorial/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>

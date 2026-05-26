@@ -171,6 +171,235 @@ print(' '.join(f'{b:02X}' for b in block[:32]))
 
 **IMPORTANT: TrustZone restrictions apply.** If you try to read secure memory (like the StandaloneMM's DRAM region) from a non-secure context, you'll get all zeros. The Iris read uses the CPU's current security context.
 
+### Accessing Secure Devices and Memory via Iris
+
+The FVP models TrustZone faithfully — secure DRAM behind TZC-400 controllers returns zeros when read from non-secure context. But there are ways around this for debugging:
+
+**Method 1: TZC Bypass at Launch (Recommended for Development)**
+
+Configure all TZC-400 controllers to allow full access from any master:
+```powershell
+# In FVP launch parameters:
+"-C", "css.tzc0.tzc400.rst_gate_keeper=0x0f",
+"-C", "css.tzc0.tzc400.rst_region_attributes_0=0xc000000f",
+"-C", "css.tzc0.tzc400.rst_region_id_access_0=0xffffffff",
+# Repeat for tzc1 through tzc7
+```
+
+With this, Iris can read ANY physical address regardless of security state — including:
+- StandaloneMM code at `0xFF200000`
+- Secure DRAM used by BL31 at `0xFF000000`
+- The SP's stack and heap regions
+
+**Method 2: Reading Flash Directly**
+
+NOR Flash at `0x1054000000` is NOT behind a TZC — it's on the system bus. You can always read it via Iris:
+
+```python
+# Read first 64 bytes of NOR flash (variable store)
+flash_data = cpu0.read_memory(0x1054000000, 64)
+print(' '.join(f'{b:02X}' for b in flash_data))
+
+# Check for EFI Firmware Volume signature
+# FV header starts with: 00 00 00 00 ... _FVH (5F 46 56 48) at offset 0x28
+fv_sig = bytes(cpu0.read_memory(0x1054000028, 4))
+print(f"FV Signature: {fv_sig}")  # Should be b'_FVH' if initialized
+
+# Read the variable store header (after FV header, typically at block 1)
+var_store = cpu0.read_memory(0x1054040000, 64)  # Block 1 (256KB offset)
+print(' '.join(f'{b:02X}' for b in var_store[:16]))
+
+# Dump a specific flash block to check if a write succeeded
+def dump_flash_block(cpu, block_num, size=256):
+    """Dump first 'size' bytes of a NOR flash block (256KB blocks)"""
+    addr = 0x1054000000 + (block_num * 0x40000)
+    data = cpu.read_memory(addr, size)
+    for i in range(0, len(data), 16):
+        hex_str = ' '.join(f'{b:02X}' for b in data[i:i+16])
+        ascii_str = ''.join(chr(b) if 32 <= b < 127 else '.' for b in data[i:i+16])
+        print(f"  {addr+i:012X}: {hex_str}  |{ascii_str}|")
+
+dump_flash_block(cpu0, 0)  # FV header block
+dump_flash_block(cpu0, 1)  # Variable store block
+```
+
+**Method 3: Timing Your Reads (When TZC is Active)**
+
+If you can't bypass TZC, read secure memory *while the CPU is executing EL3 code* (during BL31 boot or during an SMC handler):
+
+```python
+# Set a breakpoint in BL31's runtime handler
+# When BL31 is active, Iris reads from the CPU's secure context
+# Step 1: Stop simulation during secure world execution
+model.stop()
+
+# Step 2: Check CurrentEL — if we're in EL3, we can read secure memory
+current_el = cpu0.read_register('CurrentEL')
+if (current_el >> 2) == 3:
+    # We're in EL3! Can read secure memory
+    bl31_code = cpu0.read_memory(0xFF000000, 64)
+    mm_code = cpu0.read_memory(0xFF200000, 64)
+    print("BL31 first bytes:", ' '.join(f'{b:02X}' for b in bl31_code[:16]))
+    print("MM first bytes:", ' '.join(f'{b:02X}' for b in mm_code[:16]))
+else:
+    print(f"Currently at EL{current_el >> 2} — can't read secure memory")
+    print("Try stopping during boot (before UEFI) or during an SMC call")
+```
+
+### Source-Level Debugging with Iris (Without GDB)
+
+You don't need GDB for source-level debugging. Iris + symbol files + a Python script gives you the same capability:
+
+**Step 1: Parse the ELF symbol table**
+
+```python
+import subprocess
+import bisect
+
+class SymbolTable:
+    """Load symbols from an ELF file using objdump/nm"""
+    
+    def __init__(self, elf_path, base_offset=0):
+        self.symbols = []  # [(address, name)]
+        self.base_offset = base_offset
+        self._load(elf_path)
+    
+    def _load(self, elf_path):
+        # Use nm to extract symbols (works for any ELF)
+        result = subprocess.run(
+            ['aarch64-linux-gnu-nm', '-n', elf_path],
+            capture_output=True, text=True
+        )
+        for line in result.stdout.splitlines():
+            parts = line.split()
+            if len(parts) >= 3 and parts[1] in ('T', 't', 'W', 'D', 'd'):
+                addr = int(parts[0], 16) + self.base_offset
+                name = parts[2]
+                self.symbols.append((addr, name))
+        self.symbols.sort()
+        self.addresses = [s[0] for s in self.symbols]
+    
+    def resolve(self, address):
+        """Find the symbol containing this address"""
+        idx = bisect.bisect_right(self.addresses, address) - 1
+        if idx < 0:
+            return f"0x{address:X} (unknown)"
+        sym_addr, sym_name = self.symbols[idx]
+        offset = address - sym_addr
+        if offset == 0:
+            return f"{sym_name}"
+        return f"{sym_name} + 0x{offset:X}"
+
+# Load symbols for each component
+bl31_syms = SymbolTable('/path/to/bl31.elf')
+mm_syms   = SymbolTable('/path/to/StandaloneMmCore.dll', base_offset=0)
+kernel_syms = SymbolTable('/path/to/vmlinux')
+
+# Now resolve any address!
+pc = cpu0.read_register('PC')
+print(f"PC = 0x{pc:016X} → {bl31_syms.resolve(pc)}")
+
+elr = cpu0.read_register('ELR_EL3')
+print(f"ELR_EL3 = 0x{elr:016X} → {mm_syms.resolve(elr)}")
+```
+
+**Step 2: Source line mapping with addr2line**
+
+```python
+def addr_to_source(elf_path, address):
+    """Map an address to source file:line using addr2line"""
+    result = subprocess.run(
+        ['aarch64-linux-gnu-addr2line', '-e', elf_path, '-f', '-p', hex(address)],
+        capture_output=True, text=True
+    )
+    return result.stdout.strip()
+
+# Map PC to exact source line
+pc = cpu0.read_register('PC')
+source = addr_to_source('build/rdn2/debug/bl31/bl31.elf', pc)
+print(f"PC 0x{pc:X} → {source}")
+# Output: plat_panic_handler at plat/common/aarch64/plat_common.c:128
+
+# Map the faulting instruction
+elr = cpu0.read_register('ELR_EL1')
+source = addr_to_source('Build/SgiMmStandalone/DEBUG_GCC5/AARCH64/StandaloneMmCore.dll', elr)
+print(f"Fault at 0x{elr:X} → {source}")
+# Output: _ModuleEntryPoint at StandaloneMmCoreEntryPoint/Arm/AArch64/ModuleEntryPoint.S:45
+```
+
+**Step 3: Disassembly around a crash point**
+
+```python
+def disassemble_around(elf_path, address, context=5):
+    """Disassemble instructions around an address"""
+    start = address - (context * 4)  # ARM64 instructions are 4 bytes
+    count = context * 2 + 1
+    result = subprocess.run(
+        ['aarch64-linux-gnu-objdump', '-d', elf_path,
+         f'--start-address=0x{start:x}',
+         f'--stop-address=0x{start + count*4:x}'],
+        capture_output=True, text=True
+    )
+    lines = result.stdout.splitlines()
+    for line in lines:
+        if f'{address:x}:' in line:
+            print(f">>> {line}  ← FAULT HERE")
+        elif ':' in line and '\t' in line:
+            print(f"    {line}")
+
+# Show code around the crash
+elr = cpu0.read_register('ELR_EL1')
+disassemble_around('path/to/StandaloneMmCore.dll', elr)
+```
+
+**Output example from our MM crash** (detailed in [Enabling StandaloneMM](/posts/enabling-persistent-uefi-variables-arm-fvp-standalonemm/)):
+```asm
+    ff207d90:  f9400108    ldr    x8, [x8]
+    ff207d94:  340000a8    cbz    w8, ff207da8
+    ff207d98:  d2800040    mov    x0, #0x2
+    ff207d9c:  d63f0100    blr    x8
+>>> ff207da0:  f81f0fe0    str    x0, [sp, #-16]!  ← FAULT HERE (stack push with garbage SP!)
+    ff207da4:  d2800000    mov    x0, #0x0
+    ff207da8:  94000042    bl     ff207eb0
+```
+
+The `str x0, [sp, #-16]!` instruction tried to push to the stack at SP=0xFFFFFFFFFFFFFD90 — unmapped!
+
+**Step 4: Single-stepping with source correlation**
+
+```python
+def step_and_trace(cpu, model, elf_path, steps=10):
+    """Step N instructions, printing source for each"""
+    for i in range(steps):
+        pc = cpu.read_register('PC')
+        source = addr_to_source(elf_path, pc)
+        
+        # Read the instruction
+        insn_bytes = cpu.read_memory(pc, 4)
+        insn_hex = ''.join(f'{b:02X}' for b in reversed(insn_bytes))
+        
+        print(f"[{i:3d}] 0x{pc:016X}  {insn_hex}  {source}")
+        
+        model.step(1)  # Execute one instruction
+
+# Example: trace BL31's exception handler
+model.stop()
+step_and_trace(cpu0, model, 'build/rdn2/debug/bl31/bl31.elf', steps=20)
+```
+
+**Output:**
+```
+[  0] 0x00000000FF018400  D53BE100  runtime_exceptions at bl31/aarch64/runtime_exceptions.S:42
+[  1] 0x00000000FF018404  F9400661  runtime_exceptions at bl31/aarch64/runtime_exceptions.S:43
+[  2] 0x00000000FF018408  F9002681  runtime_exceptions at bl31/aarch64/runtime_exceptions.S:44
+[  3] 0x00000000FF01840C  D53B4240  runtime_exceptions at bl31/aarch64/runtime_exceptions.S:45
+[  4] 0x00000000FF018410  B4000080  runtime_exceptions at bl31/aarch64/runtime_exceptions.S:46
+[  5] 0x00000000FF018414  14000003  runtime_exceptions at bl31/aarch64/runtime_exceptions.S:47
+...
+```
+
+This gives you the full source-level debugging experience — step by step, with function names and line numbers — using ONLY Iris (no GDB required).
+
 ### Controlling Execution
 
 ```python
@@ -345,7 +574,7 @@ SCP RAM load:   0x0BD80000 (loaded via --data flag)
 SCP UART log:   uart_scp.log
 ```
 
-**Real scenario we hit:**
+**Real scenario we hit** (full story in [Firmware Bring-Up Chronicle](/posts/arm-rdn2-fvp-firmware-bringup-story/)):
 
 The SCP produced this assertion:
 ```
@@ -394,7 +623,7 @@ If GDB doesn't auto-resolve symbols (because BL31's base address differs from th
 (gdb) add-symbol-file build/rdn2/debug/bl31/bl31.elf 0xFF000000
 ```
 
-**Finding BL31's exception loop (our SVE trap scenario):**
+**Finding BL31's exception loop** (our SVE trap scenario, detailed in [Debugging the Silent Kernel](/posts/debugging-kernel-hang-arm-fvp-sve-trap/)):
 
 When the kernel SVE trap hit BL31, the CPU was stuck in:
 ```python
@@ -472,7 +701,7 @@ data = cpu0.read_memory(0xFF200000, 32)
 
 This is because Iris reads memory using the CPU's current security state. If the CPU is executing non-secure code (Linux), secure DRAM reads return zeros. You CAN read secure memory while the CPU is in EL3 (BL31) — timing your reads carefully.
 
-**Our real crash scenario:**
+**Our real crash scenario** (the full debugging story is in [Enabling StandaloneMM](/posts/enabling-persistent-uefi-variables-arm-fvp-standalonemm/#chapter-4-the-debugger--no-more-guessing)):
 
 The SM hung. We read registers:
 ```
@@ -533,7 +762,7 @@ Loading driver 8F87890C-EE3F-4644-AAC8-B3C0E45E0B34
 (gdb) add-symbol-file VariableRuntimeDxe.dll 0xF03B0000
 ```
 
-**Real scenario — DXE hang:**
+**Real scenario — DXE hang** (detailed in [the Firmware Bring-Up Chronicle](/posts/arm-rdn2-fvp-firmware-bringup-story/#chapter-5-the-dxe-hang)):
 
 During our bring-up, UEFI hung in the DXE phase. The non-secure UART just stopped printing. Using Iris:
 
@@ -608,7 +837,7 @@ awk '$1 <= "ffff8000080209ec"' System.map | tail -1
 # (PC = base + 0x20 → offset into finalise_el2)
 ```
 
-**Real scenario — Silent kernel boot:**
+**Real scenario — Silent kernel boot** (full investigation in [The Hunt for the Silent Kernel](/posts/debugging-kernel-hang-arm-fvp-sve-trap/)):
 
 The kernel loaded but produced zero output. Using Iris:
 
@@ -727,9 +956,364 @@ VBAR + 0x480: IRQ, from lower EL (AArch64)
 VBAR + 0x600: Synchronous, from lower EL (AArch32)
 ```
 
+### Determining Secure vs Non-Secure World — The First Question
+
+When you attach the debugger to a crashed system, the **first question** is: "Am I looking at a secure-world crash or a non-secure-world crash?" This fundamentally changes which registers are relevant and what memory you can access.
+
+**Step 1: Read SCR_EL3 (Secure Configuration Register)**
+
+```python
+scr_el3 = cpu0.read_register('SCR_EL3')
+ns_bit = (scr_el3 >> 0) & 1  # Bit 0 = NS (Non-Secure)
+
+print(f"SCR_EL3 = 0x{scr_el3:08X}")
+print(f"NS bit = {ns_bit}")
+if ns_bit == 0:
+    print("→ SECURE WORLD (BL31/SP/OP-TEE)")
+else:
+    print("→ NON-SECURE WORLD (Linux/UEFI)")
+```
+
+**But wait** — SCR_EL3.NS tells you the *configured* security state for the *next* ERET. If the CPU is currently executing at EL3 itself, it's always "secure" regardless of NS:
+
+**Step 2: Check CurrentEL**
+
+```python
+current_el = cpu0.read_register('CurrentEL')
+el = (current_el >> 2) & 3
+
+scr_el3 = cpu0.read_register('SCR_EL3')
+ns_bit = scr_el3 & 1
+
+print(f"CurrentEL = EL{el}")
+
+if el == 3:
+    print("Executing at EL3 (Secure Monitor / SPMC)")
+    print("This is ALWAYS secure world")
+    # Check SPSR_EL3 to see where the exception came FROM
+    spsr = cpu0.read_register('SPSR_EL3')
+    source_el = (spsr >> 2) & 3
+    # Check if we came from secure or non-secure
+    if ns_bit == 0:
+        print(f"  Exception came from SECURE EL{source_el} (SP or S-EL1)")
+    else:
+        print(f"  Exception came from NON-SECURE EL{source_el} (Linux/UEFI)")
+elif el == 2:
+    print("Executing at EL2 (Hypervisor — always non-secure)")
+elif el == 1:
+    if ns_bit == 0:
+        print("Executing at S-EL1 (Secure OS / SPMC at SEL2)")
+    else:
+        print("Executing at EL1 (Linux kernel — non-secure)")
+elif el == 0:
+    if ns_bit == 0:
+        print("Executing at S-EL0 (Secure Partition — e.g., StandaloneMM)")
+    else:
+        print("Executing at EL0 (User-space application — non-secure)")
+```
+
+**Step 3: What registers matter in each world?**
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│ SECURE WORLD CRASH (SCR_EL3.NS=0 or CurrentEL=3)                        │
+│                                                                          │
+│ Relevant registers:                                                      │
+│   ELR_EL3  — Where the secure world was when it trapped to EL3          │
+│   ESR_EL3  — What syndrome EL3 captured                                 │
+│   SPSR_EL3 — Saved state (shows source EL and mode)                     │
+│   ELR_EL1  — If SP faulted: where in the SP the fault occurred          │
+│   ESR_EL1  — If SP faulted: the SP's own exception syndrome             │
+│   FAR_EL1  — If SP faulted: the address it tried to access              │
+│   SP_EL0   — The SP's stack pointer (check for garbage!)                │
+│   SP_EL1   — S-EL1 stack (if SPMC at S-EL1)                            │
+│                                                                          │
+│ Memory you can access (with TZC bypass):                                 │
+│   0xFF000000 — BL31 code/data                                           │
+│   0xFF200000 — StandaloneMM code                                        │
+│   0xFF500000 — SP heap/stack regions                                    │
+│   Secure UART registers                                                  │
+│   NOR Flash (always accessible)                                          │
+│                                                                          │
+│ Symbol files to load:                                                    │
+│   bl31.elf (for EL3 code)                                               │
+│   StandaloneMmCore.dll (for SP code)                                    │
+│   Individual driver .dll files (NorFlash, FTW, Variable)                │
+├─────────────────────────────────────────────────────────────────────────┤
+│ NON-SECURE WORLD CRASH (SCR_EL3.NS=1 and CurrentEL < 3)                │
+│                                                                          │
+│ Relevant registers:                                                      │
+│   PC        — Where the CPU is now                                       │
+│   ELR_EL1  — If in EL1 exception handler: where the fault came from    │
+│   ESR_EL1  — The exception syndrome                                     │
+│   FAR_EL1  — The faulting virtual address                               │
+│   SP_EL0   — User-space stack pointer                                   │
+│   SP_EL1   — Kernel stack pointer                                       │
+│   TTBR0_EL1 — User-space page table base                               │
+│   TTBR1_EL1 — Kernel page table base                                   │
+│   ELR_EL2  — If trapped to EL2: where the trap came from               │
+│   ESR_EL2  — EL2 exception syndrome                                    │
+│                                                                          │
+│ Memory you can access:                                                   │
+│   All non-secure DRAM (kernel, user-space, UEFI)                        │
+│   MMIO registers (UART, GIC, PCIe)                                      │
+│   NOR Flash (always accessible)                                          │
+│   CANNOT read secure DRAM (returns zeros without TZC bypass)            │
+│                                                                          │
+│ Symbol files to load:                                                    │
+│   vmlinux (for kernel)                                                   │
+│   UEFI .dll files (for boot services)                                   │
+│   System.map (quick symbol lookup)                                       │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Step 4: Complete world determination script**
+
+```python
+def determine_world(cpu):
+    """Determine exactly where the CPU is and what crashed"""
+    
+    el = (cpu.read_register('CurrentEL') >> 2) & 3
+    scr = cpu.read_register('SCR_EL3')
+    ns = scr & 1
+    pc = cpu.read_register('PC')
+    
+    print(f"═══ WORLD DETERMINATION ═══")
+    print(f"PC:        0x{pc:016X}")
+    print(f"CurrentEL: EL{el}")
+    print(f"SCR_EL3:   0x{scr:08X} (NS={ns})")
+    print()
+    
+    if el == 3:
+        # At EL3 — need to determine if we came from secure or non-secure
+        spsr = cpu.read_register('SPSR_EL3')
+        source_el = (spsr >> 2) & 3
+        esr3 = cpu.read_register('ESR_EL3')
+        ec3 = (esr3 >> 26) & 0x3F
+        elr3 = cpu.read_register('ELR_EL3')
+        
+        print(f"Currently in EL3 (Secure Monitor)")
+        print(f"SPSR_EL3:  0x{spsr:08X} (came from EL{source_el}, {'NS' if ns else 'S'})")
+        print(f"ESR_EL3:   0x{esr3:08X} (EC=0x{ec3:02X})")
+        print(f"ELR_EL3:   0x{elr3:016X}")
+        
+        if ec3 == 0x17:  # SMC
+            print(f"\n  → SMC from {'Non-Secure' if ns else 'Secure'} EL{source_el}")
+            x0 = cpu.read_register('X0')
+            print(f"     SMC Function ID: 0x{x0:08X}")
+        
+        # Check if a Secure Partition faulted
+        if ns == 0 and source_el <= 1:
+            esr1 = cpu.read_register('ESR_EL1')
+            far1 = cpu.read_register('FAR_EL1')
+            sp0 = cpu.read_register('SP_EL0')
+            if esr1 != 0:
+                ec1 = (esr1 >> 26) & 0x3F
+                print(f"\n  ⚠️  Secure Partition fault detected!")
+                print(f"  ESR_EL1: 0x{esr1:08X} (EC=0x{ec1:02X})")
+                print(f"  FAR_EL1: 0x{far1:016X}")
+                print(f"  SP_EL0:  0x{sp0:016X}")
+                if far1 == sp0:
+                    print(f"  🔴 FAR == SP → STACK NEVER INITIALIZED!")
+    
+    elif el == 2:
+        print(f"Currently in EL2 (Hypervisor — non-secure)")
+        esr2 = cpu.read_register('ESR_EL2')
+        elr2 = cpu.read_register('ELR_EL2')
+        print(f"ESR_EL2: 0x{esr2:08X}")
+        print(f"ELR_EL2: 0x{elr2:016X}")
+    
+    elif el == 1:
+        world = "Secure (S-EL1)" if ns == 0 else "Non-Secure (Linux kernel)"
+        print(f"Currently in EL1 — {world}")
+        esr1 = cpu.read_register('ESR_EL1')
+        elr1 = cpu.read_register('ELR_EL1')
+        far1 = cpu.read_register('FAR_EL1')
+        print(f"ESR_EL1: 0x{esr1:08X}")
+        print(f"ELR_EL1: 0x{elr1:016X}")
+        print(f"FAR_EL1: 0x{far1:016X}")
+    
+    elif el == 0:
+        world = "Secure Partition (S-EL0)" if ns == 0 else "User-space (EL0)"
+        print(f"Currently in EL0 — {world}")
+
+determine_world(cpu0)
+```
+
+### When Crash Happens in Secure Partition (Our Real Scenario)
+
+Here's exactly what the register state looks like when [StandaloneMM crashes](/posts/enabling-persistent-uefi-variables-arm-fvp-standalonemm/#chapter-4-the-debugger--no-more-guessing) (the full story of how we fixed this is in [Making Variables Survive Reboot](/posts/enabling-persistent-uefi-variables-arm-fvp-standalonemm/)):
+
+```
+═══ WORLD DETERMINATION ═══
+PC:        0x00000000FF01843C          ← In BL31 (EL3 address range)
+CurrentEL: EL3                         ← CPU is at EL3
+SCR_EL3:   0x00000A39 (NS=1)          ← NS=1 means "ERET goes to NS"
+                                          But we're AT EL3, which caught the fault
+
+Currently in EL3 (Secure Monitor)
+SPSR_EL3:  0x600003C5 (came from EL1, S)  ← Came from SECURE EL1
+ESR_EL3:   0x5E000000 (EC=0x17)           ← SMC from Secure world
+ELR_EL3:   0x00000000FF207DA4             ← SP's address after fault
+
+  → SMC from Secure EL1
+     SMC Function ID: 0x84000060           ← FFA_ERROR (SP reporting failure)
+
+  ⚠️  Secure Partition fault detected!
+  ESR_EL1: 0x92000044 (EC=0x24)           ← Data Abort
+  FAR_EL1: 0xFFFFFFFFFFFFFD90             ← Garbage stack address
+  SP_EL0:  0xFFFFFFFFFFFFFD90             ← Same!
+  🔴 FAR == SP → STACK NEVER INITIALIZED!
+```
+
+**The interpretation:**
+1. CPU is at EL3 (BL31's panic handler — the infinite WFI loop)
+2. SPSR_EL3 shows it came from Secure EL1 (actually S-EL0 via SPMC routing)
+3. ESR_EL3 = SMC (0x17) — the SP called back after faulting
+4. The SP's own fault is in ESR_EL1 — Data Abort at Level 0 translation
+5. FAR_EL1 = SP_EL0 = garbage → stack pointer never initialized
+
 ---
 
-## Part VI: The Three Calling Conventions — SMC, HVC, SVC
+## Part V-B: Step-by-Step Debugging Walkthrough
+
+Let's walk through a complete debugging session from "system is hung" to "found the root cause," showing every keystroke and thought process.
+
+### Scenario: StandaloneMM hangs after "init start"
+
+**What we see:** Secure UART prints `"Secure Partition (0x8001) init start"` then nothing.
+
+**Step 1: Stop and assess**
+
+```python
+model.stop()
+pc = cpu0.read_register('PC')
+print(f"PC = 0x{pc:016X}")
+# → 0x00000000FF01843C
+```
+
+**Thought:** PC is in the `0xFF000000-0xFF1FFFFF` range = BL31. The CPU is in EL3, not in the SP. Something caused it to trap back to EL3.
+
+**Step 2: Is this a known address?**
+
+```python
+source = addr_to_source('build/rdn2/debug/bl31/bl31.elf', pc)
+print(source)
+# → plat_panic_handler at plat/common/aarch64/plat_common.c:128
+```
+
+**Thought:** `plat_panic_handler` — this is TF-A's unhandled exception handler. Something unexpected happened.
+
+**Step 3: What exception brought us here?**
+
+```python
+esr3 = cpu0.read_register('ESR_EL3')
+ec3 = (esr3 >> 26) & 0x3F
+print(f"ESR_EL3 = 0x{esr3:08X}, EC = 0x{ec3:02X}")
+# → ESR_EL3 = 0x5E000000, EC = 0x17
+```
+
+**Thought:** EC=0x17 = SMC from AArch64. So something called SMC into EL3. That's normal for FF-A — the SP uses SMC to return to the SPMC. But WHY did it return? It should still be initializing.
+
+**Step 4: Who called the SMC?**
+
+```python
+spsr3 = cpu0.read_register('SPSR_EL3')
+source_el = (spsr3 >> 2) & 3
+ns = cpu0.read_register('SCR_EL3') & 1
+elr3 = cpu0.read_register('ELR_EL3')
+print(f"SPSR_EL3 = 0x{spsr3:08X} → from EL{source_el} ({'NS' if ns else 'S'})")
+print(f"ELR_EL3 = 0x{elr3:016X}")
+# → from EL1, Secure
+# → ELR_EL3 = 0xFF207DA4 (in SP address range!)
+```
+
+**Thought:** The call came from Secure EL1, return address in the SP range (0xFF200000+). The SP tried to report something back to the SPMC. Let's check if the SP had its own exception.
+
+**Step 5: Check the SP's exception registers**
+
+```python
+esr1 = cpu0.read_register('ESR_EL1')
+far1 = cpu0.read_register('FAR_EL1')
+sp0 = cpu0.read_register('SP_EL0')
+elr1 = cpu0.read_register('ELR_EL1')
+
+ec1 = (esr1 >> 26) & 0x3F
+dfsc = esr1 & 0x3F
+
+print(f"ESR_EL1 = 0x{esr1:08X} (EC=0x{ec1:02X}, DFSC=0x{dfsc:02X})")
+print(f"FAR_EL1 = 0x{far1:016X}")
+print(f"SP_EL0  = 0x{sp0:016X}")
+print(f"ELR_EL1 = 0x{elr1:016X}")
+# → ESR_EL1 = 0x92000044 (EC=0x24=Data Abort, DFSC=0x04=Translation Fault L0)
+# → FAR_EL1 = 0xFFFFFFFFFFFFFD90
+# → SP_EL0  = 0xFFFFFFFFFFFFFD90
+# → ELR_EL1 = 0xFF207DA0
+```
+
+**Thought:** Data Abort! Translation fault at Level 0 — the topmost page table doesn't even have an entry for this address. FAR_EL1 = SP_EL0 = `0xFFFFFFFFFFFFFD90`. The SP tried to access its own stack, and the stack points to nonsense!
+
+**Step 6: What instruction faulted?**
+
+```python
+disassemble_around('Build/SgiMmStandalone/DEBUG_GCC5/AARCH64/StandaloneMmCore.dll', 0xFF207DA0)
+```
+```asm
+    ff207d94:  340000a8    cbz    w8, ff207da8
+    ff207d98:  d2800040    mov    x0, #0x2
+    ff207d9c:  d63f0100    blr    x8
+>>> ff207da0:  f81f0fe0    str    x0, [sp, #-16]!  ← FAULT (push to garbage SP)
+    ff207da4:  d2800000    mov    x0, #0x0
+```
+
+**Thought:** `str x0, [sp, #-16]!` — this is a stack push (pre-decrement SP by 16, then store). The first C function called tried to create a stack frame, but SP was garbage. Stack was NEVER initialized.
+
+**Step 7: Find where SP should have been initialized**
+
+```python
+# Map the entry point
+entry = addr_to_source('Build/SgiMmStandalone/DEBUG_GCC5/AARCH64/StandaloneMmCore.dll', 0xFF200000)
+# → _ModuleEntryPoint at ModuleEntryPoint.S:1
+```
+
+Looking at `ModuleEntryPoint.S`:
+```asm
+_ModuleEntryPoint:
+    ldr    w8, PcdGet32(PcdFfaEnable)
+    cbz    w8, FfaNotEnabled        // ← If FFA disabled, SKIP stack init
+    
+    // FFA path: init stack
+    adr    x0, StackEnd
+    mov    sp, x0                   // ← Stack initialization
+    b      SetupGdt
+    
+FfaNotEnabled:
+    // NOTHING — falls through with uninit SP!
+```
+
+**Step 8: Check the PCD value**
+
+```python
+# PcdFfaEnable is embedded in the binary — find it
+# The LDR instruction at the entry loads from a nearby literal pool
+# Address of PCD can be found from the disassembly
+
+# Or just check the build config:
+# Platform/ARM/SgiPkg/SgiPlatformMm.dsc.inc line 20:
+#   DEFINE EDK2_ENABLE_FFA = FALSE
+```
+
+**ROOT CAUSE FOUND:** `EDK2_ENABLE_FFA = FALSE` → `PcdFfaEnable = 0` → stack init skipped → immediate crash on first stack access.
+
+**Step 9: Fix and verify**
+
+```bash
+build ... -D EDK2_ENABLE_FFA=TRUE
+```
+
+**Total time from "hung" to "root cause": 5 minutes of register reads + 5 minutes tracing the source.**
+
+---
 
 These are the software-triggered exceptions used to call into higher exception levels.
 
@@ -1209,7 +1793,7 @@ def full_exception_trace(cpu):
 
 ## Part X: Putting It All Together — A Complete Debugging Session
 
-Here's how all of this came together when we debugged the StandaloneMM crash. This is the exact sequence of investigation:
+Here's how all of this came together when we debugged the [StandaloneMM crash](/posts/enabling-persistent-uefi-variables-arm-fvp-standalonemm/). This is the exact sequence of investigation:
 
 ### Step 1: Observe the Symptom
 
