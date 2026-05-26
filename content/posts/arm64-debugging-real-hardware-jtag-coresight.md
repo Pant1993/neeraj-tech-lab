@@ -38,34 +38,102 @@ ARM's CoreSight is the debug infrastructure inside every ARM SoC. Think of it as
 
 **Key components:**
 
-`
-┌─────────────────────────────────────────────────────────┐
-│                    ARM SoC                              │
-│                                                         │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐            │
-│  │  CPU 0   │  │  CPU 1   │  │  SCP     │            │
-│  │  (A/N)   │  │  (A/N)   │  │(Cortex-M)│            │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘            │
-│       │ETM          │ETM          │MTB                 │
-│       └─────────┬───┴─────────┬───┘                   │
-│                 │             │                        │
-│              ┌──▼─────────────▼──┐                    │
-│              │   Debug APB Bus   │                    │
-│              │   (CoreSight)     │                    │
-│              └──┬─────────┬──────┘                    │
-│                 │ETF      │CTI                         │
-│                 │(Trace)  │(Cross Trigger)            │
-│                 └────┬────┘                           │
-│                      │                                 │
-│              ┌───────▼──────┐                         │
-│              │  Debug Access │                         │
-│              │  Port (DAP)   │                         │
-│              └───────┬───────┘                         │
-└──────────────────────┼─────────────────────────────────┘
-                       │
-                  JTAG/SWD pins ──► To debug probe
-
-`
+```
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                   ARM SoC with CoreSight Debug Architecture                      │
+│                        (e.g., RDN2 / Neoverse Platform)                         │
+│                                                                                  │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  ┌────────────┐ │
+│  │   CPU Core 0    │  │   CPU Core 1    │  │   CPU Core 2    │  │ CPU Core 3 │ │
+│  │  (Neoverse V1)  │  │  (Neoverse V1)  │  │  (Neoverse V1)  │  │(Neoverse V1│ │
+│  ├─────────────────┤  ├─────────────────┤  ├─────────────────┤  ├────────────┤ │
+│  │ Debug Interface │  │ Debug Interface │  │ Debug Interface │  │Debug IF    │ │
+│  │ • Breakpoints   │  │ • Breakpoints   │  │ • Breakpoints   │  │• BP/WP     │ │
+│  │ • Watchpoints   │  │ • Watchpoints   │  │ • Watchpoints   │  │• Halt      │ │
+│  │ • Halt control  │  │ • Halt control  │  │ • Halt control  │  │            │ │
+│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘  └──────┬─────┘ │
+│           │                    │                    │                   │       │
+│  ┌────────▼────────┐  ┌────────▼────────┐  ┌────────▼────────┐  ┌──────▼─────┐ │
+│  │ ETM (0x840000)  │  │ ETM (0x850000)  │  │ ETM (0x860000)  │  │ETM(0x87000)│ │
+│  │ Trace Macrocell │  │ Trace Macrocell │  │ Trace Macrocell │  │Trace Macro │ │
+│  │ Captures:       │  │ Captures:       │  │ Captures:       │  │Captures:   │ │
+│  │ • PC samples    │  │ • PC samples    │  │ • PC samples    │  │• PC sample │ │
+│  │ • Branch targets│  │ • Branch targets│  │ • Branch targets│  │• Branches  │ │
+│  │ • Exceptions    │  │ • Exceptions    │  │ • Exceptions    │  │• Exception │ │
+│  │ • Address range │  │ • Address range │  │ • Address range │  │• Filters   │ │
+│  │   filters       │  │   filters       │  │   filters       │  │            │ │
+│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘  └──────┬─────┘ │
+│           │                    │                    │                   │       │
+│  ┌────────▼────────┐  ┌────────▼────────┐  ┌────────▼────────┐  ┌──────▼─────┐ │
+│  │ CTI (0x842000)  │  │ CTI (0x852000)  │  │ CTI (0x862000)  │  │CTI(0x87200)│ │
+│  │ Cross Trigger   │  │ Cross Trigger   │  │ Cross Trigger   │  │Cross Trig  │ │
+│  │ • Halt synchro  │  │ • Halt synchro  │  │ • Halt synchro  │  │• Halt sync │ │
+│  │ • Trace start   │  │ • Trace start   │  │ • Trace start   │  │• Trace trig│ │
+│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘  └──────┬─────┘ │
+│           └──────────────────┬──┴──────────────┬──────┴──────────────────┘       │
+│                              │                 │                                 │
+│                    ┌─────────▼─────────────────▼─────────┐                       │
+│                    │    Trace Funnel (0x8C0000)          │                       │
+│                    │  Merges 4 ETM streams into single   │                       │
+│                    │  • Time-multiplexed packets         │                       │
+│                    │  • Adds CPU core ID tags            │                       │
+│                    │  • Priority-based arbitration       │                       │
+│                    └─────────────────┬───────────────────┘                       │
+│                                      │                                           │
+│            ┌─────────────────────────┼─────────────────────────┐                 │
+│            │                         │                         │                 │
+│  ┌─────────▼─────────┐   ┌───────────▼────────────┐  ┌────────▼─────────────┐   │
+│  │  ETF (0x8D0000)   │   │  ETR (0x8E0000)        │  │  TPIU (0x8F0000)     │   │
+│  │  On-chip FIFO     │   │  Trace to DRAM         │  │  Trace Port Out      │   │
+│  │  • 8KB-32KB       │   │  • 1MB-256MB buffer    │  │  • Streaming to      │   │
+│  │  • Circular       │   │  • AXI write to RAM    │  │    external probe    │   │
+│  │  • Last N instr   │   │  • Long captures       │  │  • Real-time decode  │   │
+│  └───────────────────┘   └────────────────────────┘  └──────────────────────┘   │
+│                                      │                                           │
+│         ┌────────────────────────────┴────────────────────────────┐              │
+│         │    CoreSight ROM Table (0x80000000)                     │              │
+│         │  Component discovery — "Where are debug components?"    │              │
+│         │  • Lists ETM, CTI, funnel, ETF, ETR base addresses      │              │
+│         │  • Component type identification (via PIDR/CIDR)        │              │
+│         └────────────────────────┬────────────────────────────────┘              │
+│                                  │                                               │
+│         ┌────────────────────────▼────────────────────────────┐                  │
+│         │    Debug Access Port (DAP) — MEM-AP                 │                  │
+│         │  • Register access (read/write CPU registers)       │                  │
+│         │  • Memory access (read/write system RAM, MMIO)      │                  │
+│         │  • Authentication (DBGEN, NIDEN, SPIDEN, SPNIDEN)   │                  │
+│         │  • Multi-AP support (AP0=CPU, AP1=SCP, etc.)        │                  │
+│         └────────────────────────┬────────────────────────────┘                  │
+└──────────────────────────────────┼───────────────────────────────────────────────┘
+                                   │
+                     ┌─────────────▼─────────────┐
+                     │     JTAG or SWD Pins      │
+                     │  ┌──────────────────────┐ │
+                     │  │ JTAG: TDI, TDO, TCK  │ │
+                     │  │       TMS, TRST      │ │
+                     │  │  Or                  │ │
+                     │  │ SWD:  SWDIO, SWCLK   │ │
+                     │  └──────────────────────┘ │
+                     └─────────────┬─────────────┘
+                                   │
+                     ┌─────────────▼─────────────┐
+                     │      Debug Probe          │
+                     │  ARM DSTREAM (traces)     │
+                     │  Segger J-Link (debug)    │
+                     │  OpenOCD adapter (budget) │
+                     │  ┌──────────────────────┐ │
+                     │  │  USB 3.0 to host PC  │ │
+                     │  └──────────────────────┘ │
+                     └─────────────┬─────────────┘
+                                   │
+                     ┌─────────────▼─────────────┐
+                     │  Host PC Debug Software   │
+                     │  • ARM Development Studio │
+                     │  • OpenOCD + GDB          │
+                     │  • pyOCD (Python API)     │
+                     │  • Segger Ozone           │
+                     └───────────────────────────┘
+```
 
 - **ETM (Embedded Trace Macrocell)**: Records every instruction executed by a CPU (real-time, non-invasive)
 - **ETF (Embedded Trace FIFO)**: On-chip trace buffer
@@ -119,46 +187,194 @@ ARM's CoreSight is the debug infrastructure inside every ARM SoC. Think of it as
 
 ### Physical Connection
 
-On the FVP, we ran a PowerShell script and got port 7100. On real hardware, we need wires.
+On the FVP, we ran a PowerShell script and got port 7100. On real hardware, we need **physical wires** and **correct pinout**.
 
-**Typical JTAG/SWD header (20-pin ARM standard):**
+**Standard 20-pin ARM JTAG/SWD connector (Cortex Debug Connector):**
 
-`
- 1  VTref ─────► 3  nTRST      ┐
- 2  NC          4  GND         │ JTAG signals
- 5  TDI ────────► 6  GND       │ (or SWD: SWDIO/SWCLK
- 7  TMS/SWDIO ─► 8  GND       │  on pins 7/9)
- 9  TCK/SWCLK ─► 10 GND        │
-11  RTCK ◄────  12 GND        │
-13  TDO/SWO ◄─  14 GND        │
-15  nRESET     16 GND         │
-17  DBGRQ      18 GND         │
-19  DBGACK     20 GND         ┘
-`
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│            20-Pin ARM Cortex Debug Header (Top View)                │
+│                                                                     │
+│   Pin 1 (Red stripe) ◄─────────────────────────────┐               │
+│                                                     │               │
+│   ┌───┬───┬───┬───┬───┬───┬───┬───┬───┬───┐       │               │
+│   │ 1 │ 3 │ 5 │ 7 │ 9 │11 │13 │15 │17 │19 │       │               │
+│   ├───┼───┼───┼───┼───┼───┼───┼───┼───┼───┤  ◄────┘ Keyed notch   │
+│   │ 2 │ 4 │ 6 │ 8 │10 │12 │14 │16 │18 │20 │       (orientation)   │
+│   └───┴───┴───┴───┴───┴───┴───┴───┴───┴───┘                       │
+│                                                                     │
+│  Pin │ Signal    │ Direction │ Purpose                             │
+│  ────┼───────────┼───────────┼─────────────────────────────────── │
+│   1  │ VTref     │  Input ◄  │ **Target voltage reference**        │
+│   2  │ NC        │     -     │  (Not connected or optional)        │
+│   3  │ nTRST     │  Output ► │  JTAG Test Reset (optional)         │
+│   4  │ GND       │  Ground   │  Ground                             │
+│   5  │ TDI       │  Output ► │  JTAG Data In (or NC for SWD)       │
+│   6  │ GND       │  Ground   │  Ground                             │
+│   7  │ SWDIO/TMS │  I/O ◄►   │  **SWD Data (or JTAG Mode Select)** │
+│   8  │ GND       │  Ground   │  Ground                             │
+│   9  │ SWCLK/TCK │  Output ► │  **SWD Clock (or JTAG Clock)**      │
+│  10  │ GND       │  Ground   │  Ground                             │
+│  11  │ RTCK      │  Input ◄  │  Return clock (for adaptive timing) │
+│  12  │ GND       │  Ground   │  Ground                             │
+│  13  │ SWO/TDO   │  Input ◄  │  Trace out / JTAG Data Out          │
+│  14  │ GND       │  Ground   │  Ground                             │
+│  15  │ nRESET    │  I/O ◄►   │  Target reset (bidirectional)       │
+│  16  │ GND       │  Ground   │  Ground                             │
+│  17  │ DBGRQ     │  Output ► │  Debug request (optional)           │
+│  18  │ GND       │  Ground   │  Ground                             │
+│  19  │ DBGACK    │  Input ◄  │  Debug acknowledge (optional)       │
+│  20  │ GND       │  Ground   │  Ground                             │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-**Pin 1 (VTref)** is critical — it tells the probe what voltage level the target uses (1.8V, 3.3V). **Always connect this first**.
+**Minimal SWD connection (2-wire debug, most common):**
 
-**For SWD-only (2-wire):**
-- Connect: VTref (pin 1), GND (any), SWDIO (pin 7), SWCLK (pin 9), optional nRESET (pin 15)
+```
+┌──────────────────┐                   ┌──────────────────────┐
+│   J-Link Probe   │                   │   RDN2 Dev Board     │
+│   (or DSTREAM)   │                   │   Debug Header J10   │
+│                  │                   │                      │
+│  Pin 1  VTref    ├──────────────────►│ Pin 1  VTref (3.3V)  │ ◄─ Sense voltage
+│  Pin 7  SWDIO    ├◄─────────────────►│ Pin 7  SWDIO         │ ◄─ Bidirectional data
+│  Pin 9  SWCLK    ├──────────────────►│ Pin 9  SWCLK         │ ◄─ Clock output
+│  Pin 4/6/8 GND   ├──────────────────►│ Pin 4  GND           │ ◄─ Common ground
+│  Pin 15 nRESET   ├◄─────────────────►│ Pin 15 nRESET        │ ◄─ Reset (optional)
+│                  │                   │                      │
+│      USB 3.0     │                   │    Power supply      │
+│        │         │                   │         │            │
+│        ▼         │                   │         ▼            │
+│   Host PC        │                   │    12V/5V adapter    │
+└──────────────────┘                   └──────────────────────┘
+```
 
-**Level shifters:** If your probe is 3.3V and the board is 1.8V, you need a level shifter or a probe with adaptive voltage (like J-Link).
+**Critical setup rules:**
+1. **VTref MUST be connected** — probe needs to know target voltage (1.8V, 3.3V)
+2. **GND must be solid** — bad ground = unreliable connection, random failures
+3. **Short wires** (<15cm ideal) — longer wires introduce signal integrity issues at high speed
+4. **Power the board BEFORE connecting probe** (unless debugging boot ROM)
 
-### Power-On and Reset Behavior
+**Common connection failures:**
 
-**FVP:** Starts instantly, CPU at known state.
+| Symptom | Likely Cause | Fix |
+|---------|-------------|-----|
+| `Error: SWDIO line stuck low` | No VTref, board unpowered | Connect VTref, power board |
+| `Error: Cannot read IDCODE` | Wrong pins, bad ground, wrong transport | Check wiring, verify SWD selected |
+| `Error: JTAG scan failed` | Board in reset, SCP not started | Release nRESET, wait for SCP boot |
+| `Error: Target voltage is 0.00V` | VTref not connected | Connect pin 1 to target voltage rail |
+| Intermittent failures | Long wires, poor contact | Use shorter ribbon cable, check connector |
 
-**Real hardware:** Power-on sequence matters.
+---
 
+### Power-On Sequence and Boot Timing
 
-1. **Power on the board first** (SCP starts, initializes clocks/power/DDR)
-2. **Then connect the debug probe** (JTAG pins may not be active until SCP configures them)
-3. **Or:** Hold the board in reset, connect probe, then release reset (for debugging boot ROM)
+**FVP:** Starts instantly at `main()`, CPU at known EL3 state.
 
-**Warm reset vs cold reset:**
-- **Cold reset:** Full power cycle — all state lost
-- **Warm reset:** nRESET signal — debug logic may survive, registers preserved (useful for post-mortem analysis!)
+**Real hardware:** Multi-stage boot taking **10-60 seconds**, and debug access depends on which stage you're in.
 
-**Our FVP crash scenario:** When StandaloneMM crashed, we just connected Iris and read registers. On real hardware, if the system already crashed and watchdog reset it, you need to catch it BEFORE the reset (using a breakpoint or halt-on-reset).
+**Complete boot sequence diagram:**
+
+```
+Time
+(sec)
+  0 ────► Power on (12V adapter connected)
+  │       ┌──────────────────────────────────────────────┐
+  │       │  Power Regulators Stabilize                  │
+  │       │  • 12V → 5V, 5V → 3.3V, 3.3V → 1.8V         │
+  │       │  • VTref becomes valid (~100ms)              │
+  │       └──────────────────────────────────────────────┘
+  1 ────► SCP (System Control Processor) ROM starts
+  │       ┌──────────────────────────────────────────────┐
+  │       │  SCP ROM Bootloader (Cortex-M7 @ 0x0)       │
+  │       │  • Reads fuses, checks secure boot          │
+  │       │  • Loads SCP firmware from flash            │
+  │       │  • UART0 not initialized yet → Silent       │
+  │       └──────────────────────────────────────────────┘
+  3 ────► SCP firmware starts
+  │       ┌──────────────────────────────────────────────┐
+  │       │  SCP RAM Firmware (Cortex-M7 @ 0xBD06000)   │
+  │       │  • Initializes UART0 (MCP console)          │
+  │       │  • Configures clocks (CMN-700, PCIe, DDR)   │
+  │       │  • Initializes DDR4 memory controller       │
+  │       │  • Powers on AP (application processor)     │
+  │       │  • ✅ JTAG/SWD becomes accessible HERE      │
+  │       └──────────────────────────────────────────────┘
+  │         **First output:** "SCP Firmware v2.11"
+  8 ────► TF-A BL1 (Boot Loader stage 1)
+  │       ┌──────────────────────────────────────────────┐
+  │       │  TF-A Trusted Boot Firmware @ 0x0            │
+  │       │  • Secure boot verification                 │
+  │       │  • Loads BL2 from flash                     │
+  │       │  • UART1 initialized (AP console)           │
+  │       └──────────────────────────────────────────────┘
+  │         **Output:** "NOTICE: BL1: v2.11(debug)"
+ 10 ────► TF-A BL2 (Firmware loader)
+  │       ┌──────────────────────────────────────────────┐
+  │       │  • Loads BL31, BL32, BL33 from flash        │
+  │       │  • Verifies signatures (if secure boot on)  │
+  │       └──────────────────────────────────────────────┘
+ 12 ────► TF-A BL31 (Secure monitor) + BL32 (StandaloneMM)
+  │       ┌──────────────────────────────────────────────┐
+  │       │  • BL31 runtime firmware @ 0xFF000000       │
+  │       │  • BL32 (StandaloneMM) @ 0xFF200000         │
+  │       │  • SMC handler installed                    │
+  │       └──────────────────────────────────────────────┘
+  │         **Output:** "NOTICE: BL31: StandaloneMM loaded"
+ 15 ────► BL33 (UEFI firmware)
+  │       ┌──────────────────────────────────────────────┐
+  │       │  • EDK2 UEFI @ 0xE0000000                   │
+  │       │  • PEI phase, DXE phase drivers load        │
+  │       │  • UEFI variables via StandaloneMM          │
+  │       └──────────────────────────────────────────────┘
+  │         **Output:** "UEFI firmware (version 1.0)"
+ 25 ────► Grub boot loader
+  │       ┌──────────────────────────────────────────────┐
+  │       │  • Loads Linux kernel from disk             │
+  │       └──────────────────────────────────────────────┘
+ 30 ────► Linux kernel
+  │       ┌──────────────────────────────────────────────┐
+  │       │  • Kernel decompression @ 0x80080000        │
+  │       │  • MMU setup, CPU feature detection         │
+  │       │  • ⚠️ Our SVE trap happened here            │
+  │       └──────────────────────────────────────────────┘
+ 45 ────► Linux userspace
+          ┌──────────────────────────────────────────────┐
+          │  • systemd starts services                  │
+          │  • Login prompt appears                     │
+          └──────────────────────────────────────────────┘
+```
+
+**Debug access windows:**
+
+| Boot Stage | JTAG/SWD Access | What You Can Debug |
+|------------|-----------------|-------------------|
+| 0-3 sec (Power-on, SCP ROM) | ❌ Not ready | N/A — clocks not initialized |
+| 3-8 sec (SCP firmware) | ✅ **Yes**, but only SCP core | SCP firmware, CMN-700 init, DDR setup |
+| 8+ sec (TF-A BL1 onwards) | ✅ **Yes**, all AP cores | TF-A, UEFI, StandaloneMM, Linux |
+
+**To debug SCP boot (before 3 seconds):**
+```bash
+# Hold board in reset, connect probe
+openocd -f board/rdn2.cfg -c "init; reset halt"
+
+# System stays at SCP ROM entry (0x0)
+> reg pc
+pc: 0x00000000
+
+# Now step through SCP ROM bootloader
+> step; reg pc
+```
+
+**To debug normal boot (TF-A onwards):**
+```bash
+# Let board boot normally, connect anytime after 8 seconds
+openocd -f board/rdn2.cfg
+
+# Halt and inspect
+> halt
+> reg pc
+pc: 0xFF018234  ← We're in BL31 runtime firmware
+```
 
 ### JTAG Scan Chain: Discovering Cores
 
@@ -488,26 +704,380 @@ Now when CPU0 hits a breakpoint or crashes, CPU1 automatically halts too. You ca
 
 ---
 
-## Part VI: Exception and Crash Analysis — Same Approach, Different Path
+## Part VI: Exception and Crash Analysis — Real Debugging Session
 
-### The Registers Are Identical
+### Scenario: Reproducing Our StandaloneMM Crash on Real Hardware
 
-Whether on FVP or real hardware, when an exception happens:
-- **ESR_ELx** captures the exception syndrome
-- **ELR_ELx** captures the return address
-- **FAR_ELx** captures the faulting address (for aborts)
-- **SPSR_ELx** captures the saved processor state
+**On FVP, we had:** System crashed with bad stack pointer (`0xFFFFFFFFFFFFFD90`), data abort, we connected Iris and dumped registers.
 
-**Our StandaloneMM crash on FVP:**
-```python
-esr3 = cpu0.read_register('ESR_EL3')  # 0x5E000000 (EC=0x17, SMC)
-elr3 = cpu0.read_register('ELR_EL3')  # 0xFF207DA4 (return from SMC)
-esr1 = cpu0.read_register('ESR_EL1')  # 0x92000044 (Data Abort, L0 translation fault)
-far1 = cpu0.read_register('FAR_EL1')  # 0xFFFFFFFFFFFFFD90 (bad stack address)
+**On real hardware:** Same crash, but we need to catch it with JTAG/SWD. Here's the complete step-by-step workflow.
+
+---
+
+### Step 1: Initial Connection and Discovery
+
+**Start OpenOCD** (connect to RDN2 board via J-Link probe):
+
+```bash
+$ openocd -f interface/jlink.cfg -f board/arm_rdn2.cfg
+
+Open On-Chip Debugger 0.12.0
+Licensed under GNU GPL v2
+For bug reports, read http://openocd.org/doc/doxygen/bugs.html
+
+Info : J-Link V11 compiled Dec  6 2024 14:23:38
+Info : Hardware version: 11.00
+Info : VTarget = 3.318 V
+Info : clock speed 10000 kHz
+Info : SWD DPIDR 0x6ba02477
+Info : [rdn2.cpu0] Cortex-A72 r0p3 (target halted)
+Info : [rdn2.cpu1] Cortex-A72 r0p3 (target halted)
+Info : [rdn2.cpu2] Cortex-A72 r0p3 (target halted)
+Info : [rdn2.cpu3] Cortex-A72 r0p3 (target halted)
+Info : Listening on port 3333 for gdb connections
+Info : Listening on port 6666 for tcl connections
+Info : Listening on port 4444 for telnet connections
 ```
 
-**Same crash on real hardware (OpenOCD):**
+✅ **Connected!** VTarget = 3.3V (board powered), 4 CPUs discovered.
+
+---
+
+### Step 2: Let System Boot to Crash Point
+
+**Monitor UART console** (on /dev/ttyUSB0):
+
 ```
+SCP Firmware v2.11.0 (Mar 10 2025)
+[MCP] CMN-700 initialization... done
+[MCP] DDR4 training... done
+
+NOTICE:  BL1: v2.11(debug):v2.11.0-dirty
+NOTICE:  BL1: Built : 14:32:21, Mar 10 2025
+NOTICE:  BL31: v2.11(debug):v2.11.0-dirty
+NOTICE:  BL31: Built : 14:34:15, Mar 10 2025
+INFO:    BL31: Initializing runtime services
+INFO:    BL31: Initializing BL32 (StandaloneMM)
+UEFI firmware (version 1.0 Built at 14:40:00 on Mar 10 2025)
+
+Platform Init...PlatformPeim: SetBootMode: BootMode = 0
+SecureBootPolicyInit: Authentication Status: 0
+
+**SYSTEM HANGS HERE** ← No further output, watchdog will trigger in 60s
+```
+
+**The crash happened during UEFI variable access** (EFI_VARIABLE_WRITE_ARCH_PROTOCOL triggering an SMC to StandaloneMM).
+
+---
+
+### Step 3: Halt and Capture State
+
+**Telnet to OpenOCD** (within 60 seconds before watchdog resets):
+
+```bash
+$ telnet localhost 4444
+```
+
+**Halt all CPUs:**
+
+```
+> halt
+[rdn2.cpu0] target halted in ARM64 state due to debug-request, current mode: EL3
+[rdn2.cpu1] target halted in ARM64 state due to debug-request, current mode: EL1N
+[rdn2.cpu2] target halted in ARM64 state due to debug-request, current mode: EL1N
+[rdn2.cpu3] target halted in ARM64 state due to debug-request, current mode: EL1N
+```
+
+✅ **All CPUs halted.** CPU0 is in **EL3** (secure monitor) — the crash happened during SMC handling!
+
+---
+
+### Step 4: Read Exception State (CPU0)
+
+**Check program counter:**
+
+```
+> rdn2.cpu0 reg pc
+pc (/64): 0x00000000FF207DA0
+```
+
+**Read exception syndrome register (EL3):**
+
+```
+> rdn2.cpu0 reg ESR_EL3
+esr_el3 (/64): 0x000000005E000000
+
+# Decode: EC (bits [31:26]) = 0x17 (SMC instruction trapped to EL3)
+#         ISS = 0 (immediate value from SMC #0)
+```
+
+**Read EL3 return address:**
+
+```
+> rdn2.cpu0 reg ELR_EL3
+elr_el3 (/64): 0x00000000FF207DA4
+
+# This is where we'll return to after SMC completes
+# (the instruction AFTER the SMC in StandaloneMM)
+```
+
+**Read EL1 exception state** (where the actual fault happened):
+
+```
+> rdn2.cpu0 reg ESR_EL1
+esr_el1 (/64): 0x0000000092000044
+
+# Decode: EC = 0x24 (Data Abort from lower EL)
+#         ISV = 0 (syndrome not valid)
+#         DFSC = 0x04 (Translation fault, level 0)
+```
+
+**Read faulting address:**
+
+```
+> rdn2.cpu0 reg FAR_EL1
+far_el1 (/64): 0xFFFFFFFFFFFFFD90
+
+# ← BAD STACK POINTER! This is not a valid address.
+```
+
+**Read stack pointer:**
+
+```
+> rdn2.cpu0 reg SP
+sp (/64): 0xFFFFFFFFFFFFFD90
+
+# Confirmed: SP is corrupted. Translation fault because:
+# • 0xFFFFFFFF_FFFFFFD90 is a canonical address (upper half)
+# • But level 0 translation table has no entry for this region
+# • Likely: stack pointer was decremented beyond valid stack
+```
+
+---
+
+### Step 5: Inspect Call Stack
+
+**Read link register (return address):**
+
+```
+> rdn2.cpu0 reg X30
+x30 (/64): 0x00000000FF018400
+
+# X30 (LR) = return address = 0xFF018400
+# This is in BL31 runtime_exceptions handler
+```
+
+**Read frame pointer:**
+
+```
+> rdn2.cpu0 reg X29
+x29 (/64): 0x00000000FF207D80
+
+# X29 (FP) = 0xFF207D80 (StandaloneMM stack, looks valid)
+# But SP = 0xFFFFFFFFFFFFFD90 is NOT near FP!
+```
+
+**Manual stack backtrace:**
+
+```
+> mdw 0xFF207D80 8
+0xFF207D80: 0xFF207DC0  0xFF018400  0x00000000  0x5E000000
+            ▲           ▲
+            │           └─ Previous LR (runtime_exceptions @ BL31)
+            └─ Previous FP
+
+# Stack frame shows:
+# [FP+0]  = Previous FP = 0xFF207DC0
+# [FP+8]  = Previous LR = 0xFF018400 (BL31)
+# [FP+16] = Local var = 0x0
+# [FP+24] = Local var = 0x5E000000 (looks like ESR_EL3!)
+```
+
+**Reconstructed call stack:**
+
+```
+Frame 0: PC=0xFF207DA0  (_ModuleEntryPoint+160 in StandaloneMM)
+         SP=0xFFFFFFFFFFFFFD90 ← CORRUPTED
+         FP=0xFF207D80 (valid)
+         LR=0xFF018400 (BL31 runtime_exceptions)
+
+Frame 1: PC=0xFF018400  (runtime_exceptions in BL31)
+         FP=0xFF207DC0
+         LR=0xFF018234 (bl31_main)
+
+Frame 2: PC=0xFF018234  (bl31_main in BL31)
+```
+
+---
+
+### Step 6: GDB Symbol Resolution
+
+**Connect GDB to OpenOCD:**
+
+```bash
+$ gdb-multiarch
+(gdb) target extended-remote localhost:3333
+Remote debugging using localhost:3333
+0x00000000FF207DA0 in ?? ()
+```
+
+**Load BL31 symbols:**
+
+```gdb
+(gdb) symbol-file ~/rdn2/tf-a/build/rdn2/debug/bl31/bl31.elf
+Reading symbols from bl31.elf...
+```
+
+**Resolve PC=0xFF207DA0:**
+
+```gdb
+(gdb) info symbol 0xFF207DA0
+No symbol matches 0xFF207DA0.
+
+# Hmm, PC is NOT in BL31. Let's check where it is:
+
+(gdb) info symbol 0xFF018400
+runtime_exceptions + 64 in section .text of bl31.elf
+
+# LR points to BL31, but PC doesn't. PC must be in StandaloneMM.
+```
+
+**Load StandaloneMM symbols at runtime address:**
+
+```gdb
+(gdb) add-symbol-file ~/rdn2/edk2/Build/SgiMmStandalone/DEBUG_GCC5/AARCH64/StandaloneMmCore.dll 0xFF200000
+add symbol table from file "StandaloneMmCore.dll" at
+        .text_addr = 0xFF200000
+(y or n) y
+Reading symbols from StandaloneMmCore.dll...
+
+# Now resolve again:
+(gdb) info symbol 0xFF207DA0
+_ModuleEntryPoint + 160 in section .text
+
+(gdb) list *0xFF207DA0
+42    ModuleEntryPoint (IN VOID *HobStart)
+43    {
+44       // ...
+45       MmFoundationEntryPoint (&HobStart);
+46  >>>  return EFI_SUCCESS;    ← Faulted here!
+47    }
+```
+
+**Disassemble around fault:**
+
+```gdb
+(gdb) disassemble 0xFF207D90,+32
+Dump of assembler code from 0xff207d90 to 0xff207db0:
+   0x00000000ff207d90 <_ModuleEntryPoint+144>: ldr  x8, [x19, #8]
+   0x00000000ff207d94 <_ModuleEntryPoint+148>: cbz  w8, 0xff207da8
+   0x00000000ff207d98 <_ModuleEntryPoint+152>: mov  w0, #0x2
+   0x00000000ff207d9c <_ModuleEntryPoint+156>: blr  x8
+=> 0x00000000ff207da0 <_ModuleEntryPoint+160>: str  x0, [sp, #-16]!   ← FAULT
+   0x00000000ff207da4 <_ModuleEntryPoint+164>: mov  w0, #0x0
+   0x00000000ff207da8 <_ModuleEntryPoint+168>: bl   0xff207eb0
+   0x00000000ff207dac <_ModuleEntryPoint+172>: ldr  x0, [sp], #16
+End of assembler dump.
+```
+
+**Instruction causing fault:**
+
+```asm
+str  x0, [sp, #-16]!
+
+# This means: Write X0 to [SP-16], then update SP = SP-16
+# Translation:  SP was 0xFFFFFFFFFFFFFDA0
+#               Instruction tries SP = SP - 16 = 0xFFFFFFFFFFFFFD90
+#               Then tries to write to [0xFFFFFFFFFFFFFD90]
+#               MMU says: "No translation for this address!" → Data Abort
+```
+
+---
+
+### Step 7: Root Cause Analysis
+
+**Check all general-purpose registers:**
+
+```gdb
+(gdb) info registers
+x0             0x0                  0
+x1             0xff200000           4279238656
+x2             0xff300000           4280287232
+x3             0xff3ffe00           4281335296
+x4             0x0                  0
+x5             0x1                  1
+...
+x19            0xff207e00           4279263744
+x20            0xff300000           4280287232
+x29            0xff207d80           4279263616   ← FP looks OK
+x30            0xff018400           4278739968   ← LR = runtime_exceptions
+sp             0xffffffffffff\fd90  0xfffffffffffffffd90  ← **CORRUPTED SP**
+pc             0xff207da0           0xff207da0
+```
+
+**SP should be near FP (0xFF207D80), but it's at 0xFFFFFFFF_FFFFFFD90!**
+
+**Why?**
+
+1. **Hypothesis 1:** Stack overflow — SP was decremented too many times, wrapped around
+   - Unlikely: Address is way too far from valid stack region
+
+2. **Hypothesis 2:** SP was explicitly set to a bad value
+   - Check: Who sets SP in _ModuleEntryPoint?
+
+**Disassemble _ModuleEntryPoint entry:**
+
+```gdb
+(gdb) disassemble _ModuleEntryPoint
+Dump of assembler code for function _ModuleEntryPoint:
+   0x00000000ff207d10 <+0>:  stp   x29, x30, [sp, #-16]!
+   0x00000000ff207d14 <+4>:  mov   x29, sp
+   0x00000000ff207d18 <+8>:  sub   sp, sp, #0x20
+   ...
+   0x00000000ff207d30 <+32>: bl    0xff208000 <MmFoundationEntryPoint>
+   ...
+   0x00000000ff207da0 <+160>: str   x0, [sp, #-16]!   ← Fault here
+```
+
+**Wait! After `bl MmFoundationEntryPoint`, the function tries to push x0 to stack. But did `MmFoundationEntryPoint` corrupt SP?**
+
+**Check MmFoundationEntryPoint code:**
+
+```gdb
+(gdb) disassemble MmFoundationEntryPoint
+   ...
+   0x00000000ff2080f0:  mov   sp, x8      ← **HERE! SP is loaded from X8**
+   0x00000000ff2080f4:  bl    0xff208200
+   0x00000000ff2080f8:  ret
+```
+
+**Root cause found:**
+
+1. `MmFoundationEntryPoint` **overwrites SP** with a value from X8
+2. X8 contains **0xFFFFFFFF_FFFFFFD90** (invalid stack pointer)
+3. When `_ModuleEntryPoint` resumes, SP is corrupted
+4. Next instruction (`str x0, [sp, #-16]!`) tries to write to bad address → **Data Abort**
+
+**Fix:** `MmFoundationEntryPoint` should set up a VALID stack pointer, not 0xFFFFFFFF_FFFFFFD90.
+
+---
+
+### The Registers Are Identical (FVP vs Real HW)
+
+Whether on FVP or real hardware, the exception registers are the same:
+
+| Register | FVP (Iris API) | Real HW (OpenOCD/GDB) | Value |
+|----------|---------------|---------------------|-------|
+| **ESR_EL3** | `cpu0.read_register('ESR_EL3')` | `reg ESR_EL3` | `0x5E000000` (SMC) |
+| **ELR_EL3** | `cpu0.read_register('ELR_EL3')` | `reg ELR_EL3` | `0xFF207DA4` |
+| **ESR_EL1** | `cpu0.read_register('ESR_EL1')` | `reg ESR_EL1` | `0x92000044` (Data Abort, L0 fault) |
+| **FAR_EL1** | `cpu0.read_register('FAR_EL1')` | `reg FAR_EL1` | `0xFFFFFFFFFFFFFD90` (bad stack) |
+| **PC** | `cpu0.read_register('PC')` | `reg pc` | `0xFF207DA0` (_ModuleEntryPoint+160) |
+| **SP** | `cpu0.read_register('SP')` | `reg sp` | `0xFFFFFFFFFFFFFD90` |
+
+**The debugging approach is identical — only the tool syntax differs.**
+
+---
 > halt
 target halted in ARM64 state, current mode: EL3
 
@@ -580,25 +1150,153 @@ On FVP, we can **single-step** through code or set **breakpoints**. But we can't
 
 **CoreSight ETM (Embedded Trace Macrocell) on real hardware gives us all of this.**
 
-### CoreSight Trace Architecture
+### CoreSight Trace Architecture — Detailed Flow
+
+**ETM trace flow from CPU to decode:**
 
 ```
-  CPU Core
-    │
-    ├── ETM (Embedded Trace Macrocell)
-    │     │ Captures: PC samples, branches, exceptions, context switches
-    │     │ Outputs: Compressed trace packets
-    │     ↓
-    ├── Funnel (combines traces from multiple cores)
-    │     ↓
-    ├── ETF (Embedded Trace FIFO) [Optional on-chip buffer: 8KB-32KB]
-    │     ↓
-    ├── ETR (Embedded Trace Router) [Writes to DRAM buffer: 1MB-256MB]
-    │     ↓
-    └── TPIU (Trace Port Interface Unit) [Outputs to external trace probe]
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                        ETM Trace Data Flow                                   │
+│                                                                              │
+│  Step 1: CPU Execution → ETM Capture                                        │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │  CPU Core (Neoverse V1)                                              │   │
+│  │  ┌────────────────────────────────────────────────────────────────┐  │   │
+│  │  │  Instruction Pipeline                                          │  │   │
+│  │  │  • Fetch: 0xFF018400 (mrs x0, esr_el3)                         │  │   │
+│  │  │  • Execute: Read ESR_EL3 = 0x5E000000                          │  │   │
+│  │  │  • Next:  0xFF018404                                           │  │   │
+│  │  └────────────────────────────┬───────────────────────────────────┘  │   │
+│  │                                │ Instruction commit signal            │   │
+│  │  ┌─────────────────────────────▼──────────────────────────────────┐  │   │
+│  │  │  ETM (Embedded Trace Macrocell) @ 0x840000                     │  │   │
+│  │  │  ┌──────────────────────────────────────────────────────────┐  │  │   │
+│  │  │  │  Trace Generation Logic                                  │  │  │   │
+│  │  │  │  • Address: 0xFF018400                                   │  │  │   │
+│  │  │  │  • Opcode:  mrs (read system register)                   │  │  │   │
+│  │  │  │  • Branch:  No                                           │  │  │   │
+│  │  │  │  • Exception: No                                         │  │  │   │
+│  │  │  │  → Generate: Atom packet (N = not taken branch)          │  │  │   │
+│  │  │  │             + Address packet (when branch taken)         │  │  │   │
+│  │  │  └──────────────────────────────────────────────────────────┘  │  │   │
+│  │  │                                                                 │  │   │
+│  │  │  ┌──────────────────────────────────────────────────────────┐  │  │   │
+│  │  │  │  Trace Compression (ETM v4.0+)                           │  │  │   │
+│  │  │  │  • Most instructions: Atom packets (1 bit each!)         │  │  │   │
+│  │  │  │  • Branch target:     Address packet (4-8 bytes)         │  │  │   │
+│  │  │  │  • Exception:         Exception packet (8 bytes)         │  │  │   │
+│  │  │  │  Compression ratio: ~100:1 typical                       │  │  │   │
+│  │  │  └──────────────────────────────────────────────────────────┘  │  │   │
+│  │  └─────────────────────────────┬───────────────────────────────────┘  │   │
+│  └────────────────────────────────┼──────────────────────────────────────┘   │
+│                                   │ Compressed trace packets                 │
+│  Step 2: Funnel → Merge Multiple Cores                                      │
+│                   ┌───────────────▼───────────────┐                          │
+│                   │    Trace Funnel @ 0x8C0000    │                          │
+│                   │  Combines 4 ETM streams:      │                          │
+│                   │  CPU0: [N][N][E][A:0xFF01...] │                          │
+│                   │  CPU1: [N][N][N][N][N]        │                          │
+│                   │  CPU2: [N][E][A:0x800800...]  │                          │
+│                   │  CPU3: [idle]                 │                          │
+│                   │  ↓ Time-multiplexed output    │                          │
+│                   │  [ID:0][N][N][ID:1][N][ID:0]  │                          │
+│                   │  [E][A:0xFF01...][ID:2]...    │                          │
+│                   └───────────────┬───────────────┘                          │
+│                                   │ Merged packets with source IDs           │
+│  Step 3: ETF or ETR → Buffer                                                │
+│         ┌─────────────────────────┴─────────────────────┐                   │
+│         │   ETF (On-chip FIFO) @ 0x8D0000               │                   │
+│         │   ┌──────────────────────────────────────┐    │                   │
+│         │   │  Circular Buffer (32KB)              │    │                   │
+│         │   │  [Packet][Packet][Packet]...[Packet] │    │                   │
+│         │   │   ▲                          │       │    │                   │
+│         │   │   └──────Wraps around────────┘       │    │                   │
+│         │   │  Captures: Last ~10,000 instructions │    │                   │
+│         │   └──────────────────────────────────────┘    │                   │
+│         └────────────────────┬──────────────────────────┘                   │
+│                              │ OR (if configured)                            │
+│         ┌────────────────────▼──────────────────────────┐                   │
+│         │   ETR (Trace Router) @ 0x8E0000               │                   │
+│         │   Writes to System DRAM via AXI:              │                   │
+│         │   ┌──────────────────────────────────────┐    │                   │
+│         │   │  DRAM Buffer @ 0x80_0000_0000        │    │                   │
+│         │   │  Size: 16MB (configurable 1-256MB)   │    │                   │
+│         │   │  [Packet stream ─────────────────►]  │    │                   │
+│         │   │  Captures: Millions of instructions  │    │                   │
+│         │   └──────────────────────────────────────┘    │                   │
+│         └───────────────────────────────────────────────┘                   │
+│                                                                              │
+│  Step 4: Extract and Decode                                                 │
+│         ┌──────────────────────────────────────────────┐                    │
+│         │  Host PC (via OpenOCD / Arm DS)             │                    │
+│         │  1. Halt system, read ETR write pointer     │                    │
+│         │  2. Extract: dump_image trace.bin ...       │                    │
+│         │  3. Decode with:                             │                    │
+│         │     • ARM CoreSight Access Library           │                    │
+│         │     • perf (Linux kernel tool)               │                    │
+│         │     • Arm DS GUI trace viewer                │                    │
+│         │  4. Output: Full instruction flow with PCs   │                    │
+│         └──────────────────────────────────────────────┘                    │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Three trace capture modes:**
+**ETM Packet Format (compressed trace):**
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│  ETM Trace Packet Types (ETMv4.0/ETMv4.6)                             │
+│                                                                        │
+│  1. Atom Packets (most common, 1 bit per non-branch instruction)      │
+│     Binary: N N N N N N E N N N...                                    │
+│              │ │ │ │ │ │ │ │ │ └─ Not taken (sequential)             │
+│              │ │ │ │ │ │ │ │ └─── Not taken                          │
+│              │ │ │ │ │ │ │ └───── Exception occurred!                │
+│              └─└─└─└─└─└────────── More sequential instructions       │
+│     Meaning: CPU executed 6 straight-line instructions, then          │
+│              exception, then 3 more instructions.                     │
+│                                                                        │
+│  2. Address Packets (when branch target cannot be inferred)           │
+│     Hex: 9D 40 18 00 FF 00 00 00                                      │
+│          ▲  └──────┬──────────┘                                       │
+│          │         └─ Address: 0xFF018400 (compressed, 4-8 bytes)     │
+│          └─ Packet header (0x9D = long address)                       │
+│                                                                        │
+│  3. Exception Packets (when exception happens)                        │
+│     Hex: 06 17 00 00 00                                               │
+│          ▲  └───┬────┘                                                │
+│          │      └─ Exception number: 0x17 (SMC to EL3)                │
+│          └─ Packet header (0x06 = exception packet)                   │
+│                                                                        │
+│  4. Context ID Packets (track process/thread switches)                │
+│     Hex: 6E 34 12 00 00                                               │
+│          ▲  └───┬────┘                                                │
+│          │      └─ Context ID: 0x1234 (process ID)                    │
+│          └─ Packet header (0x6E = context ID)                         │
+│                                                                        │
+│  5. Timestamp Packets (correlate with external events)                │
+│     Hex: 02 A0 F3 45 01                                               │
+│          ▲  └────┬─────┘                                              │
+│          │       └─ Timestamp: 21,459,872 cycles                      │
+│          └─ Packet header (0x02 = timestamp)                          │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+**Compression efficiency example:**
+
+```
+Raw instruction trace (without ETM):
+    100,000 instructions × 4 bytes/instruction = 400 KB
+
+ETM compressed trace:
+    • 95,000 sequential instructions → Atom packets: 95,000 bits = 11.8 KB
+    • 4,500 branches → Address packets: 4,500 × 5 bytes = 22.5 KB
+    • 500 exceptions → Exception packets: 500 × 5 bytes = 2.5 KB
+    Total: ~37 KB  (10:1 compression ratio!)
+```
+
+---
+
+### Three Trace Capture Modes
 
 1. **ETR to DRAM:** Trace writes to a large system memory buffer
 2. **ETF on-chip:** Circular buffer, last 8KB-32KB of execution
